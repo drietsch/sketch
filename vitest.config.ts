@@ -25,6 +25,16 @@ export default defineConfig({
         },
       },
       {
+        // Requires `pnpm build` first; excluded from the default run via
+        // --project selection in CI so a missing dist/ is not a confusing failure.
+        test: {
+          name: 'dist',
+          include: ['test/dist/**/*.test.ts'],
+          environment: 'node',
+          testTimeout: 300_000,
+        },
+      },
+      {
         // Deliberately NO deterministic setup: these tests assert that the
         // library is reproducible on its own, against the real Math.random.
         test: {

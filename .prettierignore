@@ -3,6 +3,8 @@ coverage/
 node_modules/
 pnpm-lock.yaml
 CHANGELOG.md
-visual-tests/canvas/us.json
+# Legacy manual demo gallery, replaced by the Playwright harness. Not formatted
+# because these files are scheduled for deletion, not maintenance.
+visual-tests/
 test/**/__snapshots__/
 test/visual/__screenshots__/

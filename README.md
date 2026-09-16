@@ -19,7 +19,6 @@ npm install --save roughjs
 
 Or get the latest using unpkg: https://unpkg.com/roughjs@latest/bundled/rough.js
 
-
 If you are looking for bundled version in different formats, the npm package will have these in the following locations:
 
 CommonJS: `roughjs/bundled/rough.cjs.js`
@@ -27,7 +26,6 @@ CommonJS: `roughjs/bundled/rough.cjs.js`
 ESM: `roughjs/bundled/rough.esm.js`
 
 Browser IIFE: `roughjs/bundled/rough.js`
-
 
 ## Usage
 
@@ -64,17 +62,17 @@ rc.line(80, 120, 300, 100); // x1, y1, x2, y2
 rc.circle(50, 50, 80, { fill: 'red' }); // fill with red hachure
 rc.rectangle(120, 15, 80, 80, { fill: 'red' });
 rc.circle(50, 150, 80, {
-  fill: "rgb(10,150,10)",
-  fillWeight: 3 // thicker lines for hachure
+  fill: 'rgb(10,150,10)',
+  fillWeight: 3, // thicker lines for hachure
 });
 rc.rectangle(220, 15, 80, 80, {
   fill: 'red',
   hachureAngle: 60, // angle of hachure,
-  hachureGap: 8
+  hachureGap: 8,
 });
 rc.rectangle(120, 105, 80, 80, {
   fill: 'rgba(255,0,200,0.2)',
-  fillStyle: 'solid' // solid fill
+  fillStyle: 'solid', // solid fill
 });
 ```
 
@@ -152,4 +150,5 @@ Support this project with your organization. Your logo will show up here with a 
 <a href="https://opencollective.com/rough/organization/9/website"><img src="https://opencollective.com/rough/organization/9/avatar.svg"></a>
 
 ## License
+
 [MIT License](https://github.com/pshihn/rough/blob/master/LICENSE) (c) [Preet Shihn](https://twitter.com/preetster)
