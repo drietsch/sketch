@@ -147,8 +147,18 @@ rc.rectangle(10, 10, 80, 80, { seed: 42 }); // identical on every render
 rc.rectangle(10, 10, 80, 80, { seed: newSeed() }); // different each time
 ```
 
-All seven fill styles honour the seed. In 4.x, `fillStyle: 'dots'` did not —
-see the changelog.
+Identical arguments always produce an identical drawing, so repeated calls with
+no `seed` look the same — pass `seed: newSeed()` where you want variety. Every
+drawing reports the seed that produced it:
+
+```js
+const drawable = gen.rectangle(10, 10, 80, 80);
+drawable.options.seed; // replay this later to get the same shape
+```
+
+All seven fill styles honour the seed. In 4.x, `fillStyle: 'dots'` did not, and
+drawings made with default options could not be reproduced at all — see the
+changelog.
 
 ## TypeScript
 

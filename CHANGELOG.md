@@ -23,6 +23,20 @@ affected**. Migration is opt-in; see the table in the README.
   referenced all three classes, so importing it forced bundlers to retain the
   canvas backend even in SVG-only applications.
 - **Node 24 or newer**, declared via `engines`.
+- **`Config` is gone.** Constructors take `Options` directly:
+  `new RoughCanvas(el, { seed: 42 })` rather than
+  `new RoughCanvas(el, { options: { seed: 42 } })`.
+- **Repeated calls with identical arguments now produce identical drawings.**
+  Previously a call made *without* an options object reused the generator's
+  accumulating random stream while a call made *with* one got a fresh stream, so
+  the same arguments rendered differently depending only on whether options were
+  passed. A `Drawable` is now a pure function of its arguments and options; pass
+  `seed: newSeed()` where per-call variety is wanted.
+- **`fillStyle` is typed** as its seven real values instead of `string`, so a
+  typo'd fill style fails to compile rather than silently falling back to
+  hachure.
+- Removed unused public types: `Config`, `DrawingSurface`, `Rectangle`, and
+  `OpSet.size` / `OpSet.path` (never written or read).
 
 ### Fixed
 
@@ -38,6 +52,12 @@ affected**. Migration is opt-in; see the table in the README.
 - **`toPaths()` honours `fixedDecimalPlaceDigits`.** It ignored the option
   entirely, while both backends respected it, so `PathInfo.d` came back at full
   precision no matter what was requested.
+- **Drawings made with default options are reproducible.** The default seed of
+  `0` made the PRNG fall back to `Math.random()` on every draw, and
+  `drawable.options.seed` reported `0` — a value that could not reproduce it. A
+  generator now materialises a real seed and reports it.
+- **Drawing no longer mutates the generator.** `defaultOptions` silently
+  acquired a `Random` instance as a side effect of rendering.
 - A whitespace-collapsing `String.replace` in the SVG path parser passed a
   string literal instead of a regular expression and had therefore never run.
   Corrected; behaviour is unchanged, because the path parser already tolerates
@@ -76,8 +96,6 @@ affected**. Migration is opt-in; see the table in the README.
   2^30 yields `0.5` forever and power-of-two seeds start near zero. Inherited
   from upstream and deliberately not changed: a different multiplier would
   re-render every seeded drawing in existence.
-- Calling a shape with no options object reuses the generator's random stream,
-  while calling it with options does not. Being addressed in a later release.
 
 ---
 
