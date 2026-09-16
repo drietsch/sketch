@@ -1,4 +1,4 @@
-import type { Config, Options, ResolvedOptions, Drawable, OpSet } from './core.js';
+import type { Options, ResolvedOptions, Drawable, OpSet } from './core.js';
 import { RoughGenerator } from './generator.js';
 import { fillRuleFor } from './options.js';
 import type { Point } from './geometry.js';
@@ -8,10 +8,10 @@ export class RoughCanvas {
   private canvas: HTMLCanvasElement;
   private ctx: CanvasRenderingContext2D;
 
-  constructor(canvas: HTMLCanvasElement, config?: Config) {
+  constructor(canvas: HTMLCanvasElement, options?: Options) {
     this.canvas = canvas;
     this.ctx = this.canvas.getContext('2d')!;
-    this.gen = new RoughGenerator(config);
+    this.gen = new RoughGenerator(options);
   }
 
   draw(drawable: Drawable): void {

@@ -1,16 +1,8 @@
-import type { Point } from './geometry.js';
 import type { Random } from './math.js';
 
 export const SVGNS = 'http://www.w3.org/2000/svg';
 
-export interface Config {
-  options?: Options;
-}
-
-export interface DrawingSurface {
-  width: number | SVGAnimatedLength;
-  height: number | SVGAnimatedLength;
-}
+export type FillStyle = 'hachure' | 'solid' | 'zigzag' | 'cross-hatch' | 'dots' | 'dashed' | 'zigzag-line';
 
 export interface Options {
   maxRandomnessOffset?: number;
@@ -22,7 +14,7 @@ export interface Options {
   curveTightness?: number;
   curveStepCount?: number;
   fill?: string;
-  fillStyle?: string;
+  fillStyle?: FillStyle;
   fillWeight?: number;
   hachureAngle?: number;
   hachureGap?: number;
@@ -51,7 +43,7 @@ export interface ResolvedOptions extends Options {
   curveFitting: number;
   curveTightness: number;
   curveStepCount: number;
-  fillStyle: string;
+  fillStyle: FillStyle;
   fillWeight: number;
   hachureAngle: number;
   hachureGap: number;
@@ -66,8 +58,8 @@ export interface ResolvedOptions extends Options {
   fillShapeRoughnessGain: number;
 }
 
-export declare type OpType = 'move' | 'bcurveTo' | 'lineTo';
-export declare type OpSetType = 'path' | 'fillPath' | 'fillSketch';
+export type OpType = 'move' | 'bcurveTo' | 'lineTo';
+export type OpSetType = 'path' | 'fillPath' | 'fillSketch';
 
 export interface Op {
   op: OpType;
@@ -77,8 +69,6 @@ export interface Op {
 export interface OpSet {
   type: OpSetType;
   ops: Op[];
-  size?: Point;
-  path?: string;
 }
 
 export interface Drawable {

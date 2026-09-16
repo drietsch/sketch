@@ -1,4 +1,4 @@
-import type { Config, Options, Drawable, OpSet, Op, ResolvedOptions, PathInfo } from './core.js';
+import type { Options, Drawable, OpSet, Op, ResolvedOptions, PathInfo } from './core.js';
 import type { Point } from './geometry.js';
 import {
   line,
@@ -21,8 +21,6 @@ import { pointsOnPath } from 'points-on-path';
 const NOS = 'none';
 
 export class RoughGenerator {
-  private config: Config;
-
   defaultOptions: ResolvedOptions = {
     maxRandomnessOffset: 2,
     roughness: 1,
@@ -46,10 +44,9 @@ export class RoughGenerator {
     fillShapeRoughnessGain: 0.8,
   };
 
-  constructor(config?: Config) {
-    this.config = config || {};
-    if (this.config.options) {
-      this.defaultOptions = this._o(this.config.options);
+  constructor(options?: Options) {
+    if (options) {
+      this.defaultOptions = this._o(options);
     }
   }
 
@@ -175,19 +172,19 @@ export class RoughGenerator {
         if (inputPoints.length) {
           const p1 = inputPoints[0];
           const pointsList = typeof p1[0] === 'number' ? [inputPoints as Point[]] : (inputPoints as Point[][]);
-          for (const points of pointsList) {
-            if (points.length < 3) {
-              polyPoints.push(...points);
-            } else if (points.length === 3) {
+          for (const curvePoints of pointsList) {
+            if (curvePoints.length < 3) {
+              polyPoints.push(...curvePoints);
+            } else if (curvePoints.length === 3) {
               polyPoints.push(
                 ...pointsOnBezierCurves(
-                  curveToBezier([points[0], points[0], points[1], points[2]]),
+                  curveToBezier([curvePoints[0], curvePoints[0], curvePoints[1], curvePoints[2]]),
                   10,
                   (1 + o.roughness) / 2,
                 ),
               );
             } else {
-              polyPoints.push(...pointsOnBezierCurves(curveToBezier(points), 10, (1 + o.roughness) / 2));
+              polyPoints.push(...pointsOnBezierCurves(curveToBezier(curvePoints), 10, (1 + o.roughness) / 2));
             }
           }
         }

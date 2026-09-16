@@ -23,7 +23,7 @@
     "typescript/no-inferrable-types": "off",
     "typescript/consistent-type-imports": "error",
     "eslint/no-underscore-dangle": "off",
-    "eslint/no-shadow": "warn"
+    "eslint/no-shadow": "error"
   },
   "ignorePatterns": ["dist/", "coverage/", "node_modules/", "visual-tests/"],
   "overrides": [

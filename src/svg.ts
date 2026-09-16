@@ -1,4 +1,4 @@
-import type { Config, Options, OpSet, ResolvedOptions, Drawable } from './core.js';
+import type { Options, OpSet, ResolvedOptions, Drawable } from './core.js';
 import { SVGNS } from './core.js';
 import { RoughGenerator } from './generator.js';
 import { fillRuleFor } from './options.js';
@@ -8,9 +8,9 @@ export class RoughSVG {
   private gen: RoughGenerator;
   private svg: SVGSVGElement;
 
-  constructor(svg: SVGSVGElement, config?: Config) {
+  constructor(svg: SVGSVGElement, options?: Options) {
     this.svg = svg;
-    this.gen = new RoughGenerator(config);
+    this.gen = new RoughGenerator(options);
   }
 
   draw(drawable: Drawable): SVGGElement {

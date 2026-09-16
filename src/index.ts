@@ -12,6 +12,6 @@ export { RoughSVG } from './svg.js';
 export { Random, randomSeed, randomSeed as newSeed } from './math.js';
 export { SVGNS } from './core.js';
 
-export type { Config, Options, ResolvedOptions, Drawable, OpSet, OpSetType, Op, OpType, PathInfo } from './core.js';
+export type { FillStyle, Options, ResolvedOptions, Drawable, OpSet, OpSetType, Op, OpType, PathInfo } from './core.js';
 export type { Point, Line } from './geometry.js';
 export type { PatternFiller, RenderHelper } from './fillers/filler-interface.js';
