@@ -1,0 +1,106 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint, typecheck, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+
+      # Deliberately no `registry-url`: it makes setup-node write an .npmrc
+      # containing _authToken=${NODE_AUTH_TOKEN}, which the npm CLI then prefers
+      # over an OIDC token exchange, breaking trusted publishing with a
+      # misleading E404. Kept consistent with release.yml.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint
+      - run: pnpm run format:check
+      - run: pnpm run typecheck
+      - run: pnpm run build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  test:
+    name: Test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [24, 26]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # --ci makes a missing snapshot a failure rather than a silent write, so a
+      # golden that was never committed cannot pass.
+      - run: pnpm exec vitest run --project unit --project backend --project determinism --ci
+
+      # Proves the published bundle behaves identically to the source it was
+      # built from: a mis-resolved dependency or wrong target cannot pass here.
+      - run: pnpm run build
+      - run: pnpm run test:dist
+
+  package:
+    name: Verify published tarball
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build
+
+      - name: publint
+        run: pnpm exec publint
+
+      - name: Are the types wrong?
+        run: pnpm exec attw --pack .
+
+      - name: Assert nothing unwanted ships in the tarball
+        run: |
+          set -euo pipefail
+          npm pack --dry-run --json --ignore-scripts > /tmp/pack.json
+          node -e "
+            const files = require('/tmp/pack.json')[0].files.map(f => f.path);
+            console.log(files.join('\n'));
+            const forbidden = ['src/', 'test/', 'visual-tests/', '.github/',
+                               'tsconfig.json', '.oxlintrc.json', 'pnpm-lock.yaml'];
+            const leaked = files.filter(f => forbidden.some(p => f.startsWith(p)));
+            if (leaked.length) {
+              console.error('::error::tarball contains: ' + leaked.join(', '));
+              process.exit(1);
+            }
+          "
