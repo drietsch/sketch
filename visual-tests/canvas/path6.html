@@ -11,9 +11,9 @@
   <canvas width="800" height="800"></canvas>
 
   <script type="module">
-    import rough from '../../bin/rough.js';
+    import { RoughCanvas, RoughSVG } from '../../dist/index.js';
     const canvas = document.querySelector('canvas');
-    const rc = rough.canvas(canvas);
+    const rc = new RoughCanvas(canvas);
 
     const roughness = 2;
     const path = `M 32 0 L 153.96380615234375 0 Q 185.96380615234375 0, 185.96380615234375 32 L 185.96380615234375 157.74319458007812 Q 185.96380615234375 189.74319458007812, 153.96380615234375 189.74319458007812 L 32 189.74319458007812 Q 0 189.74319458007812, 0 157.74319458007812 L 0 32 Q 0 0, 32 0`;

@@ -13,10 +13,10 @@
   <canvas width="960" height="500"></canvas>
 
   <script type="module">
-    import rough from '../../bin/rough.js';
+    import { RoughCanvas, RoughSVG } from '../../dist/index.js';
 
     const canvas = document.querySelector('canvas');
-    const rc = rough.canvas(canvas, {
+    const rc = new RoughCanvas(canvas, {
       options: {
         simplification: 0.1,
         roughness: 0.65

@@ -11,9 +11,9 @@
   <canvas width="800" height="800"></canvas>
 
   <script type="module">
-    import rough from '../../bin/rough.js';
+    import { RoughCanvas, RoughSVG } from '../../dist/index.js';
     const canvas = document.querySelector('canvas');
-    const rc = rough.canvas(canvas);
+    const rc = new RoughCanvas(canvas);
 
     rc.line(10, 10, 100, 10);
     rc.line(10, 210, 500, 210);

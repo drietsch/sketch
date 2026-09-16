@@ -11,9 +11,9 @@
   <canvas width="800" height="800"></canvas>
 
   <script type="module">
-    import rough from '../../bin/rough.js';
+    import { RoughCanvas, RoughSVG } from '../../dist/index.js';
     const canvas = document.querySelector('canvas');
-    const rc = rough.canvas(canvas);
+    const rc = new RoughCanvas(canvas);
     const ctx = canvas.getContext('2d');
 
     const ops = { roughness: 1, fill: 'red', };

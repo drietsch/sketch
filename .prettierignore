@@ -3,8 +3,7 @@ coverage/
 node_modules/
 pnpm-lock.yaml
 CHANGELOG.md
-# Legacy manual demo gallery, replaced by the Playwright harness. Not formatted
-# because these files are scheduled for deletion, not maintenance.
+# Hand-maintained demo gallery; left in its original formatting.
 visual-tests/
 test/**/__snapshots__/
 test/visual/__screenshots__/
