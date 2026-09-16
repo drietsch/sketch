@@ -48,6 +48,13 @@ export class RoughGenerator {
     if (options) {
       this.defaultOptions = this._o(options);
     }
+    // Materialise a concrete seed once, so that a generator created without one
+    // still produces reproducible drawings and reports the seed that made them.
+    // Previously the default seed of 0 made Random fall back to Math.random on
+    // every draw, so nothing drawn with default options could be reproduced.
+    if (!this.defaultOptions.seed) {
+      this.defaultOptions.seed = randomSeed();
+    }
   }
 
   static newSeed(): number {
@@ -55,7 +62,13 @@ export class RoughGenerator {
   }
 
   private _o(options?: Options): ResolvedOptions {
-    return options ? Object.assign({}, this.defaultOptions, options) : this.defaultOptions;
+    // Always a fresh object, never this.defaultOptions by reference. renderer.ts
+    // lazily attaches a `randomizer` to whatever it is handed, so returning the
+    // shared defaults let one mutable random stream accumulate across every call
+    // made without an options argument -- while calls made WITH options got a
+    // fresh stream. Identical arguments therefore produced different drawings
+    // depending on whether an options object was passed at all.
+    return Object.assign({}, this.defaultOptions, options);
   }
 
   private _d(shape: string, sets: OpSet[], options: ResolvedOptions): Drawable {
