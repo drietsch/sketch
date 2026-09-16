@@ -1,7 +1,7 @@
-import { PatternFiller, RenderHelper } from './filler-interface';
-import { ResolvedOptions, OpSet, Op } from '../core';
-import { Point, Line } from '../geometry';
-import { polygonHachureLines } from './scan-line-hachure';
+import type { PatternFiller, RenderHelper } from './filler-interface.js';
+import type { ResolvedOptions, OpSet, Op } from '../core.js';
+import type { Point, Line } from '../geometry.js';
+import { polygonHachureLines } from './scan-line-hachure.js';
 
 export class HachureFiller implements PatternFiller {
   private helper: RenderHelper;
@@ -27,6 +27,4 @@ export class HachureFiller implements PatternFiller {
     }
     return ops;
   }
-
-
 }

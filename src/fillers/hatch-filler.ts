@@ -1,9 +1,9 @@
-import { HachureFiller } from './hachure-filler';
-import { ResolvedOptions, OpSet } from '../core';
-import { Point } from '../geometry';
+import { HachureFiller } from './hachure-filler.js';
+import type { ResolvedOptions, OpSet } from '../core.js';
+import type { Point } from '../geometry.js';
 
 export class HatchFiller extends HachureFiller {
-  fillPolygons(polygonList: Point[][], o: ResolvedOptions): OpSet {
+  override fillPolygons(polygonList: Point[][], o: ResolvedOptions): OpSet {
     const set = this._fillPolygons(polygonList, o);
     const o2 = Object.assign({}, o, { hachureAngle: o.hachureAngle + 90 });
     const set2 = this._fillPolygons(polygonList, o2);

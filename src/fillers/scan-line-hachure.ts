@@ -1,6 +1,6 @@
 import { hachureLines } from 'hachure-fill';
-import { Point, Line } from '../geometry';
-import { ResolvedOptions } from '../core';
+import type { Point, Line } from '../geometry.js';
+import type { ResolvedOptions } from '../core.js';
 
 export function polygonHachureLines(polygonList: Point[][], o: ResolvedOptions): Line[] {
   const angle = o.hachureAngle + 90;

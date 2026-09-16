@@ -1,6 +1,7 @@
-import { Config, Options, OpSet, ResolvedOptions, Drawable, SVGNS } from './core';
-import { RoughGenerator } from './generator';
-import { Point } from './geometry';
+import type { Config, Options, OpSet, ResolvedOptions, Drawable } from './core.js';
+import { SVGNS } from './core.js';
+import { RoughGenerator } from './generator.js';
+import type { Point } from './geometry.js';
 
 export class RoughSVG {
   private gen: RoughGenerator;
@@ -118,7 +119,16 @@ export class RoughSVG {
     return this.draw(d);
   }
 
-  arc(x: number, y: number, width: number, height: number, start: number, stop: number, closed: boolean = false, options?: Options): SVGGElement {
+  arc(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    start: number,
+    stop: number,
+    closed: boolean = false,
+    options?: Options,
+  ): SVGGElement {
     const d = this.gen.arc(x, y, width, height, start, stop, closed, options);
     return this.draw(d);
   }

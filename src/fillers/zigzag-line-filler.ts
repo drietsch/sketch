@@ -1,7 +1,8 @@
-import { PatternFiller, RenderHelper } from './filler-interface';
-import { ResolvedOptions, OpSet, Op } from '../core';
-import { Point, Line, lineLength } from '../geometry';
-import { polygonHachureLines } from './scan-line-hachure';
+import type { PatternFiller, RenderHelper } from './filler-interface.js';
+import type { ResolvedOptions, OpSet, Op } from '../core.js';
+import type { Point, Line } from '../geometry.js';
+import { lineLength } from '../geometry.js';
+import { polygonHachureLines } from './scan-line-hachure.js';
 
 export class ZigZagLineFiller implements PatternFiller {
   private helper: RenderHelper;
@@ -11,7 +12,7 @@ export class ZigZagLineFiller implements PatternFiller {
   }
 
   fillPolygons(polygonList: Point[][], o: ResolvedOptions): OpSet {
-    const gap = o.hachureGap < 0 ? (o.strokeWidth * 4) : o.hachureGap;
+    const gap = o.hachureGap < 0 ? o.strokeWidth * 4 : o.hachureGap;
     const zo = o.zigzagOffset < 0 ? gap : o.zigzagOffset;
     o = Object.assign({}, o, { hachureGap: gap + zo });
     const lines = polygonHachureLines(polygonList, o);
@@ -34,12 +35,15 @@ export class ZigZagLineFiller implements PatternFiller {
         const lstart = i * 2 * zo;
         const lend = (i + 1) * 2 * zo;
         const dz = Math.sqrt(2 * Math.pow(zo, 2));
-        const start: Point = [p1[0] + (lstart * Math.cos(alpha)), p1[1] + lstart * Math.sin(alpha)];
-        const end: Point = [p1[0] + (lend * Math.cos(alpha)), p1[1] + (lend * Math.sin(alpha))];
-        const middle: Point = [start[0] + dz * Math.cos(alpha + Math.PI / 4), start[1] + dz * Math.sin(alpha + Math.PI / 4)];
+        const start: Point = [p1[0] + lstart * Math.cos(alpha), p1[1] + lstart * Math.sin(alpha)];
+        const end: Point = [p1[0] + lend * Math.cos(alpha), p1[1] + lend * Math.sin(alpha)];
+        const middle: Point = [
+          start[0] + dz * Math.cos(alpha + Math.PI / 4),
+          start[1] + dz * Math.sin(alpha + Math.PI / 4),
+        ];
         ops.push(
           ...this.helper.doubleLineOps(start[0], start[1], middle[0], middle[1], o),
-          ...this.helper.doubleLineOps(middle[0], middle[1], end[0], end[1], o)
+          ...this.helper.doubleLineOps(middle[0], middle[1], end[0], end[1], o),
         );
       }
     });

@@ -1,6 +1,6 @@
-import { Config, Options, ResolvedOptions, Drawable, OpSet } from './core';
-import { RoughGenerator } from './generator';
-import { Point } from './geometry';
+import type { Config, Options, ResolvedOptions, Drawable, OpSet } from './core.js';
+import { RoughGenerator } from './generator.js';
+import type { Point } from './geometry.js';
 
 export class RoughCanvas {
   private gen: RoughGenerator;
@@ -36,7 +36,10 @@ export class RoughCanvas {
         case 'fillPath': {
           ctx.save();
           ctx.fillStyle = o.fill || '';
-          const fillRule: CanvasFillRule = (drawable.shape === 'curve' || drawable.shape === 'polygon' || drawable.shape === 'path') ? 'evenodd' : 'nonzero';
+          const fillRule: CanvasFillRule =
+            drawable.shape === 'curve' || drawable.shape === 'polygon' || drawable.shape === 'path'
+              ? 'evenodd'
+              : 'nonzero';
           this._drawToContext(ctx, drawing, precision, fillRule);
           ctx.restore();
           break;
@@ -66,10 +69,18 @@ export class RoughCanvas {
     ctx.restore();
   }
 
-  private _drawToContext(ctx: CanvasRenderingContext2D, drawing: OpSet, fixedDecimals?: number, rule: CanvasFillRule = 'nonzero') {
+  private _drawToContext(
+    ctx: CanvasRenderingContext2D,
+    drawing: OpSet,
+    fixedDecimals?: number,
+    rule: CanvasFillRule = 'nonzero',
+  ) {
     ctx.beginPath();
     for (const item of drawing.ops) {
-      const data = ((typeof fixedDecimals === 'number') && fixedDecimals >= 0) ? (item.data.map((d) => +d.toFixed(fixedDecimals))) : item.data;
+      const data =
+        typeof fixedDecimals === 'number' && fixedDecimals >= 0
+          ? item.data.map((d) => +d.toFixed(fixedDecimals))
+          : item.data;
       switch (item.op) {
         case 'move':
           ctx.moveTo(data[0], data[1]);
@@ -133,7 +144,16 @@ export class RoughCanvas {
     return d;
   }
 
-  arc(x: number, y: number, width: number, height: number, start: number, stop: number, closed: boolean = false, options?: Options): Drawable {
+  arc(
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    start: number,
+    stop: number,
+    closed: boolean = false,
+    options?: Options,
+  ): Drawable {
     const d = this.gen.arc(x, y, width, height, start, stop, closed, options);
     this.draw(d);
     return d;

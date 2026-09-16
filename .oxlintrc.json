@@ -1,5 +1,10 @@
 {
-  "plugins": ["typescript", "oxc", "unicorn", "promise"],
+  "plugins": [
+    "typescript",
+    "oxc",
+    "unicorn",
+    "promise"
+  ],
   "categories": {
     "correctness": "error",
     "suspicious": "error",
@@ -14,21 +19,31 @@
     "es2022": true
   },
   "rules": {
-    "eslint/eqeqeq": ["error", "always"],
+    "eslint/eqeqeq": [
+      "error",
+      "always"
+    ],
     "eslint/no-eval": "error",
     "eslint/no-var": "error",
     "eslint/prefer-const": "error",
     "eslint/no-useless-escape": "warn",
     "typescript/no-unused-vars": "error",
     "typescript/no-inferrable-types": "off",
-    "typescript/consistent-type-imports": "warn",
+    "typescript/consistent-type-imports": "error",
     "eslint/no-underscore-dangle": "off",
     "eslint/no-shadow": "warn"
   },
-  "ignorePatterns": ["dist/", "coverage/", "node_modules/", "visual-tests/"],
+  "ignorePatterns": [
+    "dist/",
+    "coverage/",
+    "node_modules/",
+    "visual-tests/"
+  ],
   "overrides": [
     {
-      "files": ["test/**/*.ts"],
+      "files": [
+        "test/**/*.ts"
+      ],
       "rules": {
         "typescript/no-non-null-assertion": "off"
       }
