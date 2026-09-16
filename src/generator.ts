@@ -225,7 +225,10 @@ export class RoughGenerator {
     if (!d) {
       return this._d('path', paths, o);
     }
-    d = (d || '').replace(/\n/g, ' ').replace(/(-\s)/g, '-').replace('/(s\s)/g', ' ');
+    // This last replace was a string literal, not a regex, for the library's
+    // entire history: '/(\s\s)/g' evaluates to the 7-character text /(ss)/g,
+    // which never occurs in path data, so runs of whitespace were never collapsed.
+    d = (d || '').replace(/\n/g, ' ').replace(/(-\s)/g, '-').replace(/\s\s+/g, ' ');
 
     const hasFill = o.fill && o.fill !== 'transparent' && o.fill !== NOS;
     const hasStroke = o.stroke !== NOS;

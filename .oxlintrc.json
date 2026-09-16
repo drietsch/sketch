@@ -18,7 +18,7 @@
     "eslint/no-eval": "error",
     "eslint/no-var": "error",
     "eslint/prefer-const": "error",
-    "eslint/no-useless-escape": "warn",
+    "eslint/no-useless-escape": "error",
     "typescript/no-unused-vars": "error",
     "typescript/no-inferrable-types": "off",
     "typescript/consistent-type-imports": "error",
