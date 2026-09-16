@@ -68,6 +68,26 @@ jobs:
       - run: pnpm run build
       - run: pnpm run test:dist
 
+  pages:
+    name: Render visual-test pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - run: pnpm run build
+
+      # Loads all 50 pages in a real browser and asserts each renders without a
+      # console or page error. Not pixel comparison -- it catches broken builds,
+      # missing exports and silent render failures.
+      - run: pnpm run verify:pages
+
   package:
     name: Verify published tarball
     runs-on: ubuntu-latest
