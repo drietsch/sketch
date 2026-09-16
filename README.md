@@ -1,47 +1,76 @@
-# Rough.js
+# @drietsch/roughjs
 
-<b>Rough.js</b> is a small (\<9 kB) graphics library that lets you draw in a _sketchy_, _hand-drawn-like_, style.
-The library defines primitives to draw lines, curves, arcs, polygons, circles, and ellipses. It also supports drawing [SVG paths](https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths).
+**Rough.js** is a small graphics library that lets you draw in a _sketchy_,
+_hand-drawn-like_ style. It works with both Canvas and SVG.
 
-Rough.js works with both [Canvas](https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API) and [SVG](https://developer.mozilla.org/en-US/docs/Web/SVG).
-
-![Rough.js sample](https://roughjs.com/images/cap_demo.png)
-
-[@RoughLib](https://twitter.com/RoughLib) on Twitter.
+> **This is a maintained fork of [rough-stuff/rough](https://github.com/rough-stuff/rough)**,
+> which has had no code changes since November 2023. It is ESM-only, has zero
+> runtime dependencies, and is published as `@drietsch/roughjs`.
+>
+> The original `roughjs` package is unaffected and keeps working exactly as it
+> does today — see [Migrating from roughjs 4.x](#migrating-from-roughjs-4x).
 
 ## Install
 
-from npm:
-
-```
-npm install --save roughjs
+```bash
+npm install @drietsch/roughjs
 ```
 
-Or get the latest using unpkg: https://unpkg.com/roughjs@latest/bundled/rough.js
+**This is an ESM-only package.** There is no CommonJS build, no UMD/IIFE build,
+and no deep import paths. `require()` will fail. Requires Node 24 or newer, or
+any browser with native ES modules and ES2022.
 
-If you are looking for bundled version in different formats, the npm package will have these in the following locations:
+### Browser / CDN
 
-CommonJS: `roughjs/bundled/rough.cjs.js`
+Always pin an exact version — never `@latest` in a URL your users load.
 
-ESM: `roughjs/bundled/rough.esm.js`
+```html
+<script type="module">
+  import { RoughCanvas } from 'https://esm.sh/@drietsch/roughjs@5.0.0';
 
-Browser IIFE: `roughjs/bundled/rough.js`
+  const rc = new RoughCanvas(document.getElementById('canvas'));
+  rc.rectangle(10, 10, 200, 200);
+</script>
+```
+
+jsDelivr works too:
+
+```js
+import { RoughCanvas } from 'https://cdn.jsdelivr.net/npm/@drietsch/roughjs@5.0.0/+esm';
+```
+
+The bundle is 12.3 kB gzipped (unminified — your bundler minifies it).
 
 ## Usage
 
 ![Rough.js rectangle](https://roughjs.com/images/m1.png)
 
 ```js
-const rc = rough.canvas(document.getElementById('canvas'));
+import { RoughCanvas } from '@drietsch/roughjs';
+
+const rc = new RoughCanvas(document.getElementById('canvas'));
 rc.rectangle(10, 10, 200, 200); // x, y, width, height
 ```
 
 or SVG
 
 ```js
-const rc = rough.svg(svg);
-let node = rc.rectangle(10, 10, 200, 200); // x, y, width, height
+import { RoughSVG } from '@drietsch/roughjs';
+
+const rc = new RoughSVG(svg);
+const node = rc.rectangle(10, 10, 200, 200); // x, y, width, height
 svg.appendChild(node);
+```
+
+or headless — `RoughGenerator` needs no DOM at all and renders nothing itself,
+which makes it usable in Node:
+
+```js
+import { RoughGenerator } from '@drietsch/roughjs';
+
+const gen = new RoughGenerator();
+const drawable = gen.rectangle(10, 10, 200, 200, { seed: 42 });
+const paths = gen.toPaths(drawable); // [{ d, stroke, strokeWidth, fill }]
 ```
 
 ### Lines and Ellipses
@@ -76,7 +105,8 @@ rc.rectangle(120, 105, 80, 80, {
 });
 ```
 
-Fill styles can be: **hachure**(default), **solid**, **zigzag**, **cross-hatch**, **dots**, **dashed**, or **zigzag-line**
+Fill styles can be: **hachure** (default), **solid**, **zigzag**,
+**cross-hatch**, **dots**, **dashed**, or **zigzag-line**.
 
 ![Rough.js fill examples](https://roughjs.com/images/m14.png)
 
@@ -105,50 +135,68 @@ SVG Path with simplification:
 
 ![Rough.js texas map](https://roughjs.com/images/m9.png) ![Rough.js texas map](https://roughjs.com/images/m10.png)
 
-## Examples
+### Reproducible drawings
 
-![Rough.js US map](https://roughjs.com/images/m6.png)
+Every shape is randomised. Pass an explicit non-zero `seed` to get the same
+drawing every time — useful for tests, snapshots, and anything cached.
 
-[View examples here](https://github.com/pshihn/rough/wiki/Examples)
+```js
+import { newSeed } from '@drietsch/roughjs';
 
-## API & Documentation
+rc.rectangle(10, 10, 80, 80, { seed: 42 }); // identical on every render
+rc.rectangle(10, 10, 80, 80, { seed: newSeed() }); // different each time
+```
 
-[Full Rough.js API](https://github.com/pshihn/rough/wiki)
+All seven fill styles honour the seed. In 4.x, `fillStyle: 'dots'` did not —
+see the changelog.
+
+## TypeScript
+
+Types ship with the package and are reachable from the root import, which was
+not the case in 4.x:
+
+```ts
+import type { Options, Drawable, OpSet, PathInfo, Point } from '@drietsch/roughjs';
+```
+
+## Migrating from roughjs 4.x
+
+`@drietsch/roughjs` is a separate npm package, so nothing you have today breaks.
+`roughjs@4.6.6` keeps working exactly as it does now, and migration is opt-in.
+
+| roughjs 4.x                                                | @drietsch/roughjs 5.x                             |
+| ---------------------------------------------------------- | ------------------------------------------------- |
+| `require('roughjs')`                                       | not supported — use `import`                      |
+| `require('roughjs/bundled/rough.cjs.js')`                  | not supported — use `import`                      |
+| `import rough from 'roughjs/bundled/rough.esm.js'`         | `import { RoughCanvas } from '@drietsch/roughjs'` |
+| `rough.canvas(el)`                                         | `new RoughCanvas(el)`                             |
+| `rough.svg(el)`                                            | `new RoughSVG(el)`                                |
+| `rough.generator()`                                        | `new RoughGenerator()`                            |
+| `rough.newSeed()`                                          | `newSeed()` (named export)                        |
+| `<script src="unpkg.com/roughjs@latest/bundled/rough.js">` | `<script type="module">` with an esm.sh import    |
+| `import { RoughCanvas } from 'roughjs'` — did not work     | now works                                         |
+| `import type { Options } from 'roughjs'` — did not work    | now works                                         |
+
+Behaviour changes are listed in [CHANGELOG.md](./CHANGELOG.md).
+
+## API & documentation
+
+The [upstream wiki](https://github.com/rough-stuff/rough/wiki) documents the
+drawing API, which this fork keeps unchanged apart from the entry points above.
 
 ## Credits
 
-Some of the core algorithms were adapted from [handy](https://www.gicentre.net/software/#/handy/) processing lib.
+Rough.js was created by [Preet Shihn](https://github.com/pshihn). The sketching
+algorithm is derived from Handy, a Processing library by Jo Wood, Petra Isenberg,
+Tobias Isenberg, Sheelagh Carpendale, Jason Dykes and Aidan Slingsby.
 
-Algorithm to convert SVG arcs to Canvas [described here](https://www.w3.org/TR/SVG/implnote.html) was adapted from [Mozilla codebase](https://hg.mozilla.org/mozilla-central/file/17156fbebbc8/content/svg/content/src/nsSVGPathDataParser.cpp#l887)
+This fork bundles four MIT-licensed packages by the same author —
+`hachure-fill`, `path-data-parser`, `points-on-curve` and `points-on-path` —
+see [THIRD-PARTY-NOTICES.md](./THIRD-PARTY-NOTICES.md).
 
-## Contributors
-
-### Financial Contributors
-
-Become a financial contributor and help us sustain our community. [[Contribute](https://opencollective.com/rough/contribute)]
-
-#### Individuals
-
-<a href="https://opencollective.com/rough"><img src="https://opencollective.com/rough/individuals.svg?width=890"></a>
-
-#### Organizations
-
-Support this project with your organization. Your logo will show up here with a link to your website. [[Contribute](https://opencollective.com/rough/contribute)]
-
-<a href="https://excalidraw.com/"><img src="https://avatars.githubusercontent.com/u/59452120?s=64&v=4"></a>
-<a href="https://www.diagrams.net/"><img src="https://avatars.githubusercontent.com/u/1769238?s=64&v=4"></a>
-<a href="https://terrastruct.com/"><img width="64" height="64" src="https://roughjs.com/images/sponsors/terrastruct.png"></a>
-<a href="https://opencollective.com/rough/organization/0/website"><img src="https://opencollective.com/rough/organization/0/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/1/website"><img src="https://opencollective.com/rough/organization/1/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/2/website"><img src="https://opencollective.com/rough/organization/2/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/3/website"><img src="https://opencollective.com/rough/organization/3/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/4/website"><img src="https://opencollective.com/rough/organization/4/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/5/website"><img src="https://opencollective.com/rough/organization/5/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/6/website"><img src="https://opencollective.com/rough/organization/6/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/7/website"><img src="https://opencollective.com/rough/organization/7/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/8/website"><img src="https://opencollective.com/rough/organization/8/avatar.svg"></a>
-<a href="https://opencollective.com/rough/organization/9/website"><img src="https://opencollective.com/rough/organization/9/avatar.svg"></a>
+Sponsorship goes to the upstream project on
+[Open Collective](https://opencollective.com/rough).
 
 ## License
 
-[MIT License](https://github.com/pshihn/rough/blob/master/LICENSE) (c) [Preet Shihn](https://twitter.com/preetster)
+[MIT](./LICENSE) © Preet Shihn, and contributors to this fork.
