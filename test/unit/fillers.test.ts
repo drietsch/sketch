@@ -92,16 +92,21 @@ describe('getFiller', () => {
     expect(unknown.constructor.name).toBe(hachure.constructor.name);
   });
 
-  test('CURRENT BEHAVIOUR: instances are cached in a module-level singleton', () => {
-    // filler.ts:10 keeps `const fillers = {}` at module scope, so every
-    // RoughGenerator in the process shares one filler instance and the helper
-    // captured by whichever generator constructed it first wins permanently.
-    // Replacing the cache with per-call construction flips this assertion.
+  test('returns a fresh instance bound to the helper it was given', () => {
+    // filler.ts used to memoise instances in a module-level map, so every filler
+    // was a process-wide singleton holding whichever RenderHelper reached it
+    // first -- later generators silently drew through another generator's helper.
     const a = stubHelper();
     const b = stubHelper();
-    expect(getFiller(options({ fillStyle: 'zigzag' }), a.helper)).toBe(
-      getFiller(options({ fillStyle: 'zigzag' }), b.helper),
-    );
+
+    const first = getFiller(options({ fillStyle: 'zigzag' }), a.helper);
+    const second = getFiller(options({ fillStyle: 'zigzag' }), b.helper);
+    expect(first).not.toBe(second);
+
+    const o = options({ fillStyle: 'zigzag', hachureGap: 20 });
+    second.fillPolygons(SQUARE, o);
+    expect(b.calls.length).toBeGreaterThan(0);
+    expect(a.calls).toHaveLength(0);
   });
 });
 
