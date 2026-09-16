@@ -41,7 +41,7 @@ const server = createServer(async (req, res) => {
 await new Promise((r) => server.listen(0, r));
 const port = server.address().port;
 
-const pages = execSync('find visual-tests -name "*.html"').toString().trim().split('\n').sort();
+const pages = execSync('find visual-tests -name "*.html"').toString().trim().split('\n').toSorted();
 
 // Interactive playgrounds that deliberately render nothing until driven.
 const INTERACTIVE = new Set(['visual-tests/canvas/path5.html']);

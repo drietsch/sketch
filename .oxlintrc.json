@@ -32,6 +32,13 @@
       "rules": {
         "typescript/no-non-null-assertion": "off"
       }
+    },
+    {
+      "files": ["scripts/**/*.mjs"],
+      "rules": {
+        "unicorn/consistent-function-scoping": "off",
+        "eslint/no-await-in-loop": "off"
+      }
     }
   ]
 }
