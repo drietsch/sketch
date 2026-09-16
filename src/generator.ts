@@ -291,13 +291,17 @@ export class RoughGenerator {
   toPaths(drawable: Drawable): PathInfo[] {
     const sets = drawable.sets || [];
     const o = drawable.options || this.defaultOptions;
+    // Both backends forward this to opsToPath (svg.ts:66, canvas.ts:65); toPaths
+    // used to drop it, so PathInfo.d ignored the option that the rendered output
+    // honoured.
+    const precision = o.fixedDecimalPlaceDigits;
     const paths: PathInfo[] = [];
     for (const drawing of sets) {
       let path: PathInfo | null = null;
       switch (drawing.type) {
         case 'path':
           path = {
-            d: this.opsToPath(drawing),
+            d: this.opsToPath(drawing, precision),
             stroke: o.stroke,
             strokeWidth: o.strokeWidth,
             fill: NOS,
@@ -305,7 +309,7 @@ export class RoughGenerator {
           break;
         case 'fillPath':
           path = {
-            d: this.opsToPath(drawing),
+            d: this.opsToPath(drawing, precision),
             stroke: NOS,
             strokeWidth: 0,
             fill: o.fill || NOS,
@@ -328,7 +332,7 @@ export class RoughGenerator {
       fweight = o.strokeWidth / 2;
     }
     return {
-      d: this.opsToPath(drawing),
+      d: this.opsToPath(drawing, o.fixedDecimalPlaceDigits),
       stroke: o.fill || NOS,
       strokeWidth: fweight,
       fill: NOS,

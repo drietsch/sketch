@@ -1,6 +1,7 @@
 import type { Config, Options, OpSet, ResolvedOptions, Drawable } from './core.js';
 import { SVGNS } from './core.js';
 import { RoughGenerator } from './generator.js';
+import { fillRuleFor } from './options.js';
 import type { Point } from './geometry.js';
 
 export class RoughSVG {
@@ -41,8 +42,9 @@ export class RoughSVG {
           path.setAttribute('stroke', 'none');
           path.setAttribute('stroke-width', '0');
           path.setAttribute('fill', o.fill || '');
-          if (drawable.shape === 'curve' || drawable.shape === 'polygon') {
-            path.setAttribute('fill-rule', 'evenodd');
+          const fillRule = fillRuleFor(drawable.shape);
+          if (fillRule === 'evenodd') {
+            path.setAttribute('fill-rule', fillRule);
           }
           break;
         }

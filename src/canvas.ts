@@ -1,5 +1,6 @@
 import type { Config, Options, ResolvedOptions, Drawable, OpSet } from './core.js';
 import { RoughGenerator } from './generator.js';
+import { fillRuleFor } from './options.js';
 import type { Point } from './geometry.js';
 
 export class RoughCanvas {
@@ -36,11 +37,7 @@ export class RoughCanvas {
         case 'fillPath': {
           ctx.save();
           ctx.fillStyle = o.fill || '';
-          const fillRule: CanvasFillRule =
-            drawable.shape === 'curve' || drawable.shape === 'polygon' || drawable.shape === 'path'
-              ? 'evenodd'
-              : 'nonzero';
-          this._drawToContext(ctx, drawing, precision, fillRule);
+          this._drawToContext(ctx, drawing, precision, fillRuleFor(drawable.shape));
           ctx.restore();
           break;
         }

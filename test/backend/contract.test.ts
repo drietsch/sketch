@@ -80,12 +80,12 @@ describe('canvas op dispatch', () => {
 
 describe('generator.toPaths', () => {
   /**
-   * Acceptance test for bug 4: generator.ts:262,270,293 all call
-   * this.opsToPath(drawing) with no precision argument, while svg.ts:66 and
-   * canvas.ts:65 both forward o.fixedDecimalPlaceDigits. So toPaths() silently
-   * ignores the option. Forwarding it flips this to a normal assertion.
+   * FIXED: toPaths() used to call opsToPath(drawing) with no precision argument
+   * at all three sites, while svg.ts:66 and canvas.ts:65 both forwarded
+   * o.fixedDecimalPlaceDigits -- so PathInfo.d ignored an option the rendered
+   * output honoured.
    */
-  test.fails('honours fixedDecimalPlaceDigits', () => {
+  test('honours fixedDecimalPlaceDigits', () => {
     const g = new RoughGenerator();
     const drawable = g.rectangle(10, 10, 80, 60, { seed: 11, fixedDecimalPlaceDigits: 1 });
 

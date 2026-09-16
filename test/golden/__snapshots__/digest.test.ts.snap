@@ -1107,7 +1107,7 @@ exports[`'arc-closed' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "1e5d1749993f87f8",
+  "sha256": "e0171d26c0a79add",
 }
 `;
 
@@ -2418,7 +2418,7 @@ exports[`'arc-negative' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "10afc64fe8dce71e",
+  "sha256": "3864c2dda24cec1d",
 }
 `;
 
@@ -3543,7 +3543,7 @@ exports[`'arc-open' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "92c4022a06bc3f76",
+  "sha256": "c0f3800f0f64d4dc",
 }
 `;
 
@@ -4846,7 +4846,7 @@ exports[`'arc-overfull' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "fa99727616c2395c",
+  "sha256": "7f8d1447e5b4a18d",
 }
 `;
 
@@ -6157,7 +6157,7 @@ exports[`'circle' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "925dbc68ffaf5153",
+  "sha256": "0b1e3f9d8db2084c",
 }
 `;
 
@@ -7468,7 +7468,7 @@ exports[`'curve' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "228bd8451581552d",
+  "sha256": "31f35e00690da98e",
 }
 `;
 
@@ -8779,7 +8779,7 @@ exports[`'curve-3pt' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "32637eb180de0b74",
+  "sha256": "8132998c8d49d005",
 }
 `;
 
@@ -10090,7 +10090,7 @@ exports[`'curve-multi' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "0ebe64e19c788b73",
+  "sha256": "028e0c3ecffd9c89",
 }
 `;
 
@@ -11401,7 +11401,7 @@ exports[`'ellipse' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "a3c9947f5fdd8d1b",
+  "sha256": "c2c596410de3604c",
 }
 `;
 
@@ -12712,7 +12712,7 @@ exports[`'ellipse-big' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "4cbf429867e815d0",
+  "sha256": "d2d6cb2a0e323811",
 }
 `;
 
@@ -13837,7 +13837,7 @@ exports[`'line' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "810d3d6b3a17bba1",
+  "sha256": "8ffa0d22d076dd8a",
 }
 `;
 
@@ -14962,7 +14962,7 @@ exports[`'line-long' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "f6e33f6df7b49fd0",
+  "sha256": "ce368da72e92c4c8",
 }
 `;
 
@@ -16087,7 +16087,7 @@ exports[`'line-mid' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "a186c134df4d46e8",
+  "sha256": "8664da9dfe9a9376",
 }
 `;
 
@@ -17212,7 +17212,7 @@ exports[`'linearPath' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "78b70dccc08113ae",
+  "sha256": "968f47599707fccc",
 }
 `;
 
@@ -18337,7 +18337,7 @@ exports[`'linearPath-2pt' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "7c8ce6cc73febda2",
+  "sha256": "5cd4131cf50b155d",
 }
 `;
 
@@ -19648,7 +19648,7 @@ exports[`'path' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "877b1251630652d0",
+  "sha256": "259a951a81b858a1",
 }
 `;
 
@@ -21724,7 +21724,7 @@ exports[`'path-multi' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "2f4c82feffaa7380",
+  "sha256": "e7bf9460b61b758b",
 }
 `;
 
@@ -23047,7 +23047,7 @@ exports[`'polygon' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "5749bfdc4705f05b",
+  "sha256": "7af06ee35c849148",
 }
 `;
 
@@ -24358,7 +24358,7 @@ exports[`'rect-tiny' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "4d4a30cc0ece7116",
+  "sha256": "acaeedf9a59c129e",
 }
 `;
 
@@ -25669,7 +25669,7 @@ exports[`'rectangle' > 'fixedDecimals-2' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "a95e96b504450507",
+  "sha256": "ef2d050c000709a7",
 }
 `;
 

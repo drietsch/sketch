@@ -13,8 +13,8 @@ import type { Drawable } from '../../src/core.js';
  * svg.ts:43 applies it for 'curve' | 'polygon' only -- 'path' is missing.
  * So the same Drawable renders differently depending on the backend.
  *
- * 'path' is marked test.fails to pin the defect. Extracting a shared
- * fillRuleFor() used by both backends flips it to a normal assertion.
+ * FIXED: both backends now call the shared fillRuleFor() in options.ts, so they
+ * cannot drift apart again. All shapes assert normally.
  */
 const FILL = { fill: '#e74c3c', fillStyle: 'solid', seed: 99 } as const;
 
@@ -62,9 +62,7 @@ function svgFillRule(drawable: Drawable): string {
 }
 
 describe.each(Object.keys(SHAPES))('%s', (shape) => {
-  const known = shape === 'path' ? test.fails : test;
-
-  known('canvas and svg agree on the fill rule', () => {
+  test('canvas and svg agree on the fill rule', () => {
     const drawable = SHAPES[shape](new RoughGenerator());
 
     const { canvas, calls } = recordingCanvas();
