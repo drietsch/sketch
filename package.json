@@ -64,7 +64,8 @@
     "version-packages": "changeset version && pnpm install --lockfile-only",
     "prepack": "pnpm run build",
     "test:dist": "vitest run --project dist",
-    "verify:pages": "node scripts/verify-pages.mjs"
+    "verify:pages": "node scripts/verify-pages.mjs",
+    "verify:package": "node scripts/verify-package.mjs"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.18.5",

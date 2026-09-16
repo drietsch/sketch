@@ -17,8 +17,20 @@ npm install @drietsch/roughjs
 ```
 
 **This is an ESM-only package.** There is no CommonJS build, no UMD/IIFE build,
-and no deep import paths. `require()` will fail. Requires Node 24 or newer, or
-any browser with native ES modules and ES2022.
+and no `roughjs/bundled/*` deep import paths. Requires Node 24 or newer, or any
+browser with native ES modules and ES2022.
+
+`require()` does still work on supported Node versions — Node has supported
+requiring an ES module since 22.12, and it returns the full named-export
+namespace:
+
+```js
+const { RoughGenerator } = require('@drietsch/roughjs'); // works on Node >= 22.12
+```
+
+Bundlers and tools that resolve only the legacy `main` field will not find an
+entry point, because this package ships an `exports` map with no `require`
+condition.
 
 ### Browser / CDN
 
@@ -176,8 +188,8 @@ import type { Options, Drawable, OpSet, PathInfo, Point } from '@drietsch/roughj
 
 | roughjs 4.x                                                | @drietsch/roughjs 5.x                             |
 | ---------------------------------------------------------- | ------------------------------------------------- |
-| `require('roughjs')`                                       | not supported — use `import`                      |
-| `require('roughjs/bundled/rough.cjs.js')`                  | not supported — use `import`                      |
+| `require('roughjs')`                                       | works on Node >= 22.12, returns the named exports |
+| `require('roughjs/bundled/rough.cjs.js')`                  | gone — the path no longer exists                  |
 | `import rough from 'roughjs/bundled/rough.esm.js'`         | `import { RoughCanvas } from '@drietsch/roughjs'` |
 | `rough.canvas(el)`                                         | `new RoughCanvas(el)`                             |
 | `rough.svg(el)`                                            | `new RoughSVG(el)`                                |

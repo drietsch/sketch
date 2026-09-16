@@ -109,6 +109,12 @@ jobs:
       - name: Are the types wrong?
         run: pnpm exec attw --pack .
 
+      # Packs, installs into a throwaway project and runs it. publint and attw
+      # both passed a build that shipped four unresolved bare imports, so this
+      # is the gate that actually proves the package is installable.
+      - name: Verify the installed package
+        run: pnpm run verify:package
+
       - name: Assert nothing unwanted ships in the tarball
         run: |
           set -euo pipefail

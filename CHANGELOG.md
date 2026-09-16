@@ -15,7 +15,10 @@ affected**. Migration is opt-in; see the table in the README.
 
 - **ESM only.** The CommonJS and UMD/IIFE builds are gone, along with the
   `roughjs/bundled/*` deep import paths. The package declares `"type": "module"`
-  and a real `exports` map, so `require()` fails with a clear error.
+  and an `exports` map with no `require` condition. Note that `require()` itself
+  still works on every supported Node version, since Node has supported
+  requiring an ES module since 22.12 — but tools that resolve only the legacy
+  `main` field will no longer find an entry point.
 - **Named exports replace the default object.** `rough.canvas(el)` becomes
   `new RoughCanvas(el)`, `rough.svg(el)` becomes `new RoughSVG(el)`,
   `rough.generator()` becomes `new RoughGenerator()`, and `rough.newSeed()`
