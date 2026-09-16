@@ -1,18 +1,20 @@
 {
-  "name": "roughjs",
-  "version": "4.6.6",
-  "description": "Create graphics using HTML Canvas or SVG with a hand-drawn, sketchy, appearance.",
-  "main": "bundled/rough.cjs.js",
-  "module": "bundled/rough.esm.js",
-  "types": "bin/rough.d.ts",
-  "scripts": {
-    "build": "rm -rf bin && tsc && rollup -c",
-    "lint": "eslint --ext ts src",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "name": "@drietsch/roughjs",
+  "version": "5.0.0",
+  "description": "Create graphics using HTML Canvas or SVG with a hand-drawn, sketchy appearance. Maintained ESM-only fork of roughjs.",
+  "type": "module",
+  "license": "MIT",
+  "author": "Dietmar Rietsch <dietmar.rietsch@pimcore.com>",
+  "contributors": [
+    "Preet Shihn <preetshihn@gmail.com> (original author of roughjs)"
+  ],
+  "homepage": "https://github.com/drietsch/roughjs#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/pshihn/rough.git"
+    "url": "https://github.com/drietsch/roughjs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/drietsch/roughjs/issues"
   },
   "keywords": [
     "canvas",
@@ -20,29 +22,63 @@
     "graphics",
     "sketchy",
     "hand drawn",
-    "hand-drawn"
+    "hand-drawn",
+    "esm",
+    "roughjs"
   ],
-  "author": "Preet Shihn <preetshihn@gmail.com>",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/pshihn/rough/issues"
+  "sideEffects": false,
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
-  "homepage": "https://roughjs.com",
+  "files": [
+    "dist",
+    "CHANGELOG.md",
+    "THIRD-PARTY-NOTICES.md"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@10.28.0",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run typecheck && pnpm run test && pnpm run build",
+    "changeset": "changeset",
+    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "prepack": "pnpm run build"
+  },
   "devDependencies": {
-    "@rollup/plugin-node-resolve": "^13.0.6",
-    "@rollup/plugin-typescript": "^8.3.0",
-    "@typescript-eslint/eslint-plugin": "^4.33.0",
-    "@typescript-eslint/parser": "^4.33.0",
-    "eslint": "^7.32.0",
-    "rollup": "^2.61.0",
-    "rollup-plugin-terser": "^7.0.2",
-    "tslib": "^2.3.1",
-    "typescript": "^4.5.3"
-  },
-  "dependencies": {
+    "@arethetypeswrong/cli": "^0.18.5",
+    "@changesets/cli": "^3.0.3",
+    "@playwright/test": "^1.63.0",
+    "@vitest/coverage-v8": "^4.1.11",
     "hachure-fill": "^0.5.2",
+    "happy-dom": "^20.14.5",
+    "oxlint": "^1.83.0",
     "path-data-parser": "^0.1.0",
     "points-on-curve": "^0.2.0",
-    "points-on-path": "^0.2.1"
+    "points-on-path": "^0.2.1",
+    "prettier": "^3.9.7",
+    "publint": "^0.3.24",
+    "tsdown": "^0.23.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.11"
   }
 }

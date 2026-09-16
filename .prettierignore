@@ -1,0 +1,8 @@
+dist/
+coverage/
+node_modules/
+pnpm-lock.yaml
+CHANGELOG.md
+visual-tests/canvas/us.json
+test/**/__snapshots__/
+test/visual/__screenshots__/
