@@ -411,7 +411,7 @@ exports[`'arc-closed' > 'fill-dots' > drawable 1`] = `
     "fillSketch:6006",
     "path:22",
   ],
-  "sha256": "98f8ab16493195f6",
+  "sha256": "01f811cdba25cf28",
   "shape": "arc",
 }
 `;
@@ -431,7 +431,7 @@ exports[`'arc-closed' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "ad59aafaaa7e5c26",
+  "sha256": "8a093068fb7524f0",
 }
 `;
 
@@ -442,7 +442,7 @@ exports[`'arc-closed' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:528",
     "path:22",
   ],
-  "sha256": "c52970fa3433647a",
+  "sha256": "2dfc808610ddf653",
   "shape": "arc",
 }
 `;
@@ -462,7 +462,7 @@ exports[`'arc-closed' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "41bfe4e7ae3e30db",
+  "sha256": "103211700d03aa8d",
 }
 `;
 
@@ -473,7 +473,7 @@ exports[`'arc-closed' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:6006",
     "path:22",
   ],
-  "sha256": "ef7edc732f0d2bc7",
+  "sha256": "a774d18f2087d009",
   "shape": "arc",
 }
 `;
@@ -493,7 +493,7 @@ exports[`'arc-closed' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "280d4730a63b175c",
+  "sha256": "15e20511e0ab95aa",
 }
 `;
 
@@ -504,7 +504,7 @@ exports[`'arc-closed' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:6006",
     "path:22",
   ],
-  "sha256": "98f8ab16493195f6",
+  "sha256": "01f811cdba25cf28",
   "shape": "arc",
 }
 `;
@@ -524,7 +524,7 @@ exports[`'arc-closed' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "ad59aafaaa7e5c26",
+  "sha256": "8a093068fb7524f0",
 }
 `;
 
@@ -1722,7 +1722,7 @@ exports[`'arc-negative' > 'fill-dots' > drawable 1`] = `
     "fillSketch:6622",
     "path:22",
   ],
-  "sha256": "ae4664b5b68b9887",
+  "sha256": "25cc7379438ff902",
   "shape": "arc",
 }
 `;
@@ -1742,7 +1742,7 @@ exports[`'arc-negative' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "d1e396f1d5908775",
+  "sha256": "7cebcafddc2c06dd",
 }
 `;
 
@@ -1753,7 +1753,7 @@ exports[`'arc-negative' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:682",
     "path:22",
   ],
-  "sha256": "a3bcdb884e37c2fd",
+  "sha256": "a65ba59e9a1a82a7",
   "shape": "arc",
 }
 `;
@@ -1773,7 +1773,7 @@ exports[`'arc-negative' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "91998b6d32627b93",
+  "sha256": "025acbab409f62ac",
 }
 `;
 
@@ -1784,7 +1784,7 @@ exports[`'arc-negative' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:6622",
     "path:22",
   ],
-  "sha256": "4def1fef83058a5d",
+  "sha256": "06dcd7ce0c698b3c",
   "shape": "arc",
 }
 `;
@@ -1804,7 +1804,7 @@ exports[`'arc-negative' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "496dc5aab793e136",
+  "sha256": "3a26ba52e542d747",
 }
 `;
 
@@ -1815,7 +1815,7 @@ exports[`'arc-negative' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:6622",
     "path:22",
   ],
-  "sha256": "ae4664b5b68b9887",
+  "sha256": "25cc7379438ff902",
   "shape": "arc",
 }
 `;
@@ -1835,7 +1835,7 @@ exports[`'arc-negative' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "d1e396f1d5908775",
+  "sha256": "7cebcafddc2c06dd",
 }
 `;
 
@@ -4150,7 +4150,7 @@ exports[`'arc-overfull' > 'fill-dots' > drawable 1`] = `
     "fillSketch:18216",
     "path:46",
   ],
-  "sha256": "736a11b57aa0b4e1",
+  "sha256": "38457a0b7698f2a5",
   "shape": "arc",
 }
 `;
@@ -4170,7 +4170,7 @@ exports[`'arc-overfull' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "7e10d61754dde0c6",
+  "sha256": "9b8984e6bf50a0a4",
 }
 `;
 
@@ -4181,7 +4181,7 @@ exports[`'arc-overfull' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:1826",
     "path:46",
   ],
-  "sha256": "51d3050d38c17f58",
+  "sha256": "419d4d4e013ff470",
   "shape": "arc",
 }
 `;
@@ -4201,7 +4201,7 @@ exports[`'arc-overfull' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "5eb5fcfeda3b4503",
+  "sha256": "dbd6f458ac4e5da4",
 }
 `;
 
@@ -4212,7 +4212,7 @@ exports[`'arc-overfull' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:18216",
     "path:46",
   ],
-  "sha256": "e6a7461669aad466",
+  "sha256": "06c2c7d421e7bd36",
   "shape": "arc",
 }
 `;
@@ -4232,7 +4232,7 @@ exports[`'arc-overfull' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "0024a4a9926241e3",
+  "sha256": "2a831b61b0a0bed1",
 }
 `;
 
@@ -4243,7 +4243,7 @@ exports[`'arc-overfull' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:18216",
     "path:46",
   ],
-  "sha256": "736a11b57aa0b4e1",
+  "sha256": "38457a0b7698f2a5",
   "shape": "arc",
 }
 `;
@@ -4263,7 +4263,7 @@ exports[`'arc-overfull' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "7e10d61754dde0c6",
+  "sha256": "9b8984e6bf50a0a4",
 }
 `;
 
@@ -5461,7 +5461,7 @@ exports[`'circle' > 'fill-dots' > drawable 1`] = `
     "fillSketch:14432",
     "path:30",
   ],
-  "sha256": "12d16704a03ba310",
+  "sha256": "f3069a42142892e3",
   "shape": "circle",
 }
 `;
@@ -5481,7 +5481,7 @@ exports[`'circle' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "c37a9295d2f73240",
+  "sha256": "9141e3d0c58e67ee",
 }
 `;
 
@@ -5492,7 +5492,7 @@ exports[`'circle' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:1518",
     "path:30",
   ],
-  "sha256": "f36074dfdb2dd08a",
+  "sha256": "88f8f65f3eab01fc",
   "shape": "circle",
 }
 `;
@@ -5512,7 +5512,7 @@ exports[`'circle' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "86a1413f6fc5231e",
+  "sha256": "4a6bce03feaf9f8c",
 }
 `;
 
@@ -5523,7 +5523,7 @@ exports[`'circle' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:14432",
     "path:30",
   ],
-  "sha256": "403f924783eec52c",
+  "sha256": "8096330ebfb0131d",
   "shape": "circle",
 }
 `;
@@ -5543,7 +5543,7 @@ exports[`'circle' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "3c3b991a6450bb4c",
+  "sha256": "d3400a4dfc184c61",
 }
 `;
 
@@ -5554,7 +5554,7 @@ exports[`'circle' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:14432",
     "path:30",
   ],
-  "sha256": "12d16704a03ba310",
+  "sha256": "f3069a42142892e3",
   "shape": "circle",
 }
 `;
@@ -5574,7 +5574,7 @@ exports[`'circle' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "c37a9295d2f73240",
+  "sha256": "9141e3d0c58e67ee",
 }
 `;
 
@@ -6772,7 +6772,7 @@ exports[`'curve' > 'fill-dots' > drawable 1`] = `
     "fillSketch:41030",
     "path:12",
   ],
-  "sha256": "3dc64a275f4b3447",
+  "sha256": "a12ad966fea5e993",
   "shape": "curve",
 }
 `;
@@ -6792,7 +6792,7 @@ exports[`'curve' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "ff8c15718ce40b4b",
+  "sha256": "cbebd7e6e91eff95",
 }
 `;
 
@@ -6803,7 +6803,7 @@ exports[`'curve' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:4290",
     "path:12",
   ],
-  "sha256": "8beb2096744f7dfc",
+  "sha256": "6134ac07b87d2d29",
   "shape": "curve",
 }
 `;
@@ -6823,7 +6823,7 @@ exports[`'curve' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "cc2e49d5975e0d84",
+  "sha256": "ce76226418b58193",
 }
 `;
 
@@ -6834,7 +6834,7 @@ exports[`'curve' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:41030",
     "path:12",
   ],
-  "sha256": "df6cb0dddc8da9f2",
+  "sha256": "ceaa370a702f327e",
   "shape": "curve",
 }
 `;
@@ -6854,7 +6854,7 @@ exports[`'curve' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "7c7dd73a9e81c688",
+  "sha256": "b8af12f5336dac0d",
 }
 `;
 
@@ -6865,7 +6865,7 @@ exports[`'curve' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:41030",
     "path:12",
   ],
-  "sha256": "3dc64a275f4b3447",
+  "sha256": "a12ad966fea5e993",
   "shape": "curve",
 }
 `;
@@ -6885,7 +6885,7 @@ exports[`'curve' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "ff8c15718ce40b4b",
+  "sha256": "cbebd7e6e91eff95",
 }
 `;
 
@@ -8083,7 +8083,7 @@ exports[`'curve-3pt' > 'fill-dots' > drawable 1`] = `
     "fillSketch:6908",
     "path:6",
   ],
-  "sha256": "1f180504577b0d81",
+  "sha256": "dc01832d0b076abc",
   "shape": "curve",
 }
 `;
@@ -8103,7 +8103,7 @@ exports[`'curve-3pt' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "fee61b0000534bc1",
+  "sha256": "16618977ca60603f",
 }
 `;
 
@@ -8114,7 +8114,7 @@ exports[`'curve-3pt' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:682",
     "path:6",
   ],
-  "sha256": "55a391d17fc5aa1f",
+  "sha256": "406714f3e23332a4",
   "shape": "curve",
 }
 `;
@@ -8134,7 +8134,7 @@ exports[`'curve-3pt' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "3ac84687a8bf2998",
+  "sha256": "61f7d85c4c23c0ab",
 }
 `;
 
@@ -8145,7 +8145,7 @@ exports[`'curve-3pt' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:6908",
     "path:6",
   ],
-  "sha256": "548d04deb5287e7e",
+  "sha256": "231eb7efb1e5553c",
   "shape": "curve",
 }
 `;
@@ -8165,7 +8165,7 @@ exports[`'curve-3pt' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "1bb7b78545930525",
+  "sha256": "655a7ef8a4cb3747",
 }
 `;
 
@@ -8176,7 +8176,7 @@ exports[`'curve-3pt' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:6908",
     "path:6",
   ],
-  "sha256": "1f180504577b0d81",
+  "sha256": "dc01832d0b076abc",
   "shape": "curve",
 }
 `;
@@ -8196,7 +8196,7 @@ exports[`'curve-3pt' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "fee61b0000534bc1",
+  "sha256": "16618977ca60603f",
 }
 `;
 
@@ -9394,7 +9394,7 @@ exports[`'curve-multi' > 'fill-dots' > drawable 1`] = `
     "fillSketch:36080",
     "path:16",
   ],
-  "sha256": "806c5263256c8857",
+  "sha256": "f62c1d93903996ba",
   "shape": "curve",
 }
 `;
@@ -9414,7 +9414,7 @@ exports[`'curve-multi' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "be9ce516a494e5bd",
+  "sha256": "af2ef63c28e224d0",
 }
 `;
 
@@ -9425,7 +9425,7 @@ exports[`'curve-multi' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:3696",
     "path:16",
   ],
-  "sha256": "25be66e54e557fae",
+  "sha256": "7e6451a9ed5fc2f2",
   "shape": "curve",
 }
 `;
@@ -9445,7 +9445,7 @@ exports[`'curve-multi' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "b1a119ae377387f3",
+  "sha256": "a0f152f4836c137a",
 }
 `;
 
@@ -9456,7 +9456,7 @@ exports[`'curve-multi' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:36080",
     "path:16",
   ],
-  "sha256": "c61bb836afed2ecb",
+  "sha256": "b92c9a563b775506",
   "shape": "curve",
 }
 `;
@@ -9476,7 +9476,7 @@ exports[`'curve-multi' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "caf9287baaeae74f",
+  "sha256": "d86c2d2dbd36b3aa",
 }
 `;
 
@@ -9487,7 +9487,7 @@ exports[`'curve-multi' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:36080",
     "path:16",
   ],
-  "sha256": "806c5263256c8857",
+  "sha256": "f62c1d93903996ba",
   "shape": "curve",
 }
 `;
@@ -9507,7 +9507,7 @@ exports[`'curve-multi' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "be9ce516a494e5bd",
+  "sha256": "af2ef63c28e224d0",
 }
 `;
 
@@ -10705,7 +10705,7 @@ exports[`'ellipse' > 'fill-dots' > drawable 1`] = `
     "fillSketch:14234",
     "path:30",
   ],
-  "sha256": "99952c2e22cad33b",
+  "sha256": "37830efa03b286ce",
   "shape": "ellipse",
 }
 `;
@@ -10725,7 +10725,7 @@ exports[`'ellipse' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "1b4816d0d4bb4ac4",
+  "sha256": "cba6258b24556d50",
 }
 `;
 
@@ -10736,7 +10736,7 @@ exports[`'ellipse' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:1496",
     "path:30",
   ],
-  "sha256": "f49edd4edda821fe",
+  "sha256": "eaf12b00b74cb42f",
   "shape": "ellipse",
 }
 `;
@@ -10756,7 +10756,7 @@ exports[`'ellipse' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "2488430a315fa9a0",
+  "sha256": "269c586d5f511ecb",
 }
 `;
 
@@ -10767,7 +10767,7 @@ exports[`'ellipse' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:14234",
     "path:30",
   ],
-  "sha256": "8d725f527eb8bbb2",
+  "sha256": "61f6591cb0c11af5",
   "shape": "ellipse",
 }
 `;
@@ -10787,7 +10787,7 @@ exports[`'ellipse' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "0942f977161f8fb2",
+  "sha256": "5ca1f5ab6d4be3eb",
 }
 `;
 
@@ -10798,7 +10798,7 @@ exports[`'ellipse' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:14234",
     "path:30",
   ],
-  "sha256": "99952c2e22cad33b",
+  "sha256": "37830efa03b286ce",
   "shape": "ellipse",
 }
 `;
@@ -10818,7 +10818,7 @@ exports[`'ellipse' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "1b4816d0d4bb4ac4",
+  "sha256": "cba6258b24556d50",
 }
 `;
 
@@ -12016,7 +12016,7 @@ exports[`'ellipse-big' > 'fill-dots' > drawable 1`] = `
     "fillSketch:512556",
     "path:64",
   ],
-  "sha256": "a6a8d8f898a815f1",
+  "sha256": "9f23104c4b89d4ac",
   "shape": "ellipse",
 }
 `;
@@ -12036,7 +12036,7 @@ exports[`'ellipse-big' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "c47878d10ff23d2f",
+  "sha256": "4190045c8e913b06",
 }
 `;
 
@@ -12047,7 +12047,7 @@ exports[`'ellipse-big' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:56518",
     "path:64",
   ],
-  "sha256": "cdf141106a94b9a0",
+  "sha256": "735145fc8ceb171d",
   "shape": "ellipse",
 }
 `;
@@ -12067,7 +12067,7 @@ exports[`'ellipse-big' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "34d901a20557d97d",
+  "sha256": "b1ace55a64f1b714",
 }
 `;
 
@@ -12078,7 +12078,7 @@ exports[`'ellipse-big' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:512556",
     "path:64",
   ],
-  "sha256": "9e387dc6c7ea9810",
+  "sha256": "29a3712f2ccdb33e",
   "shape": "ellipse",
 }
 `;
@@ -12098,7 +12098,7 @@ exports[`'ellipse-big' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "de58835f126fdd9c",
+  "sha256": "4e428d012fa4effa",
 }
 `;
 
@@ -12109,7 +12109,7 @@ exports[`'ellipse-big' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:512556",
     "path:64",
   ],
-  "sha256": "a6a8d8f898a815f1",
+  "sha256": "9f23104c4b89d4ac",
   "shape": "ellipse",
 }
 `;
@@ -12129,7 +12129,7 @@ exports[`'ellipse-big' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "c47878d10ff23d2f",
+  "sha256": "4190045c8e913b06",
 }
 `;
 
@@ -18952,7 +18952,7 @@ exports[`'path' > 'fill-dots' > drawable 1`] = `
     "fillSketch:2002",
     "path:12",
   ],
-  "sha256": "5983e1e666038c9a",
+  "sha256": "2d31c6dad37689b9",
   "shape": "path",
 }
 `;
@@ -18972,7 +18972,7 @@ exports[`'path' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "7bd538b272a15957",
+  "sha256": "29637bb3e4f2f8cd",
 }
 `;
 
@@ -18983,7 +18983,7 @@ exports[`'path' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:132",
     "path:12",
   ],
-  "sha256": "8a1ad320926aeb3d",
+  "sha256": "297edabc0979891f",
   "shape": "path",
 }
 `;
@@ -19003,7 +19003,7 @@ exports[`'path' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "0eaedac1321c366a",
+  "sha256": "e5f75f4ab67cc703",
 }
 `;
 
@@ -19014,7 +19014,7 @@ exports[`'path' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:2002",
     "path:12",
   ],
-  "sha256": "b8613c879320bb0d",
+  "sha256": "8595111abf38d807",
   "shape": "path",
 }
 `;
@@ -19034,7 +19034,7 @@ exports[`'path' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "280c9ac79622b1eb",
+  "sha256": "18f26ecb4850339a",
 }
 `;
 
@@ -19045,7 +19045,7 @@ exports[`'path' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:2002",
     "path:12",
   ],
-  "sha256": "5983e1e666038c9a",
+  "sha256": "2d31c6dad37689b9",
   "shape": "path",
 }
 `;
@@ -19065,7 +19065,7 @@ exports[`'path' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "7bd538b272a15957",
+  "sha256": "29637bb3e4f2f8cd",
 }
 `;
 
@@ -21028,7 +21028,7 @@ exports[`'path-multi' > 'fill-dots' > drawable 1`] = `
     "fillSketch:2486",
     "path:52",
   ],
-  "sha256": "2b47cf610d871444",
+  "sha256": "857b2ed04af548ee",
   "shape": "path",
 }
 `;
@@ -21048,7 +21048,7 @@ exports[`'path-multi' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "967f78b04213fb9a",
+  "sha256": "d647c61be247d7b2",
 }
 `;
 
@@ -21059,7 +21059,7 @@ exports[`'path-multi' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:220",
     "path:52",
   ],
-  "sha256": "a06daf7af004faa5",
+  "sha256": "4b6324acce9f37a3",
   "shape": "path",
 }
 `;
@@ -21079,7 +21079,7 @@ exports[`'path-multi' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "de506e922c749f86",
+  "sha256": "3caffe0ee590951e",
 }
 `;
 
@@ -21090,7 +21090,7 @@ exports[`'path-multi' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:2486",
     "path:52",
   ],
-  "sha256": "b1dd9ce57ab8a922",
+  "sha256": "4af52c93c8e00d90",
   "shape": "path",
 }
 `;
@@ -21110,7 +21110,7 @@ exports[`'path-multi' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "61ef664f4a509381",
+  "sha256": "f434577d3b29375a",
 }
 `;
 
@@ -21121,7 +21121,7 @@ exports[`'path-multi' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:2486",
     "path:52",
   ],
-  "sha256": "2b47cf610d871444",
+  "sha256": "857b2ed04af548ee",
   "shape": "path",
 }
 `;
@@ -21141,7 +21141,7 @@ exports[`'path-multi' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "967f78b04213fb9a",
+  "sha256": "d647c61be247d7b2",
 }
 `;
 
@@ -22351,7 +22351,7 @@ exports[`'polygon' > 'fill-dots' > drawable 1`] = `
     "fillSketch:23584",
     "path:20",
   ],
-  "sha256": "762d959277ca6817",
+  "sha256": "75156f4da17a3b29",
   "shape": "polygon",
 }
 `;
@@ -22371,7 +22371,7 @@ exports[`'polygon' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "68f8f9bf53e32553",
+  "sha256": "aef5e36f67563db3",
 }
 `;
 
@@ -22382,7 +22382,7 @@ exports[`'polygon' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:2530",
     "path:20",
   ],
-  "sha256": "8e000fbdd32af09b",
+  "sha256": "29d547e7a7b60204",
   "shape": "polygon",
 }
 `;
@@ -22402,7 +22402,7 @@ exports[`'polygon' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "b8c48f92b88737bf",
+  "sha256": "9d5c5f4ab029122c",
 }
 `;
 
@@ -22413,7 +22413,7 @@ exports[`'polygon' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:23584",
     "path:20",
   ],
-  "sha256": "661de632c94a166e",
+  "sha256": "481c1fc93e40c2b5",
   "shape": "polygon",
 }
 `;
@@ -22433,7 +22433,7 @@ exports[`'polygon' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "d7cb86ac63ae7c43",
+  "sha256": "a41f158515a3ed0c",
 }
 `;
 
@@ -22444,7 +22444,7 @@ exports[`'polygon' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:23584",
     "path:20",
   ],
-  "sha256": "762d959277ca6817",
+  "sha256": "75156f4da17a3b29",
   "shape": "polygon",
 }
 `;
@@ -22464,7 +22464,7 @@ exports[`'polygon' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "68f8f9bf53e32553",
+  "sha256": "aef5e36f67563db3",
 }
 `;
 
@@ -24973,7 +24973,7 @@ exports[`'rectangle' > 'fill-dots' > drawable 1`] = `
     "fillSketch:28072",
     "path:16",
   ],
-  "sha256": "faf9f72d001b5875",
+  "sha256": "22cf204f77f9eff6",
   "shape": "rectangle",
 }
 `;
@@ -24993,7 +24993,7 @@ exports[`'rectangle' > 'fill-dots' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "c3765f9f417a7ab6",
+  "sha256": "1089d23f35f96949",
 }
 `;
 
@@ -25004,7 +25004,7 @@ exports[`'rectangle' > 'fill-dots-ang0-gap12' > drawable 1`] = `
     "fillSketch:2772",
     "path:16",
   ],
-  "sha256": "cc1bf5c93ac34711",
+  "sha256": "275e22a00ec87e1b",
   "shape": "rectangle",
 }
 `;
@@ -25024,7 +25024,7 @@ exports[`'rectangle' > 'fill-dots-ang0-gap12' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "49bb8f7015648dc1",
+  "sha256": "4c50de7bf2888f16",
 }
 `;
 
@@ -25035,7 +25035,7 @@ exports[`'rectangle' > 'fill-dots-ang90-w4' > drawable 1`] = `
     "fillSketch:28072",
     "path:16",
   ],
-  "sha256": "a09fc65f52076a1c",
+  "sha256": "b8d70a3b21dd8db6",
   "shape": "rectangle",
 }
 `;
@@ -25055,7 +25055,7 @@ exports[`'rectangle' > 'fill-dots-ang90-w4' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "3c1e5c1efa640dac",
+  "sha256": "79fa379b7f9850e8",
 }
 `;
 
@@ -25066,7 +25066,7 @@ exports[`'rectangle' > 'fill-dots-single' > drawable 1`] = `
     "fillSketch:28072",
     "path:16",
   ],
-  "sha256": "faf9f72d001b5875",
+  "sha256": "22cf204f77f9eff6",
   "shape": "rectangle",
 }
 `;
@@ -25086,7 +25086,7 @@ exports[`'rectangle' > 'fill-dots-single' > paths 1`] = `
       "strokeWidth": 1,
     },
   ],
-  "sha256": "c3765f9f417a7ab6",
+  "sha256": "1089d23f35f96949",
 }
 `;
 

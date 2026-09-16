@@ -8,6 +8,7 @@ import type { RenderHelper } from '../../src/fillers/filler-interface.js';
 import type { Op, OpSet, ResolvedOptions } from '../../src/core.js';
 import type { Point } from '../../src/geometry.js';
 import { FILL_STYLES } from '../support/cases.js';
+import { Random } from '../../src/math.js';
 
 type Call = readonly [string, ...unknown[]];
 
@@ -112,17 +113,66 @@ describe('DotFiller', () => {
     expect(calls.filter((c) => c[0] === 'ellipse').length).toBeGreaterThan(0);
   });
 
-  test('KNOWN BUG: jitters with Math.random instead of the seeded randomizer', () => {
-    // dot-filler.ts:41-42. This is why fillStyle 'dots' is irreproducible even
-    // with an explicit seed. The fix routes through helper.randOffsetWithRange,
-    // at which point this assertion inverts.
+  test('never reaches for Math.random when a randomizer is present', () => {
+    // dot-filler.ts used to jitter each dot with raw Math.random(), which is why
+    // fillStyle 'dots' was irreproducible even under an explicit seed.
+    //
+    // The randomizer must be attached explicitly here: in normal use renderer.ts
+    // does that lazily, but these tests drive the filler directly, and
+    // scan-line-hachure.ts still falls back to Math.random when none is set.
     const { helper } = stubHelper();
+    const o = options({ fillStyle: 'dots' });
+    o.randomizer = new Random(12345);
+
     const spy = vi.spyOn(Math, 'random');
     spy.mockClear();
 
+    new DotFiller(helper).fillPolygons(SQUARE, o);
+
+    expect(spy).not.toHaveBeenCalled();
+  });
+
+  test('jitters through the injected randomizer', () => {
+    const { helper, calls } = stubHelper();
     new DotFiller(helper).fillPolygons(SQUARE, options({ fillStyle: 'dots' }));
 
-    expect(spy).toHaveBeenCalled();
+    const jitter = calls.filter((c) => c[0] === 'randOffsetWithRange');
+    expect(jitter.length).toBeGreaterThan(0);
+    // two draws per dot, one per axis
+    expect(jitter.length).toBe(calls.filter((c) => c[0] === 'ellipse').length * 2);
+  });
+
+  test('dot jitter now scales with roughness', () => {
+    // A consequence of routing through randOffsetWithRange, which applies
+    // o.roughness (renderer.ts:314). The raw Math.random() version ignored
+    // roughness entirely, so dots were the only fill style that did not respond
+    // to it. Identical at the default roughness of 1.
+    //
+    // The stub reproduces renderer.ts's _offset formula with a fixed draw of
+    // 0.75, isolating the roughness factor.
+    const jitterFor = (roughness: number): number[] => {
+      const { helper } = stubHelper();
+      const seen: number[] = [];
+      const o = options({ fillStyle: 'dots', roughness });
+      o.randomizer = new Random(12345);
+
+      new DotFiller({
+        ...helper,
+        randOffsetWithRange: (min, max, opts) => {
+          const v = opts.roughness * (0.75 * (max - min) + min);
+          seen.push(v);
+          return v;
+        },
+      }).fillPolygons(SQUARE, o);
+      return seen;
+    };
+
+    const atZero = jitterFor(0);
+    const atTwo = jitterFor(2);
+
+    expect(atZero.length).toBeGreaterThan(0);
+    expect(atZero.every((v) => v === 0)).toBe(true);
+    expect(atTwo.some((v) => v !== 0)).toBe(true);
   });
 });
 

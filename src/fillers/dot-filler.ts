@@ -39,8 +39,14 @@ export class DotFiller implements PatternFiller {
 
       for (let i = 0; i < count; i++) {
         const y = minY + offset + i * gap;
-        const cx = x - ro + Math.random() * 2 * ro;
-        const cy = y - ro + Math.random() * 2 * ro;
+        // Was Math.random(), which made a 'dots' fill irreproducible even with an
+        // explicit seed -- every other fill routes through the seeded randomizer.
+        //
+        // Note this also scales the jitter by o.roughness, which the raw
+        // Math.random() version did not: dots now respond to roughness like every
+        // other fill style. Identical at the default roughness of 1.
+        const cx = x + this.helper.randOffsetWithRange(-ro, ro, o);
+        const cy = y + this.helper.randOffsetWithRange(-ro, ro, o);
         const el = this.helper.ellipse(cx, cy, fweight, fweight, o);
         ops.push(...el.ops);
       }
