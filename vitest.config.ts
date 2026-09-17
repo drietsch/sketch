@@ -32,7 +32,7 @@ export default defineConfig({
           name: 'backend',
           include: ['test/backend/**/*.test.ts'],
           environment: 'happy-dom',
-          setupFiles: ['./test/setup/deterministic.ts'],
+          setupFiles: ['./test/setup/no-math-random.ts'],
         },
       },
       {

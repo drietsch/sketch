@@ -24,6 +24,10 @@ import { compile } from './timeline/compile.js';
 import { caretVisible, stateAt } from './timeline/state.js';
 import type { CompiledTimeline, InteractionState, Step } from './timeline/types.js';
 import { CursorRenderer } from './render/chrome.js';
+import { patchDOM } from './render/patch-dom.js';
+import { Player } from './player/player.js';
+import type { PlayerOptions } from './player/player.js';
+import { SVGNS } from './sketch/index.js';
 import type { NodeInteraction } from './render/build-frame.js';
 import type { Scene as SceneType } from './core/scene.js';
 import { DEFAULT_FONT } from './text/index.js';
@@ -264,6 +268,25 @@ export class Demo {
   /** The frame at time t as a complete SVG document string. */
   toSVG(t = 0): string {
     return frameToSVG(this.frame(t));
+  }
+
+  /**
+   * Renders into the document: into the given <svg>, or into a new <svg>
+   * appended to the container. Returns a Player that drives the timeline.
+   */
+  mount(container: Element, options: PlayerOptions = {}): Player {
+    const svg =
+      container.namespaceURI === SVGNS && container.tagName.toLowerCase() === 'svg'
+        ? (container as SVGSVGElement)
+        : null;
+    const target = svg ?? (container.ownerDocument.createElementNS(SVGNS, 'svg') as SVGSVGElement);
+    if (!svg) container.appendChild(target);
+    return new Player(this, target, options);
+  }
+
+  /** Renders the frame at t into an existing <svg>, replacing only what changed. */
+  renderInto(svg: SVGSVGElement, t = 0): void {
+    patchDOM(svg, this.frame(t));
   }
 
   /** Every frame of the timeline at a fixed rate, for export. The last frame is always the end. */

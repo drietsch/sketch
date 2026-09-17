@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>sketchdemo: player</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 24px;
+        background: #f4f4f6;
+      }
+      #controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      input[type='range'] {
+        width: 420px;
+      }
+      button {
+        font: inherit;
+        padding: 4px 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Player</h1>
+    <p>The login demo mounted into a live SVG and driven by the Player: play, pause, scrub, loop, change speed.</p>
+    <div id="controls">
+      <button id="toggle">Play</button>
+      <button id="stop">Stop</button>
+      <label><input id="loop" type="checkbox" /> loop</label>
+      <label>
+        speed
+        <select id="rate">
+          <option value="0.5">0.5x</option>
+          <option value="1" selected>1x</option>
+          <option value="2">2x</option>
+        </select>
+      </label>
+      <input id="time" type="range" min="0" max="1000" value="0" />
+      <span id="readout">0 ms</span>
+    </div>
+    <div id="out"></div>
+    <script type="module">
+      import { createDemo } from '../dist/index.js';
+
+      const demo = createDemo({ width: 900, height: 600, seed: 42, background: null });
+      demo.browser({ id: 'browser', x: 40, y: 30, width: 820, height: 540, url: 'https://example.com/login' });
+      demo.panel({ id: 'card', parent: 'browser', x: 210, y: 90, width: 400, height: 300, title: 'Welcome back' });
+      demo.text({ id: 'email-label', parent: 'card', x: 24, y: 20, text: 'Email', style: { color: '#8a8f98' } });
+      demo.input({ id: 'email', parent: 'card', x: 24, y: 44, width: 352, placeholder: 'you@example.com' });
+      demo.text({ id: 'password-label', parent: 'card', x: 24, y: 100, text: 'Password', style: { color: '#8a8f98' } });
+      demo.input({ id: 'password', parent: 'card', x: 24, y: 124, width: 352, placeholder: 'Password' });
+      demo.button({
+        id: 'login',
+        parent: 'card',
+        x: 24,
+        y: 190,
+        width: 352,
+        text: 'Sign in',
+        variant: 'primary',
+        icon: 'log-in',
+      });
+      demo.text({
+        id: 'done',
+        parent: 'card',
+        x: 200,
+        y: 240,
+        text: 'Signed in!',
+        align: 'middle',
+        hidden: true,
+        style: { color: '#2f6fed' },
+      });
+
+      demo.timeline
+        .moveCursor('email')
+        .click()
+        .type('email', 'hello@example.com')
+        .moveCursor('password')
+        .click()
+        .type('password', 'hunter2')
+        .wait(300)
+        .moveCursor('login')
+        .click()
+        .set('done', { hidden: false })
+        .wait(1200);
+
+      const player = demo.mount(document.getElementById('out'));
+      const toggle = document.getElementById('toggle');
+      const slider = document.getElementById('time');
+      const readout = document.getElementById('readout');
+      const loop = document.getElementById('loop');
+      const rate = document.getElementById('rate');
+      slider.max = String(player.duration);
+
+      const show = (t) => {
+        slider.value = String(t);
+        readout.textContent = `${Math.round(t)} ms / ${Math.round(player.duration)} ms`;
+      };
+      player.on('timeupdate', show);
+      player.on('seeked', show);
+      player.on('play', () => (toggle.textContent = 'Pause'));
+      player.on('pause', () => (toggle.textContent = 'Play'));
+      toggle.addEventListener('click', () => player.toggle());
+      document.getElementById('stop').addEventListener('click', () => player.stop());
+      loop.addEventListener('change', () => (player.loop = loop.checked));
+      rate.addEventListener('change', () => (player.rate = Number(rate.value)));
+      slider.addEventListener('input', () => {
+        player.pause();
+        player.seek(Number(slider.value));
+      });
+      show(0);
+
+      window.__demo = {
+        demo,
+        player,
+        duration: player.duration,
+        nodeIds: demo.scene.visible().map((n) => n.id),
+        seek: (t) => player.seek(t),
+      };
+    </script>
+  </body>
+</html>
