@@ -61,7 +61,13 @@
         parent: 'tools',
         icon: 'menu',
         characters: 'Actions',
-        items: ['Rename', 'Duplicate', '-', { label: 'Delete', icon: 'x' }],
+        items: [
+          'Rename',
+          'Duplicate',
+          { label: 'Export', items: ['PDF', 'PNG', 'SVG'] },
+          '-',
+          { label: 'Delete', icon: 'x' },
+        ],
       });
       demo.button({ id: 'save', parent: 'tools', characters: 'Save', icon: 'check', variant: 'primary' });
       demo.tooltip({ id: 'save-tip', anchor: 'save', characters: 'Saves to the cloud' });
@@ -186,7 +192,7 @@
         .drag('list', 120)
         .open('ctx')
         .choose('ctx', 'Rename')
-        .choose('more', 'Duplicate')
+        .choose('more', 'PNG')
         .click('trash')
         .open('confirm')
         .click('delete')

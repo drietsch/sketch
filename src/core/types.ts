@@ -441,8 +441,8 @@ export interface PopoverNode extends AnchoredBase, AutoLayoutProps {
   height?: number;
 }
 
-/** An entry of a menu: a label, a rich item, or '-' for a separator. */
-export type MenuItem = string | { label: string; icon?: string | IconDef; disabled?: boolean };
+/** An entry of a menu: a label, a rich item (with `items` for a submenu), or '-' for a separator. */
+export type MenuItem = string | { label: string; icon?: string | IconDef; disabled?: boolean; items?: MenuItem[] };
 
 export interface MenuNode extends NodeBase {
   type: 'MENU';

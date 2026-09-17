@@ -76,6 +76,8 @@ export interface MenuRow {
   height: number;
   separator: boolean;
   disabled: boolean;
+  /** The row opens a submenu. */
+  submenu: boolean;
 }
 
 /** Rows of a menu from `y0`, separators shorter than items. */
@@ -91,6 +93,7 @@ export function menuRows(items: readonly MenuItem[], y0: number): { rows: MenuRo
       height,
       separator,
       disabled: typeof item !== 'string' && !!item.disabled,
+      submenu: typeof item !== 'string' && !!item.items?.length,
     };
     y += height;
     return row;
@@ -188,6 +191,19 @@ export function menuRowParts(
       }),
       layer: 'overlay',
     });
+    if (row.submenu) {
+      parts.push({
+        key: `${keyPrefix}${i}.more`,
+        kind: 'icon',
+        x: box.x + box.width - POPUP_PADDING - ICON,
+        y: row.y + (row.height - ICON) / 2,
+        size: ICON,
+        icon: ctx.icons('chevron-right'),
+        color: theme.muted,
+        style: resolvePartStyle(theme, node),
+        layer: 'overlay',
+      });
+    }
   });
   return parts;
 }
@@ -196,7 +212,7 @@ export function menuRowParts(
 export function menuRowRegions(
   rows: readonly MenuRow[],
   box: { x: number; width: number },
-  action: (label: string) => Region['action'],
+  action: (row: MenuRow) => Region['action'],
 ): Region[] {
   return rows
     .filter((row) => !row.separator)
@@ -206,9 +222,23 @@ export function menuRowRegions(
         bounds: { x: box.x, y: row.y, width: box.width, height: row.height },
         layer: 'overlay',
       };
-      if (!row.disabled) region.action = action(row.label);
+      if (!row.disabled) region.action = action(row);
       return region;
     });
+}
+
+/** The labels chosen on the way to `value` in a tree of menu items: the submenu parent(s), outermost first. */
+export function pathToItem(items: readonly MenuItem[], value: string): string[] | undefined {
+  for (const item of items) {
+    if (item === '-') continue;
+    const label = typeof item === 'string' ? item : item.label;
+    if (label === value) return [];
+    if (typeof item !== 'string' && item.items) {
+      const below = pathToItem(item.items, value);
+      if (below) return [label, ...below];
+    }
+  }
+  return undefined;
 }
 
 /** A region that covers the whole panel so clicks on it go nowhere else. */

@@ -488,40 +488,51 @@ export function compile(
       }
       case 'choose': {
         const node = require(step.target, 'choose', 'chosen from');
-        const matches = (a: WidgetAction) =>
-          a.value === step.value || (Array.isArray(a.value) && a.value.includes(String(step.value)));
-        let region = findRegion(node, matches);
-        if (!region && componentFor(node).capabilities?.open) {
-          setOpen(node, true);
-          region = findRegion(node, matches);
-        }
-        const draggable = componentFor(node).drag;
-        if (!region && draggable && typeof step.value === 'number') {
-          // A slider: click the track where the value sits.
-          const origin = working.position(node.id);
-          const local = draggable.pointFor(working.resolved(node.id), render(node), step.value);
-          clickAt({ point: { x: origin.x + local.x, y: origin.y + local.y }, width: 16 });
-          break;
-        }
-        if (!region && typeof step.value === 'number') {
-          // A stepper: click the region that moves the value toward the target until it arrives.
-          const goal = step.value;
-          for (let guard = 0; guard < 200; guard++) {
-            const current = liveValue(node);
-            const now = typeof current === 'number' ? current : Number.NaN;
-            if (now === goal) break;
-            const closer = findRegion(
-              node,
-              (a) => typeof a.value === 'number' && Math.abs(a.value - goal) < Math.abs(now - goal),
-            );
-            if (!closer) throw new CompileError(authored, `target "${step.target}" cannot reach ${goal}`);
-            clickAt(aimAt(node, closer));
+        const def = componentFor(node);
+        /** Clicks the region offering `value`, opening the node and choosing the way there first when needed. */
+        const chooseValue = (value: ControlValue, depth: number): void => {
+          const matches = (a: WidgetAction) =>
+            a.value === value || (Array.isArray(a.value) && a.value.includes(String(value)));
+          let region = findRegion(node, matches);
+          if (!region && def.capabilities?.open && !liveOpen(node)) {
+            setOpen(node, true);
+            region = findRegion(node, matches);
           }
-          break;
-        }
-        if (!region)
-          throw new CompileError(authored, `target "${step.target}" has no option ${JSON.stringify(step.value)}`);
-        clickAt(aimAt(node, region));
+          if (!region && depth === 0) {
+            // A submenu's item, a menubar's entry: make the choices that lead there.
+            const path = def.pathTo?.(working.resolved(node.id), value);
+            if (path?.length) {
+              for (const via of path) chooseValue(via, depth + 1);
+              region = findRegion(node, matches);
+            }
+          }
+          if (!region && def.drag && typeof value === 'number') {
+            // A slider: click the track where the value sits.
+            const origin = working.position(node.id);
+            const local = def.drag.pointFor(working.resolved(node.id), render(node), value);
+            clickAt({ point: { x: origin.x + local.x, y: origin.y + local.y }, width: 16 });
+            return;
+          }
+          if (!region && typeof value === 'number') {
+            // A stepper: click the region that moves the value toward the target until it arrives.
+            for (let guard = 0; guard < 200; guard++) {
+              const current = liveValue(node);
+              const now = typeof current === 'number' ? current : Number.NaN;
+              if (now === value) break;
+              const closer = findRegion(
+                node,
+                (a) => typeof a.value === 'number' && Math.abs(a.value - value) < Math.abs(now - value),
+              );
+              if (!closer) throw new CompileError(authored, `target "${step.target}" cannot reach ${value}`);
+              clickAt(aimAt(node, closer));
+            }
+            return;
+          }
+          if (!region)
+            throw new CompileError(authored, `target "${step.target}" has no option ${JSON.stringify(value)}`);
+          clickAt(aimAt(node, region));
+        };
+        chooseValue(step.value, 0);
         break;
       }
       case 'open':

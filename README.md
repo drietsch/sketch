@@ -188,8 +188,8 @@ popover's form) come with them. All of them keep `open` as model state.
 | `demo.toast`          | `TOAST`           | `title`, `description?`, `variant?`, `stack?`; bottom-right, shown by default             |
 | `demo.scrollArea`     | `SCROLL_AREA`     | `width`, `height`, `contentHeight`, `value?`; clips and scrolls its children              |
 
-Menu items are labels, `{ label, icon?, disabled? }` objects, or `'-'` for a
-separator.
+Menu items are labels, `{ label, icon?, disabled?, items? }` objects (`items`
+opens a submenu on `MENU` and `CONTEXT_MENU`), or `'-'` for a separator.
 
 ```ts
 demo.button({ id: 'share', x: 20, y: 20, characters: 'Share' });
@@ -366,8 +366,9 @@ Popups follow the same rules through their anchors. `hover(anchor)` (or
 `hover(tooltip)`) opens a tooltip or preview card after its delay and rests on
 it; moving away closes it. `open(popover)` clicks its anchor, as does a plain
 `click(anchor)`, which toggles it. `choose(select, option)` opens the list if
-needed and clicks the option; on a menubar, choose the menu first, then its
-item. A click outside an open menu, select or popover dismisses it; a dialog
+needed and clicks the option; `choose(menubar, item)` opens the menu that
+holds the item first, and `choose(menu, item)` walks into the submenu that
+holds it. A click outside an open menu, select or popover dismisses it; a dialog
 closes from its backdrop or its close mark (`close(dialog)` clicks that), an
 alert dialog only from `close()`. A row scrolled out of a scroll area's
 viewport cannot be a target until `drag(area, offset)` brings it into view.
@@ -405,13 +406,17 @@ The pages in [`examples/`](examples/) load the built bundle. Run
 
 ```sh
 pnpm install
-pnpm run check          # lint, format, typecheck, tests, build, dist tests
-pnpm run verify:pages   # render every examples/ page in headless Chromium
-pnpm run verify:package # pack, install into a temp project, smoke-test
+pnpm run check              # lint, format, catalogue, typecheck, tests, build, dist tests
+pnpm run verify:components  # every registered type has a factory, an export, a README row and a fixture
+pnpm run verify:pages       # render every examples/ page in headless Chromium
+pnpm run verify:package     # pack, install into a temp project, smoke-test
 ```
 
 The engine's 946-case golden digest and the library's per-fixture SVG digests
-pin the visual output; a change to either must be deliberate.
+pin the visual output; a change to either must be deliberate. A new component
+is one file in `src/components/`, a registry entry, a node interface, a
+factory on `Demo`, a README row and a fixture; `verify:components` says which
+of those is missing.
 
 ## Credits
 
