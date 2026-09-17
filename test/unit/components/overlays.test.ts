@@ -217,6 +217,48 @@ describe('menus', () => {
     expect(() => demo.menu({ id: 'bad', x: 0, y: 0, items: [] })).toThrow(/non-empty/);
   });
 
+  test('a submenu opens to the right of its item; choose walks into it in one step', () => {
+    const demo = make();
+    demo.menu({
+      id: 'file',
+      x: 20,
+      y: 20,
+      characters: 'File',
+      items: ['New', { label: 'Export', items: ['PDF', 'PNG'] }, 'Quit'],
+    });
+    const closedSub = regions(demo, 'file', { open: true });
+    expect(closedSub.map((r) => r.key)).toEqual(['trigger', 'menu.body', 'option:New', 'option:Export', 'option:Quit']);
+    expect(closedSub[3].action).toEqual({ value: 'Export' });
+    expect(keys(expand(demo, 'file', { open: true }))).toContain('menu.1.more');
+    const openSub = regions(demo, 'file', { open: true, value: 'Export' });
+    expect(openSub.map((r) => r.key)).toEqual([
+      'trigger',
+      'menu.body',
+      'option:New',
+      'option:Export',
+      'option:Quit',
+      'menu.sub.body',
+      'option:PDF',
+      'option:PNG',
+    ]);
+    const parent = openSub[3].bounds;
+    const sub = openSub[5].bounds;
+    expect(sub.x).toBeGreaterThan(parent.x + parent.width);
+    expect(sub.y).toBeLessThanOrEqual(parent.y);
+    expect(keys(expand(demo, 'file', { open: true, value: 'Export' }))).toEqual(
+      expect.arrayContaining(['menu.1.highlight', 'menu.sub.panel', 'menu.sub.0.label', 'menu.sub.1.label']),
+    );
+    demo.timeline.choose('file', 'PNG');
+    const clicks = of(demo, 0).filter((s) => s.click);
+    expect(clicks.map((s) => s.effects)).toEqual([
+      [{ id: 'file', open: true }],
+      [{ id: 'file', value: 'Export' }],
+      [{ id: 'file', open: false, value: 'PNG' }],
+    ]);
+    expect(demo.nodeAt('file', demo.duration)).toMatchObject({ value: 'PNG', open: false });
+    expect(() => demo.menu({ id: 'bad', x: 0, y: 0, items: [{ label: 'A', items: [''] }] })).toThrow(/cannot be empty/);
+  });
+
   test('a context menu opens over its anchor on a click there and closes on an outside click', () => {
     const demo = make();
     demo.rectangle({ id: 'area', x: 100, y: 100, width: 300, height: 200 });
@@ -257,19 +299,23 @@ describe('menus', () => {
       { value: 'File', open: true },
       { value: 'Edit', open: true },
     ]);
-    demo.timeline
-      .choose('bar', 'Edit')
-      .choose('bar', 'Paste')
-      .choose('nav', 'Pricing')
-      .choose('nav', 'Products')
-      .choose('nav', 'Editor');
+    demo.timeline.choose('bar', 'Edit').choose('bar', 'Paste').choose('nav', 'Pricing').choose('nav', 'Editor');
     expect(demo.nodeAt('bar', of(demo, 0).at(-1)!.end)).toMatchObject({ value: 'Edit', open: true });
     expect(keys(expand(demo, 'bar', { open: true, value: 'Edit' }))).toContain('1.active');
     expect(regions(demo, 'bar', { open: true, value: 'Edit' }).map((r) => r.key)).toContain('option:Paste');
     expect(demo.nodeAt('bar', of(demo, 1).at(-1)!.end)).toMatchObject({ value: 'Paste', open: false });
     expect(demo.nodeAt('nav', of(demo, 2).at(-1)!.end)).toMatchObject({ value: 'Pricing', open: false });
+    // An item inside a closed menu: the menu is opened first, in the same step.
+    expect(
+      of(demo, 3)
+        .filter((s) => s.click)
+        .map((s) => s.effects),
+    ).toEqual([[{ id: 'nav', open: true, value: 'Products' }], [{ id: 'nav', open: false, value: 'Editor' }]]);
     expect(demo.nodeAt('nav', demo.duration)).toMatchObject({ value: 'Editor', open: false });
     expect(() => demo.menubar({ id: 'bad', x: 0, y: 0, menus: [{ label: 'X', items: [] }] })).toThrow(/non-empty/);
+    expect(() =>
+      demo.menubar({ id: 'bad', x: 0, y: 0, menus: [{ label: 'X', items: [{ label: 'Y', items: ['Z'] }] }] }),
+    ).toThrow(/cannot hold submenus/);
   });
 });
 

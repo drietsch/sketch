@@ -11,6 +11,7 @@ import {
   menuRows,
   menuWidth,
   panelParts,
+  pathToItem,
 } from './popups.js';
 import { centredTextTop, rectPart, textPart } from './common.js';
 import { fontSizeOf, hasOwnFill, resolvePartStyle, textColor } from './style.js';
@@ -27,30 +28,55 @@ function validateItems(items: unknown): string | undefined {
     if (typeof item === 'string') {
       if (!item) return 'an item label cannot be empty';
     } else if (!item || typeof item.label !== 'string' || !item.label) return 'every item needs a label';
+    else if (item.items !== undefined) {
+      const problem = validateItems(item.items);
+      if (problem) return problem;
+    }
   }
   return undefined;
 }
 
-/** The dropdown panel (parts) and its regions below `y0`, node-local. */
+/**
+ * The dropdown panel (parts) and its regions at `box`, node-local. A row with
+ * a submenu keeps the menu open and records itself as the value; the submenu
+ * whose parent is `openSub` opens to the right.
+ */
 function dropdown(
   keyPrefix: string,
   node: MenuNode | ContextMenuNode | MenubarNode | NavigationMenuNode,
   ctx: Parameters<ComponentDef<MenuNode>['expand']>[1],
   items: readonly MenuItem[],
   box: { x: number; y: number; width: number },
-  highlight?: string,
+  openSub?: string,
 ): { parts: Part[]; regions: Region[]; bounds: Bounds } {
   const { rows, height } = menuRows(items, box.y + POPUP_PADDING / 2);
   const bounds = { x: box.x, y: box.y, width: box.width, height: height + POPUP_PADDING };
   const parts = [
     ...panelParts(keyPrefix, ctx.theme, node, bounds),
-    ...menuRowParts(keyPrefix, ctx.theme, node, ctx, rows, box, highlight),
+    ...menuRowParts(keyPrefix, ctx.theme, node, ctx, rows, box, openSub),
   ];
   const regions = [
     bodyRegion(bounds, `${keyPrefix}body`),
-    ...menuRowRegions(rows, box, (label) => ({ value: label, open: false })),
+    ...menuRowRegions(rows, box, (row) => (row.submenu ? { value: row.label } : { value: row.label, open: false })),
   ];
+  const parent = rows.find((r) => r.submenu && r.label === openSub);
+  if (parent && typeof parent.item !== 'string' && parent.item.items) {
+    const sub = dropdown(`${keyPrefix}sub.`, node, ctx, parent.item.items, {
+      x: box.x + box.width + 2,
+      y: parent.y - POPUP_PADDING / 2,
+      width: menuWidth(ctx, parent.item.items, fontSizeOf(node.style, ctx.theme)),
+    });
+    parts.push(...sub.parts);
+    regions.push(...sub.regions);
+  }
   return { parts, regions, bounds };
+}
+
+/** The item whose submenu is open: the live value, when it names one. */
+function openSubOf(items: readonly MenuItem[], ctx: { value?: unknown }, stored: unknown): string | undefined {
+  const value = typeof ctx.value === 'string' ? ctx.value : typeof stored === 'string' ? stored : undefined;
+  if (value === undefined) return undefined;
+  return items.some((i) => typeof i !== 'string' && i.label === value && i.items?.length) ? value : undefined;
 }
 
 function menuTriggerWidth(node: MenuNode, ctx: LayoutContext): number {
@@ -119,7 +145,10 @@ export const menu: ComponentDef<MenuNode> = {
     if (open) {
       const fontSizeRows = fontSizeOf(node.style, theme);
       const w = Math.max(width, menuWidth(ctx, node.items, fontSizeRows));
-      parts.push(...dropdown('menu.', node, ctx, node.items, { x: 0, y: BUTTON_HEIGHT + SIDE_OFFSET, width: w }).parts);
+      const sub = openSubOf(node.items, ctx, node.value);
+      parts.push(
+        ...dropdown('menu.', node, ctx, node.items, { x: 0, y: BUTTON_HEIGHT + SIDE_OFFSET, width: w }, sub).parts,
+      );
     }
     return parts;
   },
@@ -131,10 +160,14 @@ export const menu: ComponentDef<MenuNode> = {
     ];
     if (open) {
       const w = Math.max(width, menuWidth(ctx, node.items, fontSizeOf(node.style, ctx.theme)));
-      out.push(...dropdown('menu.', node, ctx, node.items, { x: 0, y: BUTTON_HEIGHT + SIDE_OFFSET, width: w }).regions);
+      const sub = openSubOf(node.items, ctx, node.value);
+      out.push(
+        ...dropdown('menu.', node, ctx, node.items, { x: 0, y: BUTTON_HEIGHT + SIDE_OFFSET, width: w }, sub).regions,
+      );
     }
     return out;
   },
+  pathTo: (node, value) => (typeof value === 'string' ? pathToItem(node.items, value) : undefined),
 };
 
 /** A menu that opens over its anchor when the anchor is clicked. */
@@ -151,13 +184,14 @@ export const contextMenu: ComponentDef<ContextMenuNode> = {
   expand: (node, ctx) => {
     if (!isOpen(node, ctx)) return [];
     const width = node.width ?? menuWidth(ctx, node.items, fontSizeOf(node.style, ctx.theme));
-    return dropdown('', node, ctx, node.items, { x: 0, y: 0, width }).parts;
+    return dropdown('', node, ctx, node.items, { x: 0, y: 0, width }, openSubOf(node.items, ctx, node.value)).parts;
   },
   regions: (node, ctx): Region[] => {
     if (!isOpen(node, ctx)) return [];
     const width = node.width ?? menuWidth(ctx, node.items, fontSizeOf(node.style, ctx.theme));
-    return dropdown('', node, ctx, node.items, { x: 0, y: 0, width }).regions;
+    return dropdown('', node, ctx, node.items, { x: 0, y: 0, width }, openSubOf(node.items, ctx, node.value)).regions;
   },
+  pathTo: (node, value) => (typeof value === 'string' ? pathToItem(node.items, value) : undefined),
 };
 
 interface BarEntry {
@@ -209,6 +243,7 @@ function bar<N extends MenubarNode | NavigationMenuNode>(kind: 'menubar' | 'navi
         if (e.items !== undefined) {
           const problem = validateItems(e.items);
           if (problem) return problem;
+          if (e.items.some((i) => typeof i !== 'string' && i.items)) return 'a bar menu cannot hold submenus';
         } else if (node.type === 'MENUBAR') return 'every menu needs items';
       }
       return undefined;
@@ -317,6 +352,15 @@ function bar<N extends MenubarNode | NavigationMenuNode>(kind: 'menubar' | 'navi
         }
       });
       return out;
+    },
+    // An item is reached through the menu that holds it.
+    pathTo: (node, value) => {
+      if (typeof value !== 'string') return undefined;
+      for (const e of entries(node)) {
+        if (e.label === value) return [];
+        if (e.items && pathToItem(e.items, value)) return [e.label];
+      }
+      return undefined;
     },
   } as ComponentDef<N>;
 }

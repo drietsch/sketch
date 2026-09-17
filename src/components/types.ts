@@ -173,4 +173,10 @@ export interface ComponentDef<N extends NodeBase & { type: string } = SceneNode>
   opensOnType?: true;
   /** Descendants are clipped to this local box (a scroll area's viewport). */
   clip?(node: N, ctx: LayoutContext): Bounds;
+  /**
+   * The choices that lead to `value` when it is not directly on offer: the
+   * menu of a menubar that holds the item, the parent item of a submenu.
+   * `choose` makes them first, in order.
+   */
+  pathTo?(node: N, value: ControlValue): ControlValue[] | undefined;
 }

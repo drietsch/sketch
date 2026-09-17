@@ -1,6 +1,6 @@
 {
   "name": "@drietsch/sketch",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "description": "API-first library for sketching hand-drawn GUI mockups and animating how they are used. Deterministic SVG output.",
   "type": "module",
   "license": "MIT",
@@ -62,11 +62,12 @@
     "test": "vitest run --project unit --project lib --project backend --project determinism",
     "test:watch": "vitest --project unit --project lib --project backend --project determinism",
     "test:coverage": "vitest run --coverage",
-    "check": "pnpm run lint && pnpm run format:check && pnpm run build && pnpm run typecheck && pnpm run test && pnpm run test:dist",
+    "check": "pnpm run lint && pnpm run format:check && pnpm run verify:components && pnpm run build && pnpm run typecheck && pnpm run test && pnpm run test:dist",
     "changeset": "changeset",
     "version-packages": "changeset version && pnpm install --lockfile-only",
     "prepack": "pnpm run build",
     "test:dist": "vitest run --project dist",
+    "verify:components": "node scripts/verify-components.mjs",
     "verify:pages": "node scripts/verify-pages.mjs",
     "verify:package": "node scripts/verify-package.mjs"
   },

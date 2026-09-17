@@ -349,7 +349,7 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
       x: 20,
       y: 20,
       characters: 'File',
-      items: ['New', 'Open…', '-', { label: 'Quit', icon: 'log-out' }],
+      items: ['New', 'Open…', { label: 'Export', items: ['PDF', 'PNG'] }, '-', { label: 'Quit', icon: 'log-out' }],
     });
     demo.select({
       id: 'country',
@@ -390,7 +390,7 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
       items: ['Paste', 'Select all', '-', { label: 'Clear', icon: 'x', disabled: true }],
     });
     demo.timeline
-      .choose('file', 'Quit')
+      .choose('file', 'PNG')
       .choose('country', 'Germany')
       .type('city', 'Ber')
       .choose('city', 'Bern')
