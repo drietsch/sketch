@@ -23,6 +23,7 @@ export function visibleValue(font: StrokeFont, value: string, fontSize: number, 
 }
 
 export const input: ComponentDef<InputNode> = {
+  resizable: true,
   focusable: true,
   interactive: true,
   localBounds: (node) => ({ x: 0, y: 0, width: node.width, height: node.height ?? INPUT_HEIGHT }),

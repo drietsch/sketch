@@ -2,6 +2,30 @@
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 0.4.0
+
+### Minor Changes
+
+- Auto-layout frames, with Figma's properties.
+  
+  A `FRAME` (or a `WINDOW`'s content area) can position its children:
+  `layoutMode` (`HORIZONTAL` / `VERTICAL`), `itemSpacing`, `padding*` (plus a
+  `padding` shorthand at creation), `primaryAxisAlignItems` (`MIN` / `CENTER` /
+  `MAX` / `SPACE_BETWEEN`), `counterAxisAlignItems`, and `layoutSizingHorizontal`
+  / `layoutSizingVertical` (`FIXED` / `HUG` / `FILL`). Children of such a frame
+  need no coordinates; `layoutPositioning: 'ABSOLUTE'` opts a child out. A frame
+  needs a stored size only on a `FIXED` axis.
+  
+  Every geometry read (`bounds`, `position`, `hitTest`, relative placement, the
+  timeline compiler, the renderer) goes through one cached layout pass, so
+  laid-out and literal nodes behave alike, and timeline `set` steps that change
+  spacing, a label or visibility reflow at that moment. Stored nodes and
+  documents never contain computed sizes. Scenes without auto-layout render
+  byte-identically to before.
+  
+  The patched scene a timeline `set` step produces is now cached per patch
+  state, so a player pays one clone per step rather than per frame.
+
 ## 0.3.0
 
 ### Minor Changes

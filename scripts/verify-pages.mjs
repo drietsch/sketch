@@ -80,6 +80,8 @@ for (const rel of pages) {
         if (groups !== demo.nodeIds.length) out.push(`expected ${demo.nodeIds.length} node groups, found ${groups}`);
         if (demo.duration > 0) {
           if (!svg().querySelector('g[data-key="__cursor"]')) out.push('no cursor group');
+          // Pin time zero first: a page may be autoplaying.
+          demo.seek(0);
           const a = svg().innerHTML;
           demo.seek(demo.duration / 2);
           const b = svg().innerHTML;

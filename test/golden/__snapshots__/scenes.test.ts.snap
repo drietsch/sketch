@@ -1,5 +1,41 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`layoutForm > digest > t=0 1`] = `
+{
+  "bytes": 45020,
+  "groups": 11,
+  "paths": 21,
+  "sha256": "d969aeffc9fdde0a",
+}
+`;
+
+exports[`layoutForm > digest > t=386 1`] = `
+{
+  "bytes": 45026,
+  "groups": 11,
+  "paths": 21,
+  "sha256": "291524f46cfcef14",
+}
+`;
+
+exports[`layoutForm > digest > t=771 1`] = `
+{
+  "bytes": 40325,
+  "groups": 12,
+  "paths": 22,
+  "sha256": "c3d841ff63337955",
+}
+`;
+
+exports[`layoutForm > digest > t=1542 1`] = `
+{
+  "bytes": 43026,
+  "groups": 12,
+  "paths": 23,
+  "sha256": "0222c9fe2fb8d737",
+}
+`;
+
 exports[`loginDemo > digest > t=0 1`] = `
 {
   "bytes": 9130,

@@ -7,6 +7,7 @@ import { layoutText } from '../text/layout.js';
 export const DEFAULT_ICON_SIZE = 20;
 
 export const rectangle: ComponentDef<RectangleNode> = {
+  resizable: true,
   localBounds: (node) => ({ x: 0, y: 0, width: node.width, height: node.height }),
   expand: (node, ctx) => [
     {
@@ -23,6 +24,7 @@ export const rectangle: ComponentDef<RectangleNode> = {
 };
 
 export const ellipse: ComponentDef<EllipseNode> = {
+  resizable: true,
   localBounds: (node) => ({ x: 0, y: 0, width: node.width, height: node.height }),
   expand: (node, ctx) => [
     {

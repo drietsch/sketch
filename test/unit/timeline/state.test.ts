@@ -144,3 +144,54 @@ describe('frames', () => {
     expect(demo.frameAt(0).groups.find((g) => g.key === 'login')!.html).toBe(before);
   });
 });
+
+describe('auto-layout under the timeline', () => {
+  test('a set step changing itemSpacing reflows at that time and not before; the authored scene is untouched', () => {
+    const demo = createDemo({ width: 600, height: 600, seed: 3 });
+    demo.frame({
+      id: 'card',
+      x: 100,
+      y: 100,
+      width: 300,
+      height: 300,
+      layoutMode: 'VERTICAL',
+      itemSpacing: 10,
+      padding: 20,
+    });
+    demo.rectangle({ id: 'a', parent: 'card', width: 100, height: 30 });
+    demo.rectangle({ id: 'b', parent: 'card', width: 100, height: 40 });
+    demo.timeline.wait(100).set('card', { itemSpacing: 50 }).wait(100);
+    const at = (t: number) =>
+      demo
+        .frameAt(t)
+        .groups.find((g) => g.key === 'b')!
+        .html.match(/transform="([^"]*)"/)![1];
+    expect(at(0)).toBe('translate(120 160)');
+    expect(at(99)).toBe('translate(120 160)');
+    expect(at(100)).toBe('translate(120 200)');
+    expect(demo.scene.bounds('b').y).toBe(160);
+    // The patched scene is cached per patch state: two frames in the same state share it.
+    expect(demo.frameAt(150).groups.find((g) => g.key === 'b')!.html).toBe(
+      demo.frameAt(120).groups.find((g) => g.key === 'b')!.html,
+    );
+  });
+
+  test('a set step that grows a label reflows a HUG frame', () => {
+    const demo = createDemo({ width: 600, height: 600, seed: 3 });
+    demo.frame({
+      id: 'card',
+      x: 100,
+      y: 100,
+      layoutMode: 'VERTICAL',
+      layoutSizingHorizontal: 'HUG',
+      layoutSizingVertical: 'HUG',
+      padding: 10,
+    });
+    demo.button({ id: 'go', parent: 'card', characters: 'Go' });
+    demo.timeline.wait(50).set('go', { characters: 'Go to the dashboard' });
+    const before = demo.frameAt(0).groups.find((g) => g.key === 'card')!.html;
+    const after = demo.frameAt(50).groups.find((g) => g.key === 'card')!.html;
+    expect(after).not.toBe(before);
+    expect(demo.nodeAt('go', 50)).toMatchObject({ characters: 'Go to the dashboard' });
+  });
+});

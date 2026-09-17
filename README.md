@@ -181,6 +181,55 @@ Placement works on boxes, so a centred text or an auto-sized button lands
 where its visible edge should be. Placed and literal coordinates render
 byte-identically.
 
+### Auto-layout
+
+A `FRAME` (or a `WINDOW`'s content area) can lay out its children itself,
+with Figma's auto-layout properties. Children of such a frame need no
+coordinates; the frame can hug its content and children can fill the space.
+
+```ts
+demo.frame({
+  id: 'form',
+  x: 40,
+  y: 40,
+  width: 360,
+  layoutMode: 'VERTICAL',
+  itemSpacing: 12,
+  padding: 24,
+  layoutSizingVertical: 'HUG',
+});
+demo.text({ parent: 'form', characters: 'Email' });
+demo.input({ parent: 'form', width: 100, layoutSizingHorizontal: 'FILL', placeholder: 'you@example.com' });
+demo.frame({
+  parent: 'form',
+  height: 36,
+  layoutMode: 'HORIZONTAL',
+  layoutSizingHorizontal: 'FILL',
+  primaryAxisAlignItems: 'SPACE_BETWEEN',
+  fills: [],
+  strokes: [],
+});
+```
+
+On the container: `layoutMode` (`NONE`, `HORIZONTAL`, `VERTICAL`),
+`itemSpacing`, `paddingLeft` / `paddingRight` / `paddingTop` / `paddingBottom`
+(or a `padding` shorthand: a number, `[vertical, horizontal]` or
+`[top, right, bottom, left]`), `primaryAxisAlignItems` (`MIN`, `CENTER`,
+`MAX`, `SPACE_BETWEEN`), `counterAxisAlignItems` (`MIN`, `CENTER`, `MAX`), and
+`layoutSizingHorizontal` / `layoutSizingVertical` (`FIXED`, `HUG`, `FILL`). A
+`FRAME` needs `width`/`height` only on a `FIXED` axis.
+
+On any child: `layoutSizingHorizontal` / `layoutSizingVertical` set to `FILL`
+to take the available space (rectangles, ellipses, inputs, buttons and
+frames; text and icons are always their intrinsic size), and
+`layoutPositioning: 'ABSOLUTE'` to opt out and keep its own `x`/`y`.
+
+The stored node keeps what you wrote; `scene.bounds(id)` is the laid-out
+truth, and `toJSON()` never contains computed sizes. Timeline `set` steps that
+change spacing, a label or visibility reflow at that moment. Relative
+placement (`below:` …) into an auto-layout frame is an error unless the node
+is `ABSOLUTE`.
+
 ### Timeline
 
 ```ts
@@ -222,6 +271,7 @@ The pages in [`examples/`](examples/) load the built bundle. Run
 - `login-form.html`: the briefing's mockup with every component state
 - `login-demo.html`: the same, animated, with a scrub bar over `toSVG(t)`
 - `player.html`: mounted into a live SVG and driven by the `Player`
+- `auto-layout.html`: a signup form laid out entirely by auto-layout, playing on a loop
 
 ## Development
 

@@ -119,7 +119,7 @@ describe('relative placement', () => {
     expect(() => demo.rectangle({ id: 'r', gap: 4, x: 0, y: 0, width: 1, height: 1 } as never)).toThrow(
       /gap and alignTo need one of below/,
     );
-    expect(() => demo.rectangle({ id: 'r', width: 1, height: 1 } as never)).toThrow(/needs x and y, or a placement/);
+    expect(() => demo.rectangle({ id: 'r', width: 1, height: 1 } as never)).toThrow(/needs x and y, a placement/);
     expect(() => demo.rectangle({ id: 'r', below: 'email', parent: 'ghost', width: 1, height: 1 })).toThrow(
       /Unknown parent "ghost" for node "r"/,
     );
