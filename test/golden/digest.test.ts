@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { RoughGenerator } from '../../src/generator.js';
+import { RoughGenerator } from '../../src/sketch/generator.js';
 import { OPTION_CASES, SHAPES } from '../support/cases.js';
 import { digestDrawable, digestPaths } from '../support/digest.js';
 import { roundPathD } from '../support/round.js';

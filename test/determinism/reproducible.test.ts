@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { RoughGenerator } from '../../src/generator.js';
+import { RoughGenerator } from '../../src/sketch/generator.js';
 import { digestDrawable } from '../support/digest.js';
 import { FILL_STYLES } from '../support/cases.js';
 

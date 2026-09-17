@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { RoughGenerator } from '../../src/generator.js';
-import { digestDrawable } from '../support/digest.js';
+import { RoughGenerator } from '../../../src/sketch/generator.js';
+import { digestDrawable } from '../../support/digest.js';
 
 /**
  * A Drawable is a pure function of (shape arguments, options).

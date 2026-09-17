@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import type { Drawable } from '../../src/core.js';
+import type { Drawable } from '../../src/sketch/core.js';
 import { roundDrawable } from './round.js';
 
 /**

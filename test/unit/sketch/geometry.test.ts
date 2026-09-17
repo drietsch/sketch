@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { lineLength } from '../../src/geometry.js';
-import type { Line } from '../../src/geometry.js';
+import { lineLength } from '../../../src/sketch/geometry.js';
+import type { Line } from '../../../src/sketch/geometry.js';
 
 describe('lineLength', () => {
   test.each([

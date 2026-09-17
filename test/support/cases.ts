@@ -1,6 +1,6 @@
-import type { Options } from '../../src/core.js';
-import type { Point } from '../../src/geometry.js';
-import type { RoughGenerator } from '../../src/generator.js';
+import type { Options } from '../../src/sketch/core.js';
+import type { Point } from '../../src/sketch/geometry.js';
+import type { RoughGenerator } from '../../src/sketch/generator.js';
 
 export const FILL_STYLES = ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots', 'dashed', 'zigzag-line'] as const;
 

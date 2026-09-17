@@ -1,5 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
-import { Random, randomSeed } from '../../src/math.js';
+import { Random, randomSeed } from '../../../src/sketch/math.js';
 
 describe('Random', () => {
   test('reproduces the exact v4 sequence for a given seed', () => {

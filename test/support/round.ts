@@ -1,4 +1,4 @@
-import type { Drawable, Op } from '../../src/core.js';
+import type { Drawable, Op } from '../../src/sketch/core.js';
 
 /**
  * ECMAScript does not specify the results of Math.sin/cos/atan/pow -- only

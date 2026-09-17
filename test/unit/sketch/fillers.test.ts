@@ -1,14 +1,14 @@
 import { describe, expect, test, vi } from 'vitest';
-import { getFiller } from '../../src/fillers/filler.js';
-import { DotFiller } from '../../src/fillers/dot-filler.js';
-import { HatchFiller } from '../../src/fillers/hatch-filler.js';
-import { ZigZagLineFiller } from '../../src/fillers/zigzag-line-filler.js';
-import { DashedFiller } from '../../src/fillers/dashed-filler.js';
-import type { RenderHelper } from '../../src/fillers/filler-interface.js';
-import type { Op, OpSet, ResolvedOptions } from '../../src/core.js';
-import type { Point } from '../../src/geometry.js';
-import { FILL_STYLES } from '../support/cases.js';
-import { Random } from '../../src/math.js';
+import { getFiller } from '../../../src/sketch/fillers/filler.js';
+import { DotFiller } from '../../../src/sketch/fillers/dot-filler.js';
+import { HatchFiller } from '../../../src/sketch/fillers/hatch-filler.js';
+import { ZigZagLineFiller } from '../../../src/sketch/fillers/zigzag-line-filler.js';
+import { DashedFiller } from '../../../src/sketch/fillers/dashed-filler.js';
+import type { RenderHelper } from '../../../src/sketch/fillers/filler-interface.js';
+import type { Op, OpSet, ResolvedOptions } from '../../../src/sketch/core.js';
+import type { Point } from '../../../src/sketch/geometry.js';
+import { FILL_STYLES } from '../../support/cases.js';
+import { Random } from '../../../src/sketch/math.js';
 
 type Call = readonly [string, ...unknown[]];
 
