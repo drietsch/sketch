@@ -59,9 +59,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      # --ci makes a missing snapshot a failure rather than a silent write, so a
-      # golden that was never committed cannot pass.
-      - run: pnpm exec vitest run --project unit --project lib --project backend --project determinism --ci
+      # Vitest refuses to write snapshots when CI=true (which Actions sets), so
+      # a golden that was never committed fails here instead of passing silently.
+      - run: pnpm exec vitest run --project unit --project lib --project backend --project determinism
 
       # Proves the published bundle behaves identically to the source it was
       # built from: a mis-resolved dependency or wrong target cannot pass here.
@@ -108,8 +108,10 @@ jobs:
       - name: publint
         run: pnpm exec publint
 
+      # esm-only: the package deliberately ships no `require` condition, so
+      # attw's CJS-resolves-to-ESM finding is expected, not a defect.
       - name: Are the types wrong?
-        run: pnpm exec attw --pack .
+        run: pnpm exec attw --pack . --profile esm-only
 
       # Packs, installs into a throwaway project and runs it. publint and attw
       # both passed a build that shipped four unresolved bare imports, so this
