@@ -39,36 +39,38 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
     return demo;
   },
 
-  /** The briefing's login mockup, with every component state exercised. */
+  /**
+   * The briefing's login mockup, with every component state exercised. Laid
+   * out with relative placement; the golden pins that it produces exactly the
+   * coordinates the literal version did.
+   */
   loginForm(seed = 42) {
     const demo = createDemo({ width: 900, height: 600, seed, background: null });
     demo.browser({ id: 'browser', x: 40, y: 30, width: 820, height: 540, url: 'https://example.com/login' });
     demo.panel({ id: 'card', parent: 'browser', x: 210, y: 70, width: 400, height: 330, title: 'Welcome back' });
     demo.text({ id: 'email-label', parent: 'card', x: 24, y: 20, text: 'Email', style: { color: '#8a8f98' } });
-    demo.input({ id: 'email', parent: 'card', x: 24, y: 44, width: 352, placeholder: 'you@example.com' });
-    demo.text({ id: 'password-label', parent: 'card', x: 24, y: 100, text: 'Password', style: { color: '#8a8f98' } });
+    demo.input({ id: 'email', below: 'email-label', gap: 10, width: 352, placeholder: 'you@example.com' });
+    demo.text({ id: 'password-label', below: 'email', gap: 20, text: 'Password', style: { color: '#8a8f98' } });
     demo.input({
       id: 'password',
-      parent: 'card',
-      x: 24,
-      y: 124,
+      below: 'password-label',
+      gap: 10,
       width: 352,
       value: 'hunter2',
       state: { focused: true },
     });
     demo.button({
       id: 'login',
-      parent: 'card',
-      x: 24,
-      y: 190,
+      below: 'password',
+      gap: 30,
       width: 352,
       text: 'Sign in',
       variant: 'primary',
       icon: 'log-in',
     });
-    demo.button({ id: 'forgot', parent: 'card', x: 24, y: 240, text: 'Forgot password?' });
-    demo.button({ id: 'hovered', parent: 'card', x: 190, y: 240, text: 'Hovered', state: { hovered: true } });
-    demo.button({ id: 'pressed', parent: 'card', x: 290, y: 240, text: 'Pressed', state: { pressed: true } });
+    demo.button({ id: 'forgot', below: 'login', gap: 14, text: 'Forgot password?' });
+    demo.button({ id: 'hovered', rightOf: 'forgot', gap: 11, text: 'Hovered', state: { hovered: true } });
+    demo.button({ id: 'pressed', rightOf: 'hovered', gap: 13, text: 'Pressed', state: { pressed: true } });
     demo.icon({ id: 'help', parent: 'browser', x: 780, y: 20, icon: 'info', size: 22, style: { color: '#8a8f98' } });
     demo.button({ id: 'disabled', parent: 'browser', x: 40, y: 440, text: 'Disabled', state: { disabled: true } });
     return demo;

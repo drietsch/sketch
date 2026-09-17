@@ -24,10 +24,30 @@ test('built bundle renders every fixture byte-identically to source', () => {
   }
 });
 
-test('built bundle exposes the documented named exports', () => {
-  for (const name of ['createDemo', 'loadDemo', 'Demo', 'Scene', 'Timeline', 'DEFAULT_THEME', 'deriveSeed', 'frameToSVG', 'registerIcon']) {
-    expect(built, `missing export: ${name}`).toHaveProperty(name);
-  }
+/**
+ * The exact public surface. Every name here is a compatibility promise, so
+ * both an accidental addition and an accidental removal must fail.
+ */
+export const PUBLIC_EXPORTS = [
+  'CompileError',
+  'DEFAULT_FONT',
+  'DEFAULT_THEME',
+  'Demo',
+  'DemoJSONError',
+  'Player',
+  'Scene',
+  'StrokeFont',
+  'Timeline',
+  'createDemo',
+  'iconNames',
+  'loadDemo',
+  'parseDemoJSON',
+  'registerIcon',
+];
+
+test('built bundle exposes exactly the documented named exports', () => {
+  expect(Object.keys(built).sort()).toEqual(PUBLIC_EXPORTS);
+  expect(Object.keys(source).sort()).toEqual(PUBLIC_EXPORTS);
 });
 
 test('built bundle has no bare imports and no engine internals in its surface', async () => {

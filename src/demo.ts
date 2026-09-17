@@ -16,6 +16,9 @@ import type {
   WindowNode,
 } from './core/types.js';
 import type { IconDef } from './icons/types.js';
+import { resolvePlacement, splitPlacement } from './core/place.js';
+import type { Placement } from './core/place.js';
+import type { DistributiveOmit } from './core/types.js';
 import { getIcon, isBuiltinIcon } from './icons/registry.js';
 import { parseDemoJSON } from './core/json.js';
 import type { DemoJSON } from './core/json.js';
@@ -52,8 +55,21 @@ export interface DemoOptions {
   font?: StrokeFont;
 }
 
-/** Node props as passed to a factory: everything but `type`, with `id` optional. */
+/** Node props with literal coordinates: everything but `type`, with `id` optional. */
 export type Props<N extends SceneNode> = Omit<N, 'type' | 'id'> & { id?: string };
+
+/**
+ * Node props placed relative to an existing node (`below`, `above`, `rightOf`,
+ * `leftOf`). `x`/`y` become optional overrides for the cross axis.
+ */
+export type RelativeProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' | 'y'> & {
+  id?: string;
+  x?: number;
+  y?: number;
+} & Placement;
+
+/** What every factory accepts: literal coordinates, or a placement relative to another node. */
+export type NodeProps<N extends SceneNode> = Props<N> | RelativeProps<N>;
 
 export function createDemo(options: DemoOptions): Demo {
   return new Demo(options);
@@ -132,7 +148,12 @@ export class Demo {
     this.background = options.background === null ? undefined : (options.background ?? this.theme.background);
     this.font = options.font ?? DEFAULT_FONT;
     this.adapter = new SketchAdapter(this.font);
-    this.scene = new Scene({ theme: this.theme, font: this.font, icons: (icon) => this.resolveIcon(icon) });
+    this.scene = new Scene(
+      { theme: this.theme, font: this.font, icons: (icon) => this.resolveIcon(icon) },
+      // Removing a node through the scene is the one removal path; it frees the
+      // node's cached geometry here so nothing leaks.
+      { onRemove: (ids) => ids.forEach((id) => this.adapter.forget(id)) },
+    );
     this.cursor = new CursorRenderer(this.adapter, this.seed, this.theme);
   }
 
@@ -154,56 +175,49 @@ export class Demo {
     return def;
   }
 
-  rect(props: Props<RectNode>): RectNode {
+  rect(props: NodeProps<RectNode>): RectNode {
     return this.add('rect', props);
   }
 
-  ellipse(props: Props<EllipseNode>): EllipseNode {
+  ellipse(props: NodeProps<EllipseNode>): EllipseNode {
     return this.add('ellipse', props);
   }
 
-  line(props: Props<LineNode>): LineNode {
+  line(props: NodeProps<LineNode>): LineNode {
     return this.add('line', props);
   }
 
-  path(props: Props<PathNode>): PathNode {
+  path(props: NodeProps<PathNode>): PathNode {
     return this.add('path', props);
   }
 
-  text(props: Props<TextNode>): TextNode {
+  text(props: NodeProps<TextNode>): TextNode {
     return this.add('text', props);
   }
 
-  icon(props: Props<IconNode>): IconNode {
+  icon(props: NodeProps<IconNode>): IconNode {
     return this.add('icon', props);
   }
 
-  button(props: Props<ButtonNode>): ButtonNode {
+  button(props: NodeProps<ButtonNode>): ButtonNode {
     return this.add('button', props);
   }
 
-  input(props: Props<InputNode>): InputNode {
+  input(props: NodeProps<InputNode>): InputNode {
     return this.add('input', props);
   }
 
-  panel(props: Props<PanelNode>): PanelNode {
+  panel(props: NodeProps<PanelNode>): PanelNode {
     return this.add('panel', props);
   }
 
-  window(props: Omit<Props<WindowNode>, 'chrome'> & { chrome?: WindowNode['chrome'] }): WindowNode {
-    return this.add('window', { chrome: 'window', ...props });
+  window(props: DistributiveOmit<NodeProps<WindowNode>, 'chrome'> & { chrome?: WindowNode['chrome'] }): WindowNode {
+    return this.add('window', { chrome: 'window', ...props } as NodeProps<WindowNode>);
   }
 
   /** A window with browser chrome: navigation arrows and an address bar. */
-  browser(props: Omit<Props<WindowNode>, 'chrome'>): WindowNode {
-    return this.add('window', { ...props, chrome: 'browser' });
-  }
-
-  /** Removes a node (and its children) and forgets its cached geometry. */
-  remove(id: string): void {
-    const ids = [id, ...this.descendants(id)];
-    this.scene.remove(id);
-    for (const removed of ids) this.adapter.forget(removed);
+  browser(props: DistributiveOmit<NodeProps<WindowNode>, 'chrome'>): WindowNode {
+    return this.add('window', { ...props, chrome: 'browser' } as NodeProps<WindowNode>);
   }
 
   /** Total length of the timeline in ms; 0 for a static scene. */
@@ -211,7 +225,12 @@ export class Demo {
     return this.compiled().duration;
   }
 
-  /** The timeline resolved against the current scene. Recompiled lazily when either changes. */
+  /**
+   * The timeline resolved against the current scene, recompiled lazily when
+   * either changes. Not part of the package surface: the compiled form is an
+   * implementation detail that tests inspect.
+   * @internal
+   */
   compiled(): CompiledTimeline {
     const c = this.compiledCache;
     if (c && c.sceneVersion === this.scene.version && c.timelineVersion === this.timeline.version) return c;
@@ -356,18 +375,33 @@ export class Demo {
     return doc;
   }
 
-  private add<T extends NodeType>(type: T, props: Props<NodeOf<T>>): NodeOf<T> {
+  private add<T extends NodeType>(type: T, props: NodeProps<NodeOf<T>>): NodeOf<T> {
     const id = props.id ?? this.ids.next(type, (candidate) => this.scene.has(candidate));
-    const node = { ...props, id, type } as unknown as NodeOf<T>;
-    return this.scene.add(node);
-  }
-
-  private descendants(id: string): string[] {
-    const out: string[] = [];
-    for (const child of this.scene.childrenOf(id)) {
-      out.push(child, ...this.descendants(child));
+    // Placement keys must never reach the stored node: they would leak into toJSON().
+    const { placement, rest } = splitPlacement(id, props as Record<string, unknown>);
+    if (!placement) {
+      if (typeof rest.x !== 'number' || typeof rest.y !== 'number') {
+        throw new Error(`Node "${id}" needs x and y, or a placement (below, above, rightOf, leftOf).`);
+      }
+      return this.scene.add({ ...rest, id, type } as unknown as NodeOf<T>);
     }
-    return out;
+    const provisional = { ...rest, id, type, x: 0, y: 0 } as unknown as NodeOf<T>;
+    const opts = { parentGiven: 'parent' in rest, x: rest.x as number | undefined, y: rest.y as number | undefined };
+    const placed = resolvePlacement(this.scene, provisional, placement, opts);
+    const node = { ...provisional, x: placed.x, y: placed.y } as NodeOf<T> & {
+      parent?: string;
+      x2?: number;
+      y2?: number;
+    };
+    if (placed.parent !== undefined) node.parent = placed.parent;
+    else delete node.parent;
+    if (node.type === 'line') {
+      // A line's geometry is its (x2 - x, y2 - y) vector; a placed line keeps
+      // that vector, so x2/y2 are read as offsets from the resolved origin.
+      node.x2 = (node.x2 ?? 0) + placed.x;
+      node.y2 = (node.y2 ?? 0) + placed.y;
+    }
+    return this.scene.add(node);
   }
 }
 

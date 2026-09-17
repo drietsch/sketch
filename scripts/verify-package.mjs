@@ -66,6 +66,33 @@ try {
   const cjs = run('node', ['cjs.cjs'], dir);
   check('require() works on this Node', cjs.includes('CJS_OK'));
 
+  // The public surface is a promise; an accidental re-export of an internal
+  // must fail here, not surface as a breaking change later.
+  const expectedExports = [
+    'CompileError',
+    'DEFAULT_FONT',
+    'DEFAULT_THEME',
+    'Demo',
+    'DemoJSONError',
+    'Player',
+    'Scene',
+    'StrokeFont',
+    'Timeline',
+    'createDemo',
+    'iconNames',
+    'loadDemo',
+    'parseDemoJSON',
+    'registerIcon',
+  ];
+  const actualExports = cjs.trim().split('CJS_OK:')[1]?.split(',') ?? [];
+  check(
+    'package exports exactly the documented surface',
+    JSON.stringify(actualExports) === JSON.stringify(expectedExports),
+    actualExports.length !== expectedExports.length
+      ? `got ${actualExports.length}, expected ${expectedExports.length}`
+      : '',
+  );
+
   const types = readFileSync(join(dir, 'node_modules/@drietsch/sketch/dist/index.d.ts'), 'utf8');
   check('type declarations ship', types.includes('createDemo') && types.includes('SceneNode'));
 

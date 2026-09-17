@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
-import { createDemo, patchDOM } from '../../src/index.js';
+import { createDemo } from '../../src/index.js';
+import { patchDOM } from '../../src/render/patch-dom.js';
 import type { Clock } from '../../src/index.js';
 import { SCENES } from '../support/scenes.js';
 
@@ -78,7 +79,7 @@ describe('mount and patchDOM', () => {
     demo.renderInto(svg);
     const [a, b, c] = ['a', 'b', 'c'].map((k) => svg.querySelector(`g[data-key="${k}"]`)!);
     demo.scene.update('b', { x: 70 });
-    demo.remove('c');
+    demo.scene.remove('c');
     demo.renderInto(svg);
     expect(svg.querySelector('g[data-key="a"]')).toBe(a);
     expect(svg.querySelector('g[data-key="b"]')).not.toBe(b);

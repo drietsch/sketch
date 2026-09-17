@@ -41,7 +41,9 @@ from a bundler or a `<script type="module">`.
 **Scene.** What exists: a flat store of nodes addressed by id, each with a
 type, a position and optional `parent`. Children are positioned relative to
 their parent's content area, so moving a window moves everything in it.
-`demo.scene.get(id)`, `update(id, patch)`, `bounds(id)`, `remove(id)`,
+Nodes are created through the demo's factories and edited through the scene:
+`demo.scene.get(id)` (or `node(id)`, which throws instead of returning
+`undefined`), `update(id, patch)`, `bounds(id)`, `remove(id)`,
 `bringToFront(id)` and `hitTest(point)` are the whole editing surface.
 
 **Components.** Semantic nodes that expand into sketched parts: `button`,
@@ -109,6 +111,33 @@ Every factory takes the node's props with an optional `id` (auto-generated as
 `roughness`, `bowing`, `hachureGap`, `hachureAngle`, `fillWeight`, `dash`,
 `opacity`, `color` and `fontSize`. `state` accepts `focused`, `pressed`,
 `hovered` and `disabled`.
+
+### Relative placement
+
+Instead of `x` and `y`, a node can say where it sits relative to one that
+already exists. The position is resolved once, when the node is added, and
+stored as plain coordinates; later edits do not reflow neighbours.
+
+```ts
+demo.text({ id: 'label', parent: 'card', x: 24, y: 20, text: 'Email' });
+demo.input({ id: 'email', below: 'label', gap: 10, width: 320 });
+demo.button({ id: 'go', below: 'email', gap: 20, text: 'Sign in' });
+demo.button({ id: 'cancel', rightOf: 'go', gap: 12, text: 'Cancel' });
+```
+
+- One of `below`, `above`, `rightOf` or `leftOf`, naming the reference node.
+- `gap` is the distance between the two edges (default 0, may be negative).
+- `alignTo` aligns the cross axis: `start` (default), `center` or `end`.
+  Stacking vertically aligns left edges; stacking horizontally aligns tops.
+- `x` or `y` on the cross axis overrides the aligned value; giving the
+  placement's own axis is an error.
+- The new node inherits the reference's `parent` unless `parent` is given.
+- A `line` keeps its vector: `x2`/`y2` are read as offsets from the resolved
+  origin.
+
+Placement works on boxes, so a centred text or an auto-sized button lands
+where its visible edge should be. Placed and literal coordinates render
+byte-identically.
 
 ### Timeline
 
