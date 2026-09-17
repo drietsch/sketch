@@ -2,6 +2,36 @@
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 0.3.0
+
+### Minor Changes
+
+- Figma's vocabulary, Figma's property shapes, and a nested document.
+  
+  **Breaking.** Node types are Figma's, in upper snake case: `RECTANGLE`,
+  `ELLIPSE`, `LINE`, `VECTOR` (was path), `TEXT`, `FRAME` (was panel), and
+  sketch's own `ICON`, `BUTTON`, `INPUT`, `WINDOW`. Factories follow:
+  `demo.rectangle()`, `demo.vector()`, `demo.frame()`. Auto-generated ids are
+  lowercase (`rectangle-1`). The render method `demo.frame(t)` is now
+  `demo.frameAt(t)` so that `frame` can be the container factory.
+  
+  **Breaking.** Visual properties take Figma's shapes at node level: `fills` and
+  `strokes` are `Paint[]` (`{ type: 'SOLID', color, opacity?, visible? }`, colour
+  as `{ r, g, b, a }` in 0..1 or a CSS string), plus `strokeWeight`,
+  `strokeDashes`, `cornerRadius`, `opacity`, `visible` (replaces `hidden`). Text
+  content is `characters`; text styling is a `style: TypeStyle` with `fontSize`,
+  `textAlignHorizontal` (`LEFT` / `CENTER` / `RIGHT`) and `fills`. The
+  hand-drawn knobs move under `sketch: { roughness, bowing, fillStyle,
+  hachureGap, hachureAngle, fillWeight }`. The old `style` bag is gone.
+  `Theme.strokeWidth` is `strokeWeight`.
+  
+  **Breaking.** Documents are version 2: nested `children` back to front, no
+  `parent` keys. Version 1 documents (0.1.0 and 0.2.0) load and migrate
+  automatically, timeline patches included, and render byte-identically.
+  
+  **Unchanged.** Every sketched pixel: the only difference in rendered output
+  is the `data-type` attribute carrying the new type names.
+
 ## 0.2.0
 
 ### Minor Changes
