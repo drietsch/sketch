@@ -26,13 +26,15 @@ export const input: ComponentDef<InputNode> = {
   resizable: true,
   focusable: true,
   interactive: true,
+  capabilities: { text: true },
   localBounds: (node) => ({ x: 0, y: 0, width: node.width, height: node.height ?? INPUT_HEIGHT }),
   expand: (node, ctx) => {
     const { theme, font, state } = ctx;
     const height = node.height ?? INPUT_HEIGHT;
     const fontSize = fontSizeOf(node.style, theme);
     const innerWidth = Math.max(0, node.width - INPUT_PADDING_X * 2);
-    const value = ctx.value ?? node.value ?? '';
+    const live = ctx.value ?? node.value ?? '';
+    const value = typeof live === 'string' ? live : String(live);
     const overrides: Parameters<typeof rectPart>[3]['overrides'] = {};
     if (!hasOwnFill(node)) overrides.fill = theme.surface;
     if (node.sketch?.fillStyle === undefined) overrides.fillStyle = 'solid';

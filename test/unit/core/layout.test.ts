@@ -311,7 +311,7 @@ describe('auto-layout', () => {
       /a TEXT cannot FILL/,
     );
     expect(() => demo.rectangle({ id: 'r', x: 0, y: 0, width: 1, height: 1, layoutMode: 'VERTICAL' } as never)).toThrow(
-      /layoutMode only applies to FRAME and WINDOW/,
+      /layoutMode only applies to container nodes/,
     );
     expect(() => demo.frame({ id: 'f', x: 0, y: 0, layoutMode: 'ROW' } as never)).toThrow(/layoutMode must be one of/);
     expect(() => demo.frame({ id: 'f', x: 0, y: 0, width: 10, height: 10, itemSpacing: -1 })).toThrow(

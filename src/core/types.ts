@@ -85,8 +85,10 @@ export interface ComponentState {
   pressed?: boolean;
   hovered?: boolean;
   disabled?: boolean;
-  checked?: boolean;
 }
+
+/** A model value a control carries: text, a number, a selection, or several selections. */
+export type ControlValue = string | number | string[];
 
 export type LayoutMode = 'NONE' | 'HORIZONTAL' | 'VERTICAL';
 export type PrimaryAxisAlignItems = 'MIN' | 'CENTER' | 'MAX' | 'SPACE_BETWEEN';
@@ -142,6 +144,14 @@ export interface NodeBase {
   interactive?: boolean;
   /** Re-rolls this node's sketch jitter without changing the document seed. */
   sketchVariant?: number;
+  /**
+   * Model state, Base UI's names. Authored here; the timeline overrides it live
+   * (a click toggles `checked`, `choose` sets `value`) without writing back.
+   */
+  checked?: boolean;
+  open?: boolean;
+  value?: ControlValue;
+  pressed?: boolean;
 }
 
 export interface RectangleNode extends NodeBase {

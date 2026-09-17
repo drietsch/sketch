@@ -17,7 +17,15 @@ function expand(
   state: ComponentState = {},
   extra: Partial<RenderContext> = {},
 ) {
-  const ctx: RenderContext = { theme: demo.theme, font: demo.font, icons: (i) => demo.resolveIcon(i), state, ...extra };
+  const ctx: RenderContext = {
+    theme: demo.theme,
+    font: demo.font,
+    icons: (i) => demo.resolveIcon(i),
+    document: { width: demo.width, height: demo.height },
+    bounds: (id) => demo.scene.bounds(id),
+    state,
+    ...extra,
+  };
   return componentFor(node).expand(node, ctx);
 }
 

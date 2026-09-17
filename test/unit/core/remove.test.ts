@@ -30,7 +30,10 @@ describe('removing through the scene', () => {
 
   test('the hook fires once with the whole subtree, in removal order', () => {
     const onRemove = vi.fn();
-    const scene = new Scene({ theme: { ...DEFAULT_THEME }, font: DEFAULT_FONT, icons: resolveIcon }, { onRemove });
+    const scene = new Scene(
+      { theme: { ...DEFAULT_THEME }, font: DEFAULT_FONT, icons: resolveIcon, document: { width: 800, height: 600 } },
+      { onRemove },
+    );
     scene.add({ id: 'a', type: 'RECTANGLE', x: 0, y: 0, width: 1, height: 1 });
     scene.add({ id: 'a1', type: 'RECTANGLE', parent: 'a', x: 0, y: 0, width: 1, height: 1 });
     scene.add({ id: 'a11', type: 'RECTANGLE', parent: 'a1', x: 0, y: 0, width: 1, height: 1 });
@@ -43,7 +46,10 @@ describe('removing through the scene', () => {
 
   test('a clone does not carry the hook', () => {
     const onRemove = vi.fn();
-    const scene = new Scene({ theme: { ...DEFAULT_THEME }, font: DEFAULT_FONT, icons: resolveIcon }, { onRemove });
+    const scene = new Scene(
+      { theme: { ...DEFAULT_THEME }, font: DEFAULT_FONT, icons: resolveIcon, document: { width: 800, height: 600 } },
+      { onRemove },
+    );
     scene.add({ id: 'a', type: 'RECTANGLE', x: 0, y: 0, width: 1, height: 1 });
     scene.clone().remove('a');
     expect(onRemove).not.toHaveBeenCalled();

@@ -17,6 +17,7 @@ export function barHeight(node: WindowNode): number {
 
 export const window: ComponentDef<WindowNode> = {
   resizable: true,
+  container: true,
   interactive: true,
   localBounds: (node) => ({ x: 0, y: 0, width: node.width, height: node.height }),
   contentOffset: (node) => ({ x: 0, y: barHeight(node) }),

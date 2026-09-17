@@ -1,5 +1,5 @@
 import type { Scene } from './scene.js';
-import type { Bounds, FrameNode, LayoutMode, LayoutSizing, Point, SceneNode, Size, WindowNode } from './types.js';
+import type { AutoLayoutProps, Bounds, LayoutMode, LayoutSizing, Point, SceneNode, Size } from './types.js';
 import type { LayoutContext } from '../components/types.js';
 import { componentFor } from '../components/index.js';
 
@@ -14,10 +14,11 @@ export interface LayoutEntry {
 
 export type Layout = ReadonlyMap<string, LayoutEntry>;
 
-type Container = FrameNode | WindowNode;
+type Container = SceneNode & AutoLayoutProps;
 
+/** Any component that declares itself a container takes auto-layout props and may HUG. */
 export function isContainer(node: SceneNode): node is Container {
-  return node.type === 'FRAME' || node.type === 'WINDOW';
+  return !!componentFor(node).container;
 }
 
 export function layoutModeOf(node: SceneNode): LayoutMode {
@@ -191,8 +192,11 @@ const DEFAULTS: Record<string, unknown> = {
 };
 
 /** Message describing what is wrong with a node's layout props, or undefined. `resizable` says whether FILL is allowed. */
-export function validateLayoutProps(node: Record<string, unknown>, resizable: boolean): string | undefined {
-  const container = node.type === 'FRAME' || node.type === 'WINDOW';
+export function validateLayoutProps(
+  node: Record<string, unknown>,
+  resizable: boolean,
+  container: boolean,
+): string | undefined {
   for (const [key, values] of Object.entries(ENUMS)) {
     const v = node[key];
     if (v !== undefined && !(values as readonly string[]).includes(v as string)) {
@@ -207,11 +211,11 @@ export function validateLayoutProps(node: Record<string, unknown>, resizable: bo
   }
   if (!container) {
     for (const key of CONTAINER_ONLY) {
-      if (node[key] !== undefined) return `${key} only applies to FRAME and WINDOW nodes, not ${String(node.type)}`;
+      if (node[key] !== undefined) return `${key} only applies to container nodes, not ${String(node.type)}`;
     }
   }
   for (const key of ['layoutSizingHorizontal', 'layoutSizingVertical'] as const) {
-    if (node[key] === 'HUG' && !container) return `${key}: only FRAME and WINDOW can HUG their content`;
+    if (node[key] === 'HUG' && !container) return `${key}: only a container can HUG its content`;
     if (node[key] === 'FILL' && !resizable) return `${key}: a ${String(node.type)} cannot FILL; its size is intrinsic`;
   }
   if (node.type === 'FRAME') {

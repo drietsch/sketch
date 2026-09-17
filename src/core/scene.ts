@@ -2,7 +2,13 @@ import type { Bounds, NodePatch, Point, SceneNode } from './types.js';
 import type { DocumentNode } from './json.js';
 import { assertValidId } from './ids.js';
 import { componentFor, hasComponent } from '../components/index.js';
-import type { LayoutContext } from '../components/types.js';
+import type { LayoutContext, Region, RenderContext } from '../components/types.js';
+
+/** The result of a detailed hit-test: a node and, when the point fell on one, the region within it. */
+export interface Hit {
+  id: string;
+  region?: Region;
+}
 import { computeLayout, stripLayoutDefaults, validateLayoutProps } from './layout.js';
 import type { Layout, LayoutEntry } from './layout.js';
 
@@ -54,7 +60,7 @@ export class Scene {
     }
     const stored = { ...node };
     if (stored.parent === undefined) delete stored.parent;
-    const problem = validateLayoutProps(stored as unknown as Record<string, unknown>, !!componentFor(stored).resizable);
+    const problem = this.validateNode(stored);
     if (problem) throw new Error(`Node "${stored.id}": ${problem}`);
     stripLayoutDefaults(stored as unknown as Record<string, unknown>);
     this.nodes.set(stored.id, stored);
@@ -107,7 +113,7 @@ export class Scene {
       this.reparent(id, ROOT);
     }
     const stored = next as unknown as N;
-    const problem = validateLayoutProps(next, !!componentFor(stored).resizable);
+    const problem = this.validateNode(stored);
     if (problem) throw new Error(`Node "${id}": ${problem}`);
     stripLayoutDefaults(next);
     this.nodes.set(id, stored);
@@ -160,19 +166,34 @@ export class Scene {
     return out;
   }
 
-  /** Paint order, skipping hidden nodes and everything beneath them. */
-  visible(): SceneNode[] {
+  /**
+   * Paint order, skipping hidden nodes and everything beneath them, and the
+   * children of nodes whose component hides them (a closed collapsible, an
+   * inactive tab panel). `render` supplies the live context for that check.
+   */
+  visible(render?: (node: SceneNode) => RenderContext): SceneNode[] {
     const out: SceneNode[] = [];
     const walk = (parent: string) => {
       for (const id of this.children.get(parent)!) {
         const node = this.nodes.get(id)!;
         if (node.visible === false) continue;
         out.push(node);
+        const def = componentFor(node);
+        if (def.hidesChildren && render && def.hidesChildren(this.resolved(id), render(node))) continue;
         walk(id);
       }
     };
     walk(ROOT);
     return out;
+  }
+
+  /** Layout and per-type validation shared by add() and update(). */
+  private validateNode(node: SceneNode): string | undefined {
+    const def = componentFor(node);
+    return (
+      validateLayoutProps(node as unknown as Record<string, unknown>, !!def.resizable, !!def.container) ??
+      def.validate?.(node)
+    );
   }
 
   bringToFront(id: string): void {
@@ -256,15 +277,49 @@ export class Scene {
   }
 
   /** The topmost visible, interactive node containing the point, if any. */
-  hitTest(point: Point): string | undefined {
-    const nodes = this.visible();
+  hitTest(point: Point, render?: (node: SceneNode) => RenderContext): string | undefined {
+    return this.hitTestDetailed(point, render)?.id;
+  }
+
+  /**
+   * Like hitTest, but also the topmost region of the hit node under the point.
+   * Overlay regions (an open popup) are checked first, across all nodes in
+   * reverse paint order, so a popup takes clicks from whatever is beneath it.
+   */
+  hitTestDetailed(point: Point, render?: (node: SceneNode) => RenderContext): Hit | undefined {
+    const nodes = this.visible(render);
+    const inside = (b: Bounds, origin: Point) =>
+      point.x >= origin.x + b.x &&
+      point.x <= origin.x + b.x + b.width &&
+      point.y >= origin.y + b.y &&
+      point.y <= origin.y + b.y + b.height;
+    if (render) {
+      for (let i = nodes.length - 1; i >= 0; i--) {
+        const node = nodes[i];
+        const def = componentFor(node);
+        if (!def.regions) continue;
+        const origin = this.position(node.id);
+        const regions = def.regions(this.resolved(node.id), render(node));
+        for (let r = regions.length - 1; r >= 0; r--) {
+          if (regions[r].layer === 'overlay' && inside(regions[r].bounds, origin))
+            return { id: node.id, region: regions[r] };
+        }
+      }
+    }
     for (let i = nodes.length - 1; i >= 0; i--) {
       const node = nodes[i];
       if (!this.isInteractive(node)) continue;
-      const b = this.bounds(node.id);
-      if (point.x >= b.x && point.x <= b.x + b.width && point.y >= b.y && point.y <= b.y + b.height) {
-        return node.id;
+      if (!inside(this.localBounds(node.id), this.position(node.id))) continue;
+      const def = componentFor(node);
+      if (render && def.regions) {
+        const origin = this.position(node.id);
+        const regions = def.regions(this.resolved(node.id), render(node));
+        for (let r = regions.length - 1; r >= 0; r--) {
+          if (regions[r].layer !== 'overlay' && inside(regions[r].bounds, origin))
+            return { id: node.id, region: regions[r] };
+        }
       }
+      return { id: node.id };
     }
     return undefined;
   }

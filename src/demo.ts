@@ -165,7 +165,12 @@ export class Demo {
     this.font = options.font ?? DEFAULT_FONT;
     this.adapter = new SketchAdapter(this.font);
     this.scene = new Scene(
-      { theme: this.theme, font: this.font, icons: (icon) => this.resolveIcon(icon) },
+      {
+        theme: this.theme,
+        font: this.font,
+        icons: (icon) => this.resolveIcon(icon),
+        document: { width: this.width, height: this.height },
+      },
       // Removing a node through the scene is the one removal path; it frees the
       // node's cached geometry here so nothing leaks.
       { onRemove: (ids) => ids.forEach((id) => this.adapter.forget(id)) },
@@ -254,7 +259,13 @@ export class Demo {
   compiled(): CompiledTimeline {
     const c = this.compiledCache;
     if (c && c.sceneVersion === this.scene.version && c.timelineVersion === this.timeline.version) return c;
-    const fresh = compile(this.timeline, this.scene, this.seed, { width: this.width, height: this.height });
+    const size = { width: this.width, height: this.height };
+    const fresh = compile(this.timeline, this.scene, this.seed, size, {
+      theme: this.theme,
+      font: this.font,
+      icons: (icon) => this.resolveIcon(icon),
+      document: size,
+    });
     this.compiledCache = fresh;
     return fresh;
   }
@@ -266,8 +277,13 @@ export class Demo {
 
   /** The frame at time t (ms) as a virtual SVG tree. Pure: the same inputs always give the same frame. */
   frameAt(t = 0): Frame {
-    const base = { theme: this.theme, font: this.font, icons: (icon: string | IconDef) => this.resolveIcon(icon) };
     const size = { width: this.width, height: this.height };
+    const base = {
+      theme: this.theme,
+      font: this.font,
+      icons: (icon: string | IconDef) => this.resolveIcon(icon),
+      document: size,
+    };
     if (this.timeline.steps.length === 0) {
       return buildFrame(this.scene, size, { ...base, seed: this.seed, adapter: this.adapter }, this.background);
     }
@@ -347,10 +363,14 @@ export class Demo {
     const state = this.stateAt(t);
     const patch = state.patches.get(id);
     const value = state.values.get(id);
-    if (!patch && value === undefined) return node;
-    const out = Object.assign({}, node) as N & { value?: string };
+    const checked = state.checked.get(id);
+    const open = state.open.get(id);
+    if (!patch && value === undefined && checked === undefined && open === undefined) return node;
+    const out = Object.assign({}, node) as N;
     if (patch) Object.assign(out, patch);
-    if (value !== undefined && node.type === 'INPUT') out.value = value;
+    if (value !== undefined) out.value = value;
+    if (checked !== undefined) out.checked = checked;
+    if (open !== undefined) out.open = open;
     return out;
   }
 
