@@ -113,6 +113,8 @@ export interface ComponentDef<N extends NodeBase & { type: string } = SceneNode>
   expand(node: N, ctx: RenderContext): Part[];
   /** Where children of this node are positioned from, in local space. */
   contentOffset?(node: N, ctx: LayoutContext): Point;
+  /** Chrome after the content (a field's description), which a HUG axis adds and a FIXED axis reserves. */
+  contentTrailing?(node: N, ctx: LayoutContext): Point;
   focusable?: boolean;
   interactive?: boolean;
   /** Reads width/height from the node it is given, so layout may set them (FILL). Unset: FILL is rejected. */

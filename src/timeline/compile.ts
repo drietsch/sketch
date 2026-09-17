@@ -199,7 +199,7 @@ export function compile(
       if (Object.keys(effect).length > 1 && componentFor(working.node(id)).layoutDependsOnState) {
         const { id: _id, ...patch } = effect;
         void _id;
-        working.update(id, patch);
+        working.update<SceneNode>(id, patch);
       }
       return Object.keys(effect).length > 1 ? [effect] : [];
     };
@@ -210,8 +210,17 @@ export function compile(
       const hit = working.hitTestDetailed(state.cursor, render);
       const node = hit ? working.node(hit.id) : undefined;
       const def = node ? componentFor(node) : undefined;
-      const action =
-        hit?.region?.action ?? (node && def?.click ? def.click(working.resolved(node.id), render(node)) : undefined);
+      let action = hit?.region?.action;
+      if (!action && node && def) {
+        if (def.drag) {
+          // A click anywhere on a draggable control jumps its value to the cursor.
+          const origin = working.position(node.id);
+          const local = { x: state.cursor.x - origin.x, y: state.cursor.y - origin.y };
+          action = { value: def.drag.valueAt(working.resolved(node.id), render(node), local) };
+        } else if (def.click) {
+          action = def.click(working.resolved(node.id), render(node));
+        }
+      }
       state.focused = node && working.isFocusable(node) ? hit!.id : undefined;
       const effects = applyAction(action, hit?.id);
       const c: NonNullable<CompiledStep['click']> = { pressAt: 0, releaseAt: hold };
@@ -353,7 +362,7 @@ export function compile(
         break;
       case 'set':
         if (!working.has(step.target)) throw new CompileError(authored, `unknown target "${step.target}"`);
-        working.update(step.target, step.patch);
+        working.update<SceneNode>(step.target, step.patch);
         emit({ step, duration: 0 });
         break;
       case 'check':
@@ -394,6 +403,30 @@ export function compile(
           setOpen(node, true);
           region = findRegion(node, matches);
         }
+        const draggable = componentFor(node).drag;
+        if (!region && draggable && typeof step.value === 'number') {
+          // A slider: click the track where the value sits.
+          const origin = working.position(node.id);
+          const local = draggable.pointFor(working.resolved(node.id), render(node), step.value);
+          clickAt({ point: { x: origin.x + local.x, y: origin.y + local.y }, width: 16 });
+          break;
+        }
+        if (!region && typeof step.value === 'number') {
+          // A stepper: click the region that moves the value toward the target until it arrives.
+          const goal = step.value;
+          for (let guard = 0; guard < 200; guard++) {
+            const current = liveValue(node);
+            const now = typeof current === 'number' ? current : Number.NaN;
+            if (now === goal) break;
+            const closer = findRegion(
+              node,
+              (a) => typeof a.value === 'number' && Math.abs(a.value - goal) < Math.abs(now - goal),
+            );
+            if (!closer) throw new CompileError(authored, `target "${step.target}" cannot reach ${goal}`);
+            clickAt(aimAt(node, closer));
+          }
+          break;
+        }
         if (!region)
           throw new CompileError(authored, `target "${step.target}" has no option ${JSON.stringify(step.value)}`);
         clickAt(aimAt(node, region));
@@ -402,7 +435,10 @@ export function compile(
       case 'open':
       case 'close': {
         const node = require(step.target, 'open', step.type === 'open' ? 'opened' : 'closed');
-        setOpen(node, step.type === 'open');
+        const want = step.type === 'open';
+        // Already there: the cursor still goes to it, as check and choose do.
+        if (liveOpen(node) === want) moveTo(pointIn(working.bounds(node.id)), { type: 'moveCursor', target: node.id });
+        else setOpen(node, want);
         break;
       }
       case 'hover': {
@@ -429,6 +465,8 @@ export function compile(
         const origin = working.position(node.id);
         const local0 = def.drag!.pointFor(resolved, ctx, from);
         const local1 = def.drag!.pointFor(resolved, ctx, step.value);
+        // The value the component reports where the cursor lands: snapped to its step and range.
+        const to = def.drag!.valueAt(resolved, ctx, local1);
         const p0 = { x: origin.x + local0.x, y: origin.y + local0.y };
         const p1 = { x: origin.x + local1.x, y: origin.y + local1.y };
         moveTo({ point: p0, width: 16 }, { type: 'moveCursor', target: node.id });
@@ -439,17 +477,17 @@ export function compile(
         emit({
           step: { type: 'moveCursor', target: p1 },
           cursor,
-          drag: { target: node.id, from, to: step.value },
+          drag: { target: node.id, from, to },
           duration: cursor.duration,
         });
         state.pressed = false;
-        state.values.set(node.id, step.value);
+        state.values.set(node.id, to);
         const c: NonNullable<CompiledStep['click']> = { pressAt: 0, releaseAt: 0, hit: node.id };
         if (working.isFocusable(node)) {
           state.focused = node.id;
           c.focus = node.id;
         }
-        emit({ step: { type: 'release' }, click: c, duration: 0, effects: [{ id: node.id, value: step.value }] });
+        emit({ step: { type: 'release' }, click: c, duration: 0, effects: [{ id: node.id, value: to }] });
         break;
       }
     }

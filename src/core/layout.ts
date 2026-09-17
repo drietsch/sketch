@@ -72,7 +72,9 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
       const c = node as Container;
       const row = mode === 'HORIZONTAL';
       const p = pad(c);
-      const chrome = componentFor(node).contentOffset?.(node, ctx) ?? { x: 0, y: 0 };
+      const def = componentFor(node);
+      const chrome = def.contentOffset?.(node, ctx) ?? { x: 0, y: 0 };
+      const trailing = def.contentTrailing?.(node, ctx) ?? { x: 0, y: 0 };
       const kids = scene
         .childrenOf(id)
         .map((k, i) => (scene.childShown(id, i) ? scene.node(k) : undefined))
@@ -81,8 +83,12 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
       const gaps = Math.max(0, kids.length - 1) * (c.itemSpacing ?? 0);
       const main = kids.reduce((s, k) => s + (row ? k.width : k.height), 0) + gaps;
       const cross = kids.reduce((s, k) => Math.max(s, row ? k.height : k.width), 0);
-      if (sizing(c, 'H') === 'HUG') m.width = chrome.x + p.l + (row ? main : cross) + p.r;
-      if (sizing(c, 'V') === 'HUG') m.height = chrome.y + p.t + (row ? cross : main) + p.b;
+      // A component that hides all its children (a closed collapsible) hugs to its chrome alone.
+      const collapsed = kids.length === 0 && def.childVisible !== undefined && scene.childrenOf(id).length > 0;
+      if (sizing(c, 'H') === 'HUG')
+        m.width = collapsed ? chrome.x : chrome.x + p.l + (row ? main : cross) + p.r + trailing.x;
+      if (sizing(c, 'V') === 'HUG')
+        m.height = collapsed ? chrome.y : chrome.y + p.t + (row ? cross : main) + p.b + trailing.y;
     }
     measured.set(id, m);
     return m;
@@ -104,6 +110,7 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
       bounds: { x: origin.x + local.x, y: origin.y + local.y, width: local.width, height: local.height },
     });
     const chrome = def.contentOffset?.(node, ctx) ?? { x: 0, y: 0 };
+    const trailing = def.contentTrailing?.(node, ctx) ?? { x: 0, y: 0 };
     const content = { x: origin.x + chrome.x, y: origin.y + chrome.y };
     const children = scene.childrenOf(id).map((k) => scene.node(k));
     const shown = new Set(children.filter((_, i) => scene.childShown(id, i)));
@@ -118,8 +125,8 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
     const row = mode === 'HORIZONTAL';
     const p = pad(c);
     const spacing = c.itemSpacing ?? 0;
-    const innerW = size.width - chrome.x - p.l - p.r;
-    const innerH = size.height - chrome.y - p.t - p.b;
+    const innerW = size.width - chrome.x - trailing.x - p.l - p.r;
+    const innerH = size.height - chrome.y - trailing.y - p.t - p.b;
     const innerMain = row ? innerW : innerH;
     const innerCross = row ? innerH : innerW;
     const items = [...auto].map((k) => ({ k, km: measure(k.id), fill: sizing(k, row ? 'H' : 'V') === 'FILL' }));

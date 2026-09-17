@@ -230,4 +230,114 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
     demo.rectangle({ id: 'ghost', x: 500, y: 250, width: 40, height: 40, visible: false });
     return demo;
   },
+
+  /** Every in-place leaf control, in its resting and its active state. */
+  controls(seed = 13) {
+    const demo = createDemo({ width: 560, height: 420, seed });
+    demo.checkbox({ id: 'cb', x: 20, y: 20, characters: 'Remember me' });
+    demo.checkbox({ id: 'cb-on', below: 'cb', gap: 10, characters: 'Checked', checked: true });
+    demo.checkbox({ id: 'cb-mixed', below: 'cb-on', gap: 10, characters: 'Some', checked: true, indeterminate: true });
+    demo.checkbox({ id: 'cb-off', below: 'cb-mixed', gap: 10, characters: 'Disabled', state: { disabled: true } });
+    demo.switch({ id: 'sw', below: 'cb-off', gap: 14, characters: 'Wi-Fi' });
+    demo.switch({ id: 'sw-on', below: 'sw', gap: 10, characters: 'Bluetooth', checked: true });
+    demo.toggle({ id: 'tg', below: 'sw-on', gap: 14, characters: 'Bold', icon: 'pencil' });
+    demo.toggle({ id: 'tg-on', rightOf: 'tg', gap: 8, characters: 'Italic', pressed: true });
+    demo.toggleGroup({ id: 'align', below: 'tg', gap: 14, options: ['Left', 'Center', 'Right'], value: 'Center' });
+    demo.radioGroup({
+      id: 'plan',
+      below: 'align',
+      gap: 14,
+      options: ['Free', 'Pro'],
+      value: 'Pro',
+      orientation: 'horizontal',
+    });
+    demo.checkboxGroup({ id: 'toppings', below: 'plan', gap: 14, options: ['Cheese', 'Olives'], value: ['Cheese'] });
+    demo.slider({ id: 'volume', x: 300, y: 20, width: 220, value: 35 });
+    demo.slider({ id: 'stepped', below: 'volume', gap: 14, width: 220, value: 80, step: 10 });
+    demo.progress({ id: 'upload', below: 'stepped', gap: 20, width: 220, value: 62, characters: 'Uploading' });
+    demo.progress({ id: 'busy', below: 'upload', gap: 10, width: 220, indeterminate: true });
+    demo.meter({ id: 'disk', below: 'busy', gap: 14, width: 220, value: 78, characters: 'Disk' });
+    demo.separator({ id: 'rule', below: 'disk', gap: 14, length: 220 });
+    demo.separator({ id: 'bar', x: 270, y: 20, orientation: 'vertical', length: 380 });
+    demo.avatar({ id: 'initials', below: 'rule', gap: 14, characters: 'Ada' });
+    demo.avatar({ id: 'icon', rightOf: 'initials', gap: 10, icon: 'user' });
+    demo.avatar({
+      id: 'coloured',
+      rightOf: 'icon',
+      gap: 10,
+      characters: 'JS',
+      size: 44,
+      fills: [{ type: 'SOLID', color: '#ffd166' }],
+      sketch: { fillStyle: 'solid' },
+    });
+    demo.numberField({ id: 'qty', below: 'initials', gap: 16, width: 140, value: 2, min: 0, max: 10 });
+    demo.otpField({ id: 'otp', below: 'qty', gap: 14, length: 4, value: '49', state: { focused: true } });
+    return demo;
+  },
+
+  /** FIELD, FIELDSET and FORM under auto-layout, driven by the semantic steps. */
+  formLayout(seed = 17) {
+    const demo = createDemo({ width: 520, height: 460, seed });
+    demo.form({ id: 'signup', x: 30, y: 30, width: 280, layoutSizingVertical: 'HUG' });
+    demo.field({ id: 'f-name', parent: 'signup', label: 'Name', width: 280 });
+    demo.input({ id: 'name', parent: 'f-name', width: 280, placeholder: 'Ada Lovelace' });
+    demo.field({ id: 'f-plan', parent: 'signup', label: 'Plan', description: 'Change any time.', width: 280 });
+    demo.radioGroup({ id: 'plan', parent: 'f-plan', options: ['Free', 'Team'], value: 'Free' });
+    demo.field({ id: 'f-seats', parent: 'signup', label: 'Seats', width: 280 });
+    demo.numberField({ id: 'seats', parent: 'f-seats', width: 140, value: 1, min: 1, max: 20 });
+    demo.field({ id: 'f-volume', parent: 'signup', label: 'Volume', error: 'Too loud.', width: 280 });
+    demo.slider({ id: 'volume', parent: 'f-volume', width: 280, value: 20 });
+    demo.fieldset({ id: 'contact', x: 340, y: 30, width: 160, height: 90, legend: 'Contact' });
+    demo.checkbox({ id: 'email-me', parent: 'contact', x: 14, y: 14, characters: 'Email' });
+    demo.checkbox({ id: 'text-me', below: 'email-me', gap: 10, characters: 'Text', checked: true });
+    demo.timeline
+      .click('name')
+      .type('name', 'Ada')
+      .choose('plan', 'Team')
+      .choose('seats', 3)
+      .drag('volume', 75)
+      .check('email-me')
+      .uncheck('text-me');
+    return demo;
+  },
+
+  /** TABS, ACCORDION, COLLAPSIBLE and TOOLBAR, with panels shown and hidden over time. */
+  tabsAccordion(seed = 9) {
+    const demo = createDemo({ width: 560, height: 420, seed });
+    demo.tabs({ id: 'tabs', x: 20, y: 20, width: 250, height: 120, tabs: ['General', 'Billing'], value: 'General' });
+    demo.text({ id: 'general', parent: 'tabs', x: 0, y: 10, characters: 'General settings' });
+    demo.button({ id: 'billing', parent: 'tabs', x: 0, y: 10, characters: 'Add card', icon: 'plus' });
+    demo.accordion({
+      id: 'faq',
+      below: 'tabs',
+      gap: 16,
+      width: 250,
+      items: [{ label: 'Shipping', characters: 'Ships in 2 days.' }, 'Returns'],
+      value: 'Shipping',
+    });
+    demo.collapsible({
+      id: 'advanced',
+      x: 300,
+      y: 20,
+      width: 230,
+      characters: 'Advanced',
+      open: true,
+      padding: 12,
+    });
+    demo.checkbox({ id: 'beta', parent: 'advanced', characters: 'Beta features' });
+    demo.switch({ id: 'logs', parent: 'advanced', characters: 'Verbose logs', checked: true });
+    demo.toolbar({ id: 'tools', below: 'advanced', gap: 16, height: 44, layoutSizingHorizontal: 'HUG' });
+    demo.toggle({ id: 't-pen', parent: 'tools', icon: 'pencil', pressed: true });
+    demo.toggle({ id: 't-link', parent: 'tools', icon: 'link' });
+    demo.separator({ id: 't-sep', parent: 'tools', orientation: 'vertical', length: 20 });
+    demo.button({ id: 't-save', parent: 'tools', characters: 'Save', variant: 'primary' });
+    demo.timeline
+      .choose('tabs', 'Billing')
+      .choose('faq', 'Returns')
+      .close('advanced')
+      .hover('t-save')
+      .open('advanced')
+      .toggle('logs');
+    return demo;
+  },
 };

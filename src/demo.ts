@@ -15,6 +15,26 @@ import type {
   NodePatch,
   VectorNode,
   WindowNode,
+  CheckboxNode,
+  CheckboxGroupNode,
+  SwitchNode,
+  ToggleNode,
+  ToggleGroupNode,
+  RadioGroupNode,
+  SliderNode,
+  ProgressNode,
+  MeterNode,
+  SeparatorNode,
+  AvatarNode,
+  NumberFieldNode,
+  OtpFieldNode,
+  FieldNode,
+  FieldsetNode,
+  FormNode,
+  ToolbarNode,
+  CollapsibleNode,
+  AccordionNode,
+  TabsNode,
 } from './core/types.js';
 import type { IconDef } from './icons/types.js';
 import { resolvePlacement, splitPlacement } from './core/place.js';
@@ -87,7 +107,7 @@ export type LayoutChildProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' 
 export type NodeProps<N extends SceneNode> = Props<N> | RelativeProps<N> | LayoutChildProps<N>;
 
 /** Container props may also give `padding` as a shorthand for the four sides. */
-export type ContainerProps<N extends FrameNode | WindowNode> = NodeProps<N> & { padding?: Padding };
+export type ContainerProps<N extends SceneNode> = NodeProps<N> & { padding?: Padding };
 
 export function createDemo(options: DemoOptions): Demo {
   return new Demo(options);
@@ -247,6 +267,102 @@ export class Demo {
     return this.add('WINDOW', { ...props, chrome: 'browser' } as NodeProps<WindowNode>);
   }
 
+  // --- controls (Base UI's catalogue) ------------------------------------
+
+  checkbox(props: NodeProps<CheckboxNode>): CheckboxNode {
+    return this.add('CHECKBOX', props);
+  }
+
+  checkboxGroup(props: NodeProps<CheckboxGroupNode>): CheckboxGroupNode {
+    return this.add('CHECKBOX_GROUP', props);
+  }
+
+  switch(props: NodeProps<SwitchNode>): SwitchNode {
+    return this.add('SWITCH', props);
+  }
+
+  toggle(props: NodeProps<ToggleNode>): ToggleNode {
+    return this.add('TOGGLE', props);
+  }
+
+  toggleGroup(props: NodeProps<ToggleGroupNode>): ToggleGroupNode {
+    return this.add('TOGGLE_GROUP', props);
+  }
+
+  radioGroup(props: NodeProps<RadioGroupNode>): RadioGroupNode {
+    return this.add('RADIO_GROUP', props);
+  }
+
+  slider(props: NodeProps<SliderNode>): SliderNode {
+    return this.add('SLIDER', props);
+  }
+
+  progress(props: NodeProps<ProgressNode>): ProgressNode {
+    return this.add('PROGRESS', props);
+  }
+
+  meter(props: NodeProps<MeterNode>): MeterNode {
+    return this.add('METER', props);
+  }
+
+  separator(props: NodeProps<SeparatorNode>): SeparatorNode {
+    return this.add('SEPARATOR', props);
+  }
+
+  avatar(props: NodeProps<AvatarNode>): AvatarNode {
+    return this.add('AVATAR', props);
+  }
+
+  numberField(props: NodeProps<NumberFieldNode>): NumberFieldNode {
+    return this.add('NUMBER_FIELD', props);
+  }
+
+  otpField(props: NodeProps<OtpFieldNode>): OtpFieldNode {
+    return this.add('OTP_FIELD', props);
+  }
+
+  /** A label above one control, with an optional description or error below. Hugs its control vertically by default. */
+  field(props: ContainerProps<FieldNode>): FieldNode {
+    return this.add('FIELD', { layoutMode: 'VERTICAL', layoutSizingVertical: 'HUG', ...props } as NodeProps<FieldNode>);
+  }
+
+  fieldset(props: ContainerProps<FieldsetNode>): FieldsetNode {
+    return this.add('FIELDSET', props);
+  }
+
+  /** A vertical stack of fields by default. */
+  form(props: ContainerProps<FormNode>): FormNode {
+    return this.add('FORM', { layoutMode: 'VERTICAL', itemSpacing: 10, ...props } as NodeProps<FormNode>);
+  }
+
+  /** A row of controls by default. */
+  toolbar(props: ContainerProps<ToolbarNode>): ToolbarNode {
+    const vertical = (props as { orientation?: string }).orientation === 'vertical';
+    return this.add('TOOLBAR', {
+      layoutMode: vertical ? 'VERTICAL' : 'HORIZONTAL',
+      padding: 6,
+      itemSpacing: 6,
+      ...props,
+    } as NodeProps<ToolbarNode>);
+  }
+
+  collapsible(props: ContainerProps<CollapsibleNode>): CollapsibleNode {
+    return this.add('COLLAPSIBLE', {
+      layoutMode: 'VERTICAL',
+      layoutSizingVertical: 'HUG',
+      itemSpacing: 10,
+      ...props,
+    } as NodeProps<CollapsibleNode>);
+  }
+
+  accordion(props: NodeProps<AccordionNode>): AccordionNode {
+    return this.add('ACCORDION', props);
+  }
+
+  tabs(props: ContainerProps<TabsNode>): TabsNode {
+    return this.add('TABS', props);
+  }
+
   /** Total length of the timeline in ms; 0 for a static scene. */
   get duration(): number {
     return this.compiled().duration;
@@ -312,6 +428,12 @@ export class Demo {
     for (const [id, value] of state.values) {
       if (scene.has(id)) touch(id).value = value;
     }
+    for (const [id, checked] of state.checked) {
+      if (scene.has(id)) touch(id).checked = checked;
+    }
+    for (const [id, open] of state.open) {
+      if (scene.has(id)) touch(id).open = open;
+    }
     if (state.focused !== undefined && scene.has(state.focused))
       touch(state.focused).caretVisible = caretVisible(state);
     return buildFrame(
@@ -356,8 +478,8 @@ export class Demo {
 
   /**
    * The node as it is at time t: authored props with the timeline's `set`
-   * patches and live input value applied. The scene itself is never mutated
-   * by playback.
+   * patches and live value, checked and open state applied. The scene itself
+   * is never mutated by playback.
    */
   nodeAt<N extends SceneNode = SceneNode>(id: string, t: number): N {
     const node = this.scene.node<N>(id);
@@ -371,7 +493,8 @@ export class Demo {
     const out = Object.assign({}, node) as N;
     if (patch) Object.assign(out, patch);
     if (value !== undefined) out.value = value;
-    if (checked !== undefined) out.checked = checked;
+    // A TOGGLE keeps its "checked" state under Base UI's name for it.
+    if (checked !== undefined) out[node.type === 'TOGGLE' ? 'pressed' : 'checked'] = checked;
     if (open !== undefined) out.open = open;
     return out;
   }
@@ -402,7 +525,7 @@ export class Demo {
     if (c && c.compiled === compiled && c.key === key) return c.scene;
     const scene = this.scene.clone();
     for (const [id, patch] of patches) {
-      if (scene.has(id)) scene.update(id, patch);
+      if (scene.has(id)) scene.update<SceneNode>(id, patch);
     }
     this.patchedCache = { compiled, key, scene };
     return scene;

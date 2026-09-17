@@ -166,7 +166,8 @@ describe('regions and actions', () => {
     const demo = make();
     demo.timeline.open('w').open('w').close('w');
     expect(byAuthored(demo, 0).map((s) => s.step.type)).toEqual(['moveCursor', 'click']);
-    expect(byAuthored(demo, 1).map((s) => s.step.type)).toEqual(['open']);
+    // Already open: the cursor visits it, nothing is clicked.
+    expect(byAuthored(demo, 1).map((s) => s.step.type)).toEqual(['moveCursor']);
     expect(byAuthored(demo, 2).map((s) => s.step.type)).toEqual(['moveCursor', 'click']);
     expect(demo.stateAt(demo.duration).open.get('w')).toBe(false);
     const direct = make();
