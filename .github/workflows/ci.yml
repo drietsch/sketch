@@ -61,7 +61,7 @@ jobs:
 
       # --ci makes a missing snapshot a failure rather than a silent write, so a
       # golden that was never committed cannot pass.
-      - run: pnpm exec vitest run --project unit --project backend --project determinism --ci
+      - run: pnpm exec vitest run --project unit --project lib --project backend --project determinism --ci
 
       # Proves the published bundle behaves identically to the source it was
       # built from: a mis-resolved dependency or wrong target cannot pass here.

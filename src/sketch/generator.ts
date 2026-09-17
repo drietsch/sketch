@@ -1,5 +1,6 @@
 import type { Options, Drawable, OpSet, Op, ResolvedOptions, PathInfo } from './core.js';
 import type { Point } from './geometry.js';
+import { roundedRectPath } from './geometry.js';
 import {
   line,
   solidFillPolygon,
@@ -101,6 +102,15 @@ export class RoughGenerator {
       paths.push(outline);
     }
     return this._d('rectangle', paths, o);
+  }
+
+  roundedRectangle(x: number, y: number, width: number, height: number, radius: number, options?: Options): Drawable {
+    if (!(radius > 0)) {
+      return this.rectangle(x, y, width, height, options);
+    }
+    const ret = this.path(roundedRectPath(x, y, width, height, radius), options);
+    ret.shape = 'roundedRectangle';
+    return ret;
   }
 
   ellipse(x: number, y: number, width: number, height: number, options?: Options): Drawable {

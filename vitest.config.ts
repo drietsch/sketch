@@ -4,16 +4,27 @@ export default defineConfig({
   test: {
     projects: [
       {
+        // The sketch engine: seeded Math.random, because a few engine tests
+        // exercise its documented Math.random fallback for seed 0.
         test: {
           name: 'unit',
-          include: ['test/unit/**/*.test.ts', 'test/golden/**/*.test.ts'],
+          include: ['test/unit/sketch/**/*.test.ts', 'test/golden/digest.test.ts'],
           environment: 'node',
           setupFiles: ['./test/setup/deterministic.ts'],
           // The largest golden case (a 700x700 ellipse stamped with dots, where
-          // each dot is itself a sketched ellipse) takes ~1.1s to generate and
-          // several more to run through pretty-format. That is a real property
-          // of the library, not a slow test.
+          // each dot is itself a sketched ellipse) takes ~1.1s to generate.
           testTimeout: 60_000,
+        },
+      },
+      {
+        // The library: Math.random throws, so any unseeded randomness fails
+        // loudly instead of silently breaking the determinism contract.
+        test: {
+          name: 'lib',
+          include: ['test/unit/**/*.test.ts', 'test/golden/scenes.test.ts'],
+          exclude: ['test/unit/sketch/**'],
+          environment: 'node',
+          setupFiles: ['./test/setup/no-math-random.ts'],
         },
       },
       {

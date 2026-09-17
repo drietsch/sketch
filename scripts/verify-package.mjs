@@ -41,11 +41,12 @@ try {
 
   writeFileSync(
     join(dir, 'esm.mjs'),
-    `import { RoughGenerator, Random, SVGNS } from '@drietsch/sketchdemo';
-     const g = new RoughGenerator({ seed: 42 });
-     const d = g.rectangle(10, 10, 80, 60, { fill: 'red', fillStyle: 'dots' });
-     const ok = [RoughGenerator, Random, SVGNS].every(Boolean)
-       && d.sets.length > 0 && g.toPaths(d).length > 0 && d.options.seed === 42;
+    `import { createDemo, Scene, DEFAULT_THEME } from '@drietsch/sketchdemo';
+     const demo = createDemo({ width: 200, height: 100, seed: 42 });
+     demo.rect({ id: 'box', x: 10, y: 10, width: 80, height: 60, style: { fill: 'red', fillStyle: 'dots' } });
+     const svg = demo.toSVG();
+     const ok = [createDemo, Scene, DEFAULT_THEME].every(Boolean)
+       && svg.startsWith('<svg') && svg.includes('data-key="box"') && demo.seed === 42 && demo.toSVG() === svg;
      if (!ok) { console.error('esm surface broken'); process.exit(1); }
      console.log('ESM_OK');`,
   );
@@ -57,15 +58,16 @@ try {
   writeFileSync(
     join(dir, 'cjs.cjs'),
     `const m = require('@drietsch/sketchdemo');
-     const g = new m.RoughGenerator({ seed: 1 });
-     if (!g.rectangle(0, 0, 10, 10).sets.length) { console.error('cjs broken'); process.exit(1); }
+     const demo = m.createDemo({ width: 10, height: 10, seed: 1 });
+     demo.rect({ x: 0, y: 0, width: 10, height: 10 });
+     if (!demo.toSVG().includes('<path')) { console.error('cjs broken'); process.exit(1); }
      console.log('CJS_OK:' + Object.keys(m).sort().join(','));`,
   );
   const cjs = run('node', ['cjs.cjs'], dir);
   check('require() works on this Node', cjs.includes('CJS_OK'));
 
   const types = readFileSync(join(dir, 'node_modules/@drietsch/sketchdemo/dist/index.d.ts'), 'utf8');
-  check('type declarations ship', types.includes('RoughGenerator') && types.includes('FillStyle'));
+  check('type declarations ship', types.includes('createDemo') && types.includes('SceneNode'));
 
   const bundle = readFileSync(join(dir, 'node_modules/@drietsch/sketchdemo/dist/index.js'), 'utf8');
   const bare = [...bundle.matchAll(/^import .* from ["']([^.][^"']*)["']/gm)].map((m) => m[1]);

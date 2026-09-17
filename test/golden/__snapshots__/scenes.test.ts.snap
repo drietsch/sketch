@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`minimal > digest 1`] = `
+{
+  "bytes": 1383,
+  "groups": 2,
+  "paths": 2,
+  "sha256": "6793d5bb95a687e4",
+}
+`;
+
+exports[`minimal > digest 2`] = `"<svg xmlns="http://www.w3.org/2000/svg" width="200" height="120" viewBox="0 0 200 120"><g data-key="box" data-h="1fjttlm" data-type="rect" transform="translate(20 20)"><path d="M4.9 -0.74 C27.82 1.4, 52.47 -0.75, 94.05 0.69 M5.28 0.99 C26.41 -0.94, 47.25 -0.59, 93.75 0.45 M94 0 C96.95 -1.9, 98.82 3.82, 99.12 4.66 M95.16 -1.49 C98.9 -1.38, 100.79 2.01, 99.17 5.27 M99.51 5.57 C99.57 16.36, 99.87 28.06, 98.03 54.97 M99.96 5.99 C98.94 24.94, 100.15 44.99, 99.22 54.78 M100 54 C98.01 55.66, 99.19 59.14, 94.33 59.1 M100.92 54.3 C100.03 58.55, 99.5 61.29, 94.17 61.32 M95.29 60.63 C71.71 60.26, 46.04 60.29, 5.01 61.61 M94.13 60.23 C76.5 59.84, 56.3 61.82, 5.84 59.25 M6 60 C2.18 59.41, 0.51 55.69, -1.85 52.13 M6.42 60.16 C3.63 61.59, -1.14 57.88, -1.87 54.59 M-1.48 55.97 C2.02 39.81, 1.27 25.37, -1.76 4.44 M-0.76 54.03 C0.05 43.64, 1.02 31.34, -0.57 5.18 M0 6 C1.82 1.06, 1.39 -0.08, 5.51 1.35 M1.4 5.64 C-0.54 2.39, 2.72 -0.54, 7.08 0 M6 0 C6 0, 6 0, 6 0 M6 0 C6 0, 6 0, 6 0" stroke="#1f2430" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g><g data-key="underline" data-h="34d5zn" data-type="line" transform="translate(20 100)"><path d="M0.93 -0.59 C62.98 -2.77, 123.14 -0.8, 158.74 0.23 M-0.31 -0.15 C33.33 0.75, 69.2 0.43, 159.09 -0.27" stroke="#1f2430" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g></svg>"`;
+
+exports[`primitives > digest 1`] = `
+{
+  "bytes": 136958,
+  "groups": 14,
+  "paths": 23,
+  "sha256": "374a503803b3ca34",
+}
+`;

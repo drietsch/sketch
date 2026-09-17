@@ -5,6 +5,7 @@
 // callers, and the engine never reaches back into the library.
 
 export { RoughGenerator } from './generator.js';
+export { roundedRectPath, lineLength } from './geometry.js';
 export { Random, randomSeed } from './math.js';
 export { fillRuleFor } from './options.js';
 export { SVGNS } from './core.js';

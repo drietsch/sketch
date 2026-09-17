@@ -12,27 +12,55 @@
   </head>
   <body>
     <h1>Sketch styles</h1>
-    <p>Placeholder page until the scene API lands: rectangles in every fill style, drawn by the engine.</p>
+    <p>Every fill style, a rounded rectangle, an ellipse, a dashed line, a path, and a nested group.</p>
     <div id="out"></div>
     <script type="module">
-      import { RoughGenerator, SVGNS } from '../dist/index.js';
+      import { createDemo } from '../dist/index.js';
+
+      const demo = createDemo({ width: 900, height: 400, seed: 42 });
       const styles = ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots', 'dashed', 'zigzag-line'];
-      const g = new RoughGenerator({ seed: 42, fixedDecimalPlaceDigits: 2 });
-      const svg = document.createElementNS(SVGNS, 'svg');
-      svg.setAttribute('width', '900');
-      svg.setAttribute('height', '160');
       styles.forEach((fillStyle, i) => {
-        const d = g.rectangle(20 + i * 125, 20, 100, 100, { fill: '#7aa2f7', fillStyle });
-        for (const p of g.toPaths(d)) {
-          const el = document.createElementNS(SVGNS, 'path');
-          el.setAttribute('d', p.d);
-          el.setAttribute('stroke', p.stroke);
-          el.setAttribute('stroke-width', String(p.strokeWidth));
-          el.setAttribute('fill', p.fill ?? 'none');
-          svg.appendChild(el);
-        }
+        demo.rect({
+          id: `fill-${fillStyle}`,
+          x: 20 + i * 125,
+          y: 20,
+          width: 100,
+          height: 80,
+          style: { fill: '#7aa2f7', fillStyle },
+        });
       });
-      document.getElementById('out').appendChild(svg);
+      demo.rect({
+        id: 'rounded',
+        x: 20,
+        y: 140,
+        width: 220,
+        height: 100,
+        radius: 16,
+        style: { stroke: '#b00', strokeWidth: 2 },
+      });
+      demo.ellipse({
+        id: 'ellipse',
+        x: 270,
+        y: 140,
+        width: 160,
+        height: 100,
+        style: { fill: '#ffd166', fillStyle: 'solid' },
+      });
+      demo.line({ id: 'line', x: 460, y: 140, x2: 870, y2: 240, style: { dash: [8, 6] } });
+      demo.path({ id: 'triangle', x: 20, y: 270, d: 'M0 100 L60 0 L120 100 Z', style: { fill: '#06d6a0' } });
+      demo.rect({ id: 'group', x: 180, y: 270, width: 400, height: 110, style: { roughness: 0.5 } });
+      demo.rect({ id: 'child', parent: 'group', x: 16, y: 16, width: 120, height: 70 });
+      demo.ellipse({ id: 'grandchild', parent: 'child', x: 30, y: 15, width: 40, height: 40, sketchVariant: 3 });
+
+      const out = document.getElementById('out');
+      out.innerHTML = demo.toSVG();
+
+      window.__demo = {
+        demo,
+        duration: 0,
+        nodeIds: demo.scene.visible().map((n) => n.id),
+        seek: () => {},
+      };
     </script>
   </body>
 </html>
