@@ -4,7 +4,7 @@ import { createDemo, loadDemo } from '../../src/index.js';
 function build(seed = 42) {
   const demo = createDemo({ width: 900, height: 600, seed });
   demo.input({ id: 'email', x: 250, y: 200, width: 350, placeholder: 'Email' });
-  demo.button({ id: 'login', x: 470, y: 300, text: 'Sign in' });
+  demo.button({ id: 'login', x: 470, y: 300, characters: 'Sign in' });
   demo.timeline.moveCursor('email').click().type('email', 'hello@example.com').moveCursor('login').click();
   return demo;
 }

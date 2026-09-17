@@ -1,0 +1,151 @@
+{
+  "version": 1,
+  "width": 900,
+  "height": 600,
+  "seed": 42,
+  "theme": {
+    "stroke": "#1f2430",
+    "text": "#1f2430",
+    "accent": "#2f6fed",
+    "muted": "#8a8f98",
+    "surface": "#ffffff",
+    "background": "#ffffff",
+    "strokeWidth": 1.2,
+    "roughness": 1,
+    "bowing": 1,
+    "radius": 6,
+    "fontSize": 14,
+    "textRoughness": 0.6
+  },
+  "background": null,
+  "font": "hershey-sans",
+  "nodes": [
+    {
+      "id": "browser",
+      "x": 40,
+      "y": 30,
+      "width": 820,
+      "height": 540,
+      "url": "https://example.com/login",
+      "chrome": "browser",
+      "type": "window"
+    },
+    {
+      "id": "card",
+      "parent": "browser",
+      "x": 210,
+      "y": 70,
+      "width": 400,
+      "height": 330,
+      "title": "Welcome back",
+      "type": "panel"
+    },
+    {
+      "id": "email-label",
+      "parent": "card",
+      "x": 24,
+      "y": 20,
+      "text": "Email",
+      "style": {
+        "color": "#8a8f98"
+      },
+      "type": "text"
+    },
+    {
+      "id": "email",
+      "width": 352,
+      "placeholder": "you@example.com",
+      "type": "input",
+      "x": 24,
+      "y": 44,
+      "parent": "card"
+    },
+    {
+      "id": "password-label",
+      "text": "Password",
+      "style": {
+        "color": "#8a8f98"
+      },
+      "type": "text",
+      "x": 24,
+      "y": 100,
+      "parent": "card"
+    },
+    {
+      "id": "password",
+      "width": 352,
+      "value": "hunter2",
+      "state": {
+        "focused": true
+      },
+      "type": "input",
+      "x": 24,
+      "y": 124,
+      "parent": "card"
+    },
+    {
+      "id": "login",
+      "width": 352,
+      "text": "Sign in",
+      "variant": "primary",
+      "icon": "log-in",
+      "type": "button",
+      "x": 24,
+      "y": 190,
+      "parent": "card"
+    },
+    {
+      "id": "forgot",
+      "text": "Forgot password?",
+      "type": "button",
+      "x": 24,
+      "y": 240,
+      "parent": "card"
+    },
+    {
+      "id": "hovered",
+      "text": "Hovered",
+      "state": {
+        "hovered": true
+      },
+      "type": "button",
+      "x": 190,
+      "y": 240,
+      "parent": "card"
+    },
+    {
+      "id": "pressed",
+      "text": "Pressed",
+      "state": {
+        "pressed": true
+      },
+      "type": "button",
+      "x": 290,
+      "y": 240,
+      "parent": "card"
+    },
+    {
+      "id": "help",
+      "parent": "browser",
+      "x": 780,
+      "y": 20,
+      "icon": "info",
+      "size": 22,
+      "style": {
+        "color": "#8a8f98"
+      },
+      "type": "icon"
+    },
+    {
+      "id": "disabled",
+      "parent": "browser",
+      "x": 40,
+      "y": 440,
+      "text": "Disabled",
+      "state": {
+        "disabled": true
+      },
+      "type": "button"
+    }
+  ]
+}

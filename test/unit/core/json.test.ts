@@ -15,11 +15,11 @@ describe('toJSON / loadDemo', () => {
 
   test('is plain data in paint order with the document settings', () => {
     const demo = createDemo({ width: 300, height: 200, seed: 9, background: null, theme: { accent: '#f00' } });
-    demo.rect({ id: 'a', x: 0, y: 0, width: 10, height: 10 });
-    demo.rect({ id: 'b', parent: 'a', x: 1, y: 1, width: 5, height: 5 });
+    demo.rectangle({ id: 'a', x: 0, y: 0, width: 10, height: 10 });
+    demo.rectangle({ id: 'b', parent: 'a', x: 1, y: 1, width: 5, height: 5 });
     const json = demo.toJSON();
     expect(json).toMatchObject({
-      version: 1,
+      version: 2,
       width: 300,
       height: 200,
       seed: 9,
@@ -27,7 +27,9 @@ describe('toJSON / loadDemo', () => {
       font: 'hershey-sans',
     });
     expect(json.theme.accent).toBe('#f00');
-    expect(json.nodes.map((n) => n.id)).toEqual(['a', 'b']);
+    expect(json.children.map((n) => n.id)).toEqual(['a']);
+    expect(json.children[0].children!.map((n) => n.id)).toEqual(['b']);
+    expect('parent' in json.children[0].children![0]).toBe(false);
     expect(json.icons).toBeUndefined();
     expect(JSON.parse(JSON.stringify(json))).toEqual(json);
   });
@@ -40,7 +42,7 @@ describe('toJSON / loadDemo', () => {
       demo.registerIcon('mine', mine);
       registerIcon('shared', shared);
       demo.icon({ id: 'a', x: 0, y: 0, icon: 'mine' });
-      demo.button({ id: 'b', x: 0, y: 30, text: 'x', icon: 'shared' });
+      demo.button({ id: 'b', x: 0, y: 30, characters: 'x', icon: 'shared' });
       demo.icon({ id: 'c', x: 0, y: 60, icon: 'search' });
       const json = demo.toJSON();
       expect(Object.keys(json.icons!)).toEqual(['mine', 'shared']);
@@ -55,30 +57,70 @@ describe('toJSON / loadDemo', () => {
 
   test('loaded demos keep working: new nodes get fresh ids', () => {
     const demo = createDemo({ width: 100, height: 100, seed: 1 });
-    demo.rect({ x: 0, y: 0, width: 1, height: 1 });
+    demo.rectangle({ x: 0, y: 0, width: 1, height: 1 });
     const back = loadDemo(demo.toJSON());
-    expect(back.rect({ x: 0, y: 0, width: 1, height: 1 }).id).toBe('rect-2');
+    expect(back.rectangle({ x: 0, y: 0, width: 1, height: 1 }).id).toBe('rectangle-2');
   });
 
   test('rejects malformed documents with a precise message', () => {
     const good = SCENES.minimal().toJSON();
     expect(() => parseDemoJSON('{')).toThrow(DemoJSONError);
-    expect(() => parseDemoJSON({ ...good, version: 2 } as never)).toThrow(/unsupported version 2/);
+    expect(() => parseDemoJSON({ ...good, version: 3 } as never)).toThrow(/unsupported version 3/);
     expect(() => parseDemoJSON({ ...good, width: -1 })).toThrow(/width must be a positive number/);
     expect(() => parseDemoJSON({ ...good, seed: 1.5 })).toThrow(/seed must be an integer/);
-    expect(() => parseDemoJSON({ ...good, nodes: [{ id: 'bad id', type: 'rect', x: 0, y: 0 }] as never })).toThrow(
-      /nodes\[0\].id "bad id"/,
-    );
-    expect(() => parseDemoJSON({ ...good, nodes: [{ id: 'a', type: 'blob', x: 0, y: 0 }] as never })).toThrow(
+    expect(() =>
+      parseDemoJSON({ ...good, children: [{ id: 'bad id', type: 'RECTANGLE', x: 0, y: 0 }] as never }),
+    ).toThrow(/children\[0\].id "bad id"/);
+    expect(() => parseDemoJSON({ ...good, children: [{ id: 'a', type: 'blob', x: 0, y: 0 }] as never })).toThrow(
       /unknown type "blob"/,
     );
-    expect(() => parseDemoJSON({ ...good, nodes: [{ id: 'a', type: 'rect', x: 'no', y: 0 }] as never })).toThrow(
-      /\.x must be a finite number/,
-    );
+    expect(() =>
+      parseDemoJSON({ ...good, children: [{ id: 'a', type: 'RECTANGLE', x: 'no', y: 0 }] as never }),
+    ).toThrow(/\.x must be a finite number/);
+    expect(() =>
+      parseDemoJSON({
+        ...good,
+        children: [{ id: 'a', type: 'RECTANGLE', x: 0, y: 0, children: [{ id: 'b', type: 'nope' }] }],
+      } as never),
+    ).toThrow(/children\[0\].children\[0\] \("b"\) has unknown type/);
+    expect(() =>
+      parseDemoJSON({ ...good, children: [{ id: 'a', type: 'RECTANGLE', x: 0, y: 0, parent: 'zz' }] } as never),
+    ).toThrow(/must nest under its parent/);
+    expect(() =>
+      parseDemoJSON({
+        ...good,
+        children: [{ id: 'a', type: 'RECTANGLE', x: 0, y: 0, fills: [{ type: 'GRADIENT_LINEAR' }] }],
+      } as never),
+    ).toThrow(/fills\[0\].type "GRADIENT_LINEAR" is not supported/);
+    expect(() =>
+      parseDemoJSON({
+        ...good,
+        children: [{ id: 'a', type: 'RECTANGLE', x: 0, y: 0, fills: [{ type: 'SOLID', color: { r: 2, g: 0, b: 0 } }] }],
+      } as never),
+    ).toThrow(/color.r must be in 0..1/);
+    expect(() =>
+      parseDemoJSON({
+        ...good,
+        children: [{ id: 'a', type: 'TEXT', x: 0, y: 0, characters: 'x', style: { textAlignHorizontal: 'middle' } }],
+      } as never),
+    ).toThrow(/textAlignHorizontal must be one of LEFT, CENTER, RIGHT/);
     expect(() => parseDemoJSON({ ...good, icons: { bad: {} } } as never)).toThrow(/icon "bad" must have nodes/);
     expect(() => loadDemo({ ...good, font: 'other' })).toThrow(/uses font "other"/);
     expect(() =>
-      loadDemo({ ...good, nodes: [{ id: 'a', type: 'rect', x: 0, y: 0, width: 1, height: 1, parent: 'zz' }] }),
-    ).toThrow(/nodes\[0\]: Unknown parent "zz"/);
+      loadDemo({
+        ...good,
+        children: [
+          {
+            id: 'a',
+            type: 'RECTANGLE',
+            x: 0,
+            y: 0,
+            width: 1,
+            height: 1,
+            children: [{ id: 'a', type: 'RECTANGLE', x: 0, y: 0, width: 1, height: 1 }],
+          },
+        ],
+      }),
+    ).toThrow(/node "a": Duplicate node id "a"/);
   });
 });

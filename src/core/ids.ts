@@ -47,18 +47,19 @@ export function assertValidId(id: unknown): asserts id is string {
   }
 }
 
-/** Generates `${type}-${n}` ids, skipping any the caller says are taken. */
+/** Generates `${type.toLowerCase()}-${n}` ids (`rectangle-1`, `frame-2`), skipping any the caller says are taken. */
 export class IdCounter {
   private readonly counts = new Map<string, number>();
 
   next(type: string, taken: (id: string) => boolean): string {
-    let n = this.counts.get(type) ?? 0;
+    const prefix = type.toLowerCase();
+    let n = this.counts.get(prefix) ?? 0;
     let id: string;
     do {
       n += 1;
-      id = `${type}-${n}`;
+      id = `${prefix}-${n}`;
     } while (taken(id));
-    this.counts.set(type, n);
+    this.counts.set(prefix, n);
     return id;
   }
 }

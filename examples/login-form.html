@@ -23,13 +23,26 @@
 
       const demo = createDemo({ width: 900, height: 600, seed: 42, background: null });
       demo.browser({ id: 'browser', x: 40, y: 30, width: 820, height: 540, url: 'https://example.com/login' });
-      demo.panel({ id: 'card', parent: 'browser', x: 210, y: 70, width: 400, height: 330, title: 'Welcome back' });
+      demo.frame({ id: 'card', parent: 'browser', x: 210, y: 70, width: 400, height: 330, title: 'Welcome back' });
 
       // Inside the card, only the first node has coordinates; the rest are
       // placed relative to their neighbour and inherit the card as parent.
-      demo.text({ id: 'email-label', parent: 'card', x: 24, y: 20, text: 'Email', style: { color: '#8a8f98' } });
+      demo.text({
+        id: 'email-label',
+        parent: 'card',
+        x: 24,
+        y: 20,
+        characters: 'Email',
+        style: { fills: [{ type: 'SOLID', color: '#8a8f98' }] },
+      });
       demo.input({ id: 'email', below: 'email-label', gap: 10, width: 352, placeholder: 'you@example.com' });
-      demo.text({ id: 'password-label', below: 'email', gap: 20, text: 'Password', style: { color: '#8a8f98' } });
+      demo.text({
+        id: 'password-label',
+        below: 'email',
+        gap: 20,
+        characters: 'Password',
+        style: { fills: [{ type: 'SOLID', color: '#8a8f98' }] },
+      });
       demo.input({
         id: 'password',
         below: 'password-label',
@@ -43,17 +56,38 @@
         below: 'password',
         gap: 30,
         width: 352,
-        text: 'Sign in',
+        characters: 'Sign in',
         variant: 'primary',
         icon: 'log-in',
       });
-      demo.button({ id: 'forgot', below: 'login', gap: 14, text: 'Forgot password?' });
-      demo.button({ id: 'hovered', rightOf: 'forgot', gap: 12, text: 'Hovered', state: { hovered: true } });
-      demo.button({ id: 'pressed', rightOf: 'hovered', gap: 12, text: 'Pressed', state: { pressed: true } });
+      demo.button({ id: 'forgot', below: 'login', gap: 14, characters: 'Forgot password?' });
+      demo.button({ id: 'hovered', rightOf: 'forgot', gap: 12, characters: 'Hovered', state: { hovered: true } });
+      demo.button({ id: 'pressed', rightOf: 'hovered', gap: 12, characters: 'Pressed', state: { pressed: true } });
 
-      demo.icon({ id: 'help', parent: 'browser', x: 780, y: 20, icon: 'info', size: 22, style: { color: '#8a8f98' } });
-      demo.button({ id: 'disabled', parent: 'browser', x: 40, y: 440, text: 'Disabled', state: { disabled: true } });
-      demo.button({ id: 'long', rightOf: 'disabled', gap: 16, text: 'A button with a longer label', icon: 'download' });
+      demo.icon({
+        id: 'help',
+        parent: 'browser',
+        x: 780,
+        y: 20,
+        icon: 'info',
+        size: 22,
+        strokes: [{ type: 'SOLID', color: '#8a8f98' }],
+      });
+      demo.button({
+        id: 'disabled',
+        parent: 'browser',
+        x: 40,
+        y: 440,
+        characters: 'Disabled',
+        state: { disabled: true },
+      });
+      demo.button({
+        id: 'long',
+        rightOf: 'disabled',
+        gap: 16,
+        characters: 'A button with a longer label',
+        icon: 'download',
+      });
 
       document.getElementById('out').innerHTML = demo.toSVG();
       window.__demo = { demo, duration: 0, nodeIds: demo.scene.visible().map((n) => n.id), seek: () => {} };

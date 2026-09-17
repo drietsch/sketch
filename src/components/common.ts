@@ -1,4 +1,4 @@
-import type { Style, Theme } from '../core/types.js';
+import type { SceneNode, Theme } from '../core/types.js';
 import type { StrokeFont } from '../text/font.js';
 import type { Part, PartStyle } from './types.js';
 import { resolvePartStyle } from './style.js';
@@ -11,21 +11,13 @@ export function centredTextTop(font: StrokeFont, fontSize: number, height: numbe
   return height / 2 + font.capHeight(fontSize) / 2 - font.ascent(fontSize);
 }
 
+/** A sketched text part. The node supplies its `sketch` roughness; everything else is explicit. */
 export function textPart(
   key: string,
   theme: Theme,
-  font: StrokeFont,
-  opts: {
-    x: number;
-    y: number;
-    text: string;
-    fontSize: number;
-    color: string;
-    align?: TextPart['align'];
-    style?: Style;
-  },
+  node: SceneNode,
+  opts: { x: number; y: number; text: string; fontSize: number; color: string; align?: TextPart['align'] },
 ): TextPart {
-  void font;
   return {
     key,
     kind: 'text',
@@ -33,24 +25,18 @@ export function textPart(
     y: opts.y,
     text: opts.text,
     fontSize: opts.fontSize,
-    align: opts.align ?? 'start',
+    align: opts.align ?? 'LEFT',
     color: opts.color,
-    style: resolvePartStyle(theme, opts.style, { roughness: opts.style?.roughness ?? theme.textRoughness }),
+    style: resolvePartStyle(theme, node, { roughness: node.sketch?.roughness ?? theme.textRoughness }),
   };
 }
 
+/** A sketched box part styled from the node's fills/strokes, with component overrides applied last. */
 export function rectPart(
   key: string,
   theme: Theme,
-  opts: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-    radius?: number;
-    style?: Style;
-    overrides?: Partial<PartStyle>;
-  },
+  node: SceneNode | undefined,
+  opts: { x: number; y: number; width: number; height: number; cornerRadius?: number; overrides?: Partial<PartStyle> },
 ): RectPart {
   return {
     key,
@@ -59,8 +45,8 @@ export function rectPart(
     y: opts.y,
     width: opts.width,
     height: opts.height,
-    radius: opts.radius,
-    style: resolvePartStyle(theme, opts.style, opts.overrides),
+    cornerRadius: opts.cornerRadius,
+    style: resolvePartStyle(theme, node, opts.overrides),
   };
 }
 

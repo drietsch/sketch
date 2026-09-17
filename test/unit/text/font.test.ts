@@ -66,7 +66,7 @@ describe('layoutText', () => {
   });
 
   test('aligns each line and keeps character indices across newlines', () => {
-    const l = layoutText(DEFAULT_FONT, 'ab\ncd', 16, 'middle');
+    const l = layoutText(DEFAULT_FONT, 'ab\ncd', 16, 'CENTER');
     expect(l.lineWidths).toHaveLength(2);
     expect(l.glyphs.map((g) => g.index)).toEqual([0, 1, 3, 4]);
     expect(l.glyphs[0].x).toBeCloseTo(-l.lineWidths[0] / 2, 10);
@@ -74,7 +74,7 @@ describe('layoutText', () => {
     expect(l.bounds.x).toBeCloseTo(-Math.max(...l.lineWidths) / 2, 10);
     expect(l.bounds.height).toBe(DEFAULT_FONT.lineHeight(16) + DEFAULT_FONT.ascent(16) + DEFAULT_FONT.descent(16));
 
-    const end = layoutText(DEFAULT_FONT, 'ab', 16, 'end');
+    const end = layoutText(DEFAULT_FONT, 'ab', 16, 'RIGHT');
     expect(end.bounds.x).toBeCloseTo(-end.lineWidths[0], 10);
     expect(end.glyphs[0].x).toBeCloseTo(-end.lineWidths[0], 10);
   });

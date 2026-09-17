@@ -27,7 +27,7 @@ export class CursorRenderer {
       (gen, o) => gen.path(CURSOR_ARROW_PATH, o),
       {
         stroke: this.theme.stroke,
-        strokeWidth: 1.2,
+        strokeWeight: 1.2,
         fill: '#ffffff',
         fillStyle: 'solid',
         roughness: 0.5,

@@ -12,9 +12,9 @@ const part = (text: string, extra: Partial<Extract<Part, { kind: 'text' }>> = {}
   y: 5,
   text,
   fontSize: 16,
-  align: 'start',
+  align: 'LEFT',
   color: '#123',
-  style: { stroke: '#123', strokeWidth: 1, fillStyle: 'hachure', roughness: 0.6, bowing: 1 },
+  style: { stroke: '#123', strokeWeight: 1, fillStyle: 'hachure', roughness: 0.6, bowing: 1 },
   ...extra,
 });
 

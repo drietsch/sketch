@@ -72,9 +72,9 @@ describe('mount and patchDOM', () => {
 
   test('unchanged groups keep their element identity; changed ones are rebuilt; removed ones go', () => {
     const demo = createDemo({ width: 200, height: 200, seed: 1 });
-    demo.rect({ id: 'a', x: 0, y: 0, width: 50, height: 50 });
-    demo.rect({ id: 'b', x: 60, y: 0, width: 50, height: 50 });
-    demo.rect({ id: 'c', x: 120, y: 0, width: 50, height: 50 });
+    demo.rectangle({ id: 'a', x: 0, y: 0, width: 50, height: 50 });
+    demo.rectangle({ id: 'b', x: 60, y: 0, width: 50, height: 50 });
+    demo.rectangle({ id: 'c', x: 120, y: 0, width: 50, height: 50 });
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
     demo.renderInto(svg);
     const [a, b, c] = ['a', 'b', 'c'].map((k) => svg.querySelector(`g[data-key="${k}"]`)!);
@@ -90,8 +90,8 @@ describe('mount and patchDOM', () => {
 
   test('re-ordering only moves elements', () => {
     const demo = createDemo({ width: 200, height: 200, seed: 1, background: null });
-    demo.rect({ id: 'a', x: 0, y: 0, width: 50, height: 50 });
-    demo.rect({ id: 'b', x: 60, y: 0, width: 50, height: 50 });
+    demo.rectangle({ id: 'a', x: 0, y: 0, width: 50, height: 50 });
+    demo.rectangle({ id: 'b', x: 60, y: 0, width: 50, height: 50 });
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
     demo.renderInto(svg);
     const a = svg.querySelector('g[data-key="a"]')!;
@@ -116,7 +116,7 @@ describe('mount and patchDOM', () => {
 
   test('foreign children and the background are handled', () => {
     const demo = createDemo({ width: 100, height: 100, seed: 1 });
-    demo.rect({ id: 'a', x: 0, y: 0, width: 10, height: 10 });
+    demo.rectangle({ id: 'a', x: 0, y: 0, width: 10, height: 10 });
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
     svg.appendChild(document.createElementNS('http://www.w3.org/2000/svg', 'title'));
     demo.renderInto(svg);
@@ -125,7 +125,7 @@ describe('mount and patchDOM', () => {
     const bg = svg.firstElementChild!;
     demo.renderInto(svg);
     expect(svg.firstElementChild).toBe(bg);
-    patchDOM(svg, { ...demo.frame(), background: undefined });
+    patchDOM(svg, { ...demo.frameAt(), background: undefined });
     expect(svg.querySelector('[data-key="__bg"]')).toBeNull();
   });
 });
@@ -206,10 +206,10 @@ describe('Player', () => {
 
   test('render() picks up edits made while paused', () => {
     const demo = createDemo({ width: 100, height: 100, seed: 1 });
-    demo.rect({ id: 'a', x: 0, y: 0, width: 10, height: 10 });
+    demo.rectangle({ id: 'a', x: 0, y: 0, width: 10, height: 10 });
     const { clock } = fakeClock();
     const player = demo.mount(document.createElement('div'), { clock });
-    demo.rect({ id: 'b', x: 20, y: 0, width: 10, height: 10 });
+    demo.rectangle({ id: 'b', x: 20, y: 0, width: 10, height: 10 });
     expect(player.svg.querySelector('g[data-key="b"]')).toBeNull();
     player.render();
     expect(player.svg.querySelector('g[data-key="b"]')).not.toBeNull();

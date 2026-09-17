@@ -1,7 +1,7 @@
 import type { Bounds } from '../core/types.js';
 import type { StrokeFont } from './font.js';
 
-export type TextAlign = 'start' | 'middle' | 'end';
+export type TextAlign = 'LEFT' | 'CENTER' | 'RIGHT';
 
 export interface PlacedGlyph {
   ch: string;
@@ -21,9 +21,9 @@ export interface TextLayout {
 /**
  * Lays out text top-aligned at (0, 0): the first baseline sits one ascent
  * below the origin, later lines one line-height apart. `align` positions each
- * line relative to x = 0, so a middle-aligned text is centred on the origin.
+ * line relative to x = 0, so a CENTER-aligned text is centred on the origin.
  */
-export function layoutText(font: StrokeFont, text: string, fontSize: number, align: TextAlign = 'start'): TextLayout {
+export function layoutText(font: StrokeFont, text: string, fontSize: number, align: TextAlign = 'LEFT'): TextLayout {
   const lines = text.split('\n');
   const lineHeight = font.lineHeight(fontSize);
   const ascent = font.ascent(fontSize);
@@ -35,7 +35,7 @@ export function layoutText(font: StrokeFont, text: string, fontSize: number, ali
   lines.forEach((line, row) => {
     const width = font.measure(line, fontSize);
     lineWidths.push(width);
-    const start = align === 'middle' ? -width / 2 : align === 'end' ? -width : 0;
+    const start = align === 'CENTER' ? -width / 2 : align === 'RIGHT' ? -width : 0;
     minX = Math.min(minX, start);
     maxX = Math.max(maxX, start + width);
     const y = ascent + row * lineHeight;

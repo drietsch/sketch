@@ -15,27 +15,49 @@ export interface Size {
 
 export interface Bounds extends Point, Size {}
 
+/** An RGBA colour with components in 0..1, as Figma spells it. `a` defaults to 1. */
+export interface Color {
+  r: number;
+  g: number;
+  b: number;
+  a?: number;
+}
+
+/** A Figma `Color`, or a CSS colour string for convenience. */
+export type ColorLike = Color | string;
+
+/** A solid paint. Only `SOLID` is supported; gradients and images are rejected at load. */
+export interface SolidPaint {
+  type: 'SOLID';
+  color: ColorLike;
+  /** 0..1, multiplied into the colour's alpha. */
+  opacity?: number;
+  /** Defaults to true; an invisible paint is skipped. */
+  visible?: boolean;
+}
+
+export type Paint = SolidPaint;
+
 /**
- * Per-node visual overrides. Every field is optional; unset fields fall back
- * to the theme (for colours and stroke) or the engine defaults (for sketching
- * parameters).
+ * The hand-drawn look. Figma has no equivalent, so these live under their own
+ * key. Unset fields fall back to the theme or the engine defaults.
  */
-export interface Style {
-  stroke?: string;
-  strokeWidth?: number;
-  fill?: string;
-  fillStyle?: FillStyle;
+export interface SketchStyle {
   roughness?: number;
   bowing?: number;
+  fillStyle?: FillStyle;
   hachureGap?: number;
   hachureAngle?: number;
   fillWeight?: number;
-  /** Dash pattern for the outline, in user units. */
-  dash?: number[];
-  opacity?: number;
-  /** Text colour; defaults to theme.text. */
-  color?: string;
+}
+
+export type TextAlignHorizontal = 'LEFT' | 'CENTER' | 'RIGHT';
+
+/** Text styling, a subset of Figma's TypeStyle. `fills` colours the glyphs. */
+export interface TypeStyle {
   fontSize?: number;
+  textAlignHorizontal?: TextAlignHorizontal;
+  fills?: Paint[];
 }
 
 export interface Theme {
@@ -45,7 +67,7 @@ export interface Theme {
   muted: string;
   surface: string;
   background: string;
-  strokeWidth: number;
+  strokeWeight: number;
   roughness: number;
   bowing: number;
   radius: number;
@@ -72,57 +94,69 @@ export interface NodeBase {
   x: number;
   y: number;
   parent?: string;
-  style?: Style;
-  hidden?: boolean;
+  /** Defaults to true. An invisible node and its children are not rendered, hit-tested or targetable. */
+  visible?: boolean;
+  /** Fill paints, bottom to top; the first visible one is drawn. Absent: the component's default; empty: no fill. */
+  fills?: Paint[];
+  /** Stroke paints; the first visible one outlines the node. Absent: the theme stroke; empty: no outline. */
+  strokes?: Paint[];
+  strokeWeight?: number;
+  /** Dash pattern for the outline, in user units. */
+  strokeDashes?: number[];
+  /** Whole-node opacity, 0..1. */
+  opacity?: number;
+  /** The hand-drawn look of this node. */
+  sketch?: SketchStyle;
   /** Whether the node takes part in hit-testing. Components default to true, primitives to false. */
   interactive?: boolean;
   /** Re-rolls this node's sketch jitter without changing the document seed. */
   sketchVariant?: number;
 }
 
-export interface RectNode extends NodeBase {
-  type: 'rect';
+export interface RectangleNode extends NodeBase {
+  type: 'RECTANGLE';
   width: number;
   height: number;
-  radius?: number;
+  cornerRadius?: number;
 }
 
 export interface EllipseNode extends NodeBase {
-  type: 'ellipse';
+  type: 'ELLIPSE';
   width: number;
   height: number;
 }
 
 /** A line from (x, y) to (x2, y2), both in the parent's coordinate space. */
 export interface LineNode extends NodeBase {
-  type: 'line';
+  type: 'LINE';
   x2: number;
   y2: number;
 }
 
 /** SVG path data in the node's local coordinate space (origin at x, y). */
-export interface PathNode extends NodeBase {
-  type: 'path';
+export interface VectorNode extends NodeBase {
+  type: 'VECTOR';
   d: string;
 }
 
 export interface TextNode extends NodeBase {
-  type: 'text';
-  text: string;
-  fontSize?: number;
-  align?: 'start' | 'middle' | 'end';
+  type: 'TEXT';
+  characters: string;
+  style?: TypeStyle;
 }
 
 export interface IconNode extends NodeBase {
-  type: 'icon';
+  type: 'ICON';
   /** A registered icon name, or an icon definition passed directly. */
   icon: string | IconDef;
   size?: number;
 }
 
 export interface ButtonNode extends NodeBase {
-  type: 'button';
-  text: string;
+  type: 'BUTTON';
+  characters: string;
+  /** Styling of the label. */
+  style?: TypeStyle;
   icon?: string | IconDef;
   width?: number;
   height?: number;
@@ -131,32 +165,48 @@ export interface ButtonNode extends NodeBase {
 }
 
 export interface InputNode extends NodeBase {
-  type: 'input';
+  type: 'INPUT';
   width: number;
   height?: number;
   value?: string;
   placeholder?: string;
+  /** Styling of the value and placeholder text. */
+  style?: TypeStyle;
   state?: ComponentState;
 }
 
-export interface PanelNode extends NodeBase {
-  type: 'panel';
+/** A container, optionally with a title bar. Children are positioned from below the bar. */
+export interface FrameNode extends NodeBase {
+  type: 'FRAME';
   width: number;
   height: number;
   title?: string;
+  /** Styling of the title. */
+  style?: TypeStyle;
 }
 
 export interface WindowNode extends NodeBase {
-  type: 'window';
+  type: 'WINDOW';
   width: number;
   height: number;
   title?: string;
   chrome: 'window' | 'browser';
   url?: string;
+  /** Styling of the title and url text. */
+  style?: TypeStyle;
 }
 
 export type SceneNode =
-  RectNode | EllipseNode | LineNode | PathNode | TextNode | IconNode | ButtonNode | InputNode | PanelNode | WindowNode;
+  | RectangleNode
+  | EllipseNode
+  | LineNode
+  | VectorNode
+  | TextNode
+  | IconNode
+  | ButtonNode
+  | InputNode
+  | FrameNode
+  | WindowNode;
 
 export type NodeType = SceneNode['type'];
 export type NodeOf<T extends NodeType> = Extract<SceneNode, { type: T }>;

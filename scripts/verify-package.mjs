@@ -43,7 +43,7 @@ try {
     join(dir, 'esm.mjs'),
     `import { createDemo, Scene, DEFAULT_THEME } from '@drietsch/sketch';
      const demo = createDemo({ width: 200, height: 100, seed: 42 });
-     demo.rect({ id: 'box', x: 10, y: 10, width: 80, height: 60, style: { fill: 'red', fillStyle: 'dots' } });
+     demo.rectangle({ id: 'box', x: 10, y: 10, width: 80, height: 60, fills: [{ type: 'SOLID', color: 'red' }], sketch: { fillStyle: 'dots' } });
      const svg = demo.toSVG();
      const ok = [createDemo, Scene, DEFAULT_THEME].every(Boolean)
        && svg.startsWith('<svg') && svg.includes('data-key="box"') && demo.seed === 42 && demo.toSVG() === svg;
@@ -59,7 +59,7 @@ try {
     join(dir, 'cjs.cjs'),
     `const m = require('@drietsch/sketch');
      const demo = m.createDemo({ width: 10, height: 10, seed: 1 });
-     demo.rect({ x: 0, y: 0, width: 10, height: 10 });
+     demo.rectangle({ x: 0, y: 0, width: 10, height: 10 });
      if (!demo.toSVG().includes('<path')) { console.error('cjs broken'); process.exit(1); }
      console.log('CJS_OK:' + Object.keys(m).sort().join(','));`,
   );

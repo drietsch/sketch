@@ -3,7 +3,7 @@ import { createDemo } from '../../../src/index.js';
 import { componentFor } from '../../../src/components/index.js';
 import { visibleValue, INPUT_HEIGHT, INPUT_PADDING_X } from '../../../src/components/input.js';
 import { BUTTON_HEIGHT } from '../../../src/components/button.js';
-import { PANEL_TITLE_HEIGHT } from '../../../src/components/panel.js';
+import { FRAME_TITLE_HEIGHT } from '../../../src/components/frame.js';
 import { BROWSER_BAR_HEIGHT, WINDOW_BAR_HEIGHT } from '../../../src/components/window.js';
 import { DEFAULT_FONT } from '../../../src/text/index.js';
 import type { RenderContext } from '../../../src/components/types.js';
@@ -24,9 +24,9 @@ function expand(
 describe('button', () => {
   test('auto-sizes to its label and icon, or takes explicit dimensions', () => {
     const demo = make();
-    const a = demo.button({ id: 'a', x: 0, y: 0, text: 'Sign in' });
-    const b = demo.button({ id: 'b', x: 0, y: 0, text: 'Sign in', icon: 'log-in' });
-    const c = demo.button({ id: 'c', x: 0, y: 0, text: 'Sign in', width: 300, height: 50 });
+    const a = demo.button({ id: 'a', x: 0, y: 0, characters: 'Sign in' });
+    const b = demo.button({ id: 'b', x: 0, y: 0, characters: 'Sign in', icon: 'log-in' });
+    const c = demo.button({ id: 'c', x: 0, y: 0, characters: 'Sign in', width: 300, height: 50 });
     const wa = demo.scene.bounds('a').width;
     expect(wa).toBe(Math.ceil(32 + DEFAULT_FONT.measure('Sign in', demo.theme.fontSize)));
     expect(demo.scene.bounds('b').width).toBe(wa + 18 + 8);
@@ -39,14 +39,14 @@ describe('button', () => {
 
   test('parts: box and centred label; primary inverts colours; icon sits before the label', () => {
     const demo = make();
-    const plain = demo.button({ id: 'p', x: 0, y: 0, text: 'Go' });
+    const plain = demo.button({ id: 'p', x: 0, y: 0, characters: 'Go' });
     const parts = expand(demo, plain);
     expect(parts.map((p) => p.key)).toEqual(['box', 'label']);
     const label = parts[1] as Extract<(typeof parts)[number], { kind: 'text' }>;
     expect(label.color).toBe(demo.theme.text);
     expect(label.x).toBeCloseTo((demo.scene.bounds('p').width - DEFAULT_FONT.measure('Go', 14)) / 2, 6);
 
-    const primary = demo.button({ id: 'q', x: 0, y: 0, text: 'Go', variant: 'primary', icon: 'check' });
+    const primary = demo.button({ id: 'q', x: 0, y: 0, characters: 'Go', variant: 'primary', icon: 'check' });
     const pp = expand(demo, primary);
     expect(pp.map((p) => p.key)).toEqual(['box', 'icon', 'label']);
     expect((pp[0] as { style: { fill?: string } }).style.fill).toBe(demo.theme.accent);
@@ -57,13 +57,13 @@ describe('button', () => {
 
   test('state changes the parts: hovered adds a hatch, pressed offsets everything', () => {
     const demo = make();
-    const node = demo.button({ id: 'b', x: 0, y: 0, text: 'Go' });
+    const node = demo.button({ id: 'b', x: 0, y: 0, characters: 'Go' });
     expect(expand(demo, node, { hovered: true }).map((p) => p.key)).toEqual(['box', 'hover', 'label']);
     const pressed = expand(demo, node, { pressed: true });
     expect((pressed[0] as { x: number; y: number }).x).toBe(1);
     expect((pressed[1] as { x: number }).x).toBe((expand(demo, node)[1] as { x: number }).x + 1);
-    expect((pressed[0] as { style: { strokeWidth: number } }).style.strokeWidth).toBeGreaterThan(
-      demo.theme.strokeWidth,
+    expect((pressed[0] as { style: { strokeWeight: number } }).style.strokeWeight).toBeGreaterThan(
+      demo.theme.strokeWeight,
     );
   });
 });
@@ -120,12 +120,12 @@ describe('input', () => {
 describe('containers', () => {
   test('panel title creates a content offset; children are placed below it', () => {
     const demo = make();
-    demo.panel({ id: 'p', x: 100, y: 100, width: 300, height: 200, title: 'Settings' });
-    demo.panel({ id: 'q', x: 100, y: 400, width: 300, height: 100 });
-    demo.rect({ id: 'child', parent: 'p', x: 10, y: 10, width: 20, height: 20 });
-    expect(demo.scene.contentOrigin('p')).toEqual({ x: 100, y: 100 + PANEL_TITLE_HEIGHT });
+    demo.frame({ id: 'p', x: 100, y: 100, width: 300, height: 200, title: 'Settings' });
+    demo.frame({ id: 'q', x: 100, y: 400, width: 300, height: 100 });
+    demo.rectangle({ id: 'child', parent: 'p', x: 10, y: 10, width: 20, height: 20 });
+    expect(demo.scene.contentOrigin('p')).toEqual({ x: 100, y: 100 + FRAME_TITLE_HEIGHT });
     expect(demo.scene.contentOrigin('q')).toEqual({ x: 100, y: 400 });
-    expect(demo.scene.bounds('child')).toEqual({ x: 110, y: 110 + PANEL_TITLE_HEIGHT, width: 20, height: 20 });
+    expect(demo.scene.bounds('child')).toEqual({ x: 110, y: 110 + FRAME_TITLE_HEIGHT, width: 20, height: 20 });
     expect(expand(demo, demo.scene.node('p')).map((p) => p.key)).toEqual(['box', 'title', 'divider']);
     expect(expand(demo, demo.scene.node('q')).map((p) => p.key)).toEqual(['box']);
     expect(demo.scene.isInteractive(demo.scene.node('p'))).toBe(true);
@@ -148,8 +148,8 @@ describe('containers', () => {
 
   test('clicking inside a container but outside a control hits the container', () => {
     const demo = make();
-    demo.panel({ id: 'p', x: 0, y: 0, width: 300, height: 300 });
-    demo.button({ id: 'b', parent: 'p', x: 10, y: 10, text: 'Go' });
+    demo.frame({ id: 'p', x: 0, y: 0, width: 300, height: 300 });
+    demo.button({ id: 'b', parent: 'p', x: 10, y: 10, characters: 'Go' });
     expect(demo.scene.hitTest({ x: 20, y: 20 })).toBe('b');
     expect(demo.scene.hitTest({ x: 200, y: 200 })).toBe('p');
     expect(demo.scene.hitTest({ x: 400, y: 400 })).toBeUndefined();
@@ -160,10 +160,10 @@ describe('focus ring', () => {
   test('is drawn once, after the nodes, around the focused focusable node', () => {
     const demo = make();
     demo.input({ id: 'i', x: 50, y: 50, width: 200, state: { focused: true } });
-    demo.button({ id: 'b', x: 50, y: 150, text: 'Go' });
-    const keys = demo.frame().groups.map((g) => g.key);
+    demo.button({ id: 'b', x: 50, y: 150, characters: 'Go' });
+    const keys = demo.frameAt().groups.map((g) => g.key);
     expect(keys).toEqual(['i', 'b', '__focus']);
-    const ring = demo.frame().groups[2];
+    const ring = demo.frameAt().groups[2];
     expect(ring.html).toContain('data-for="i"');
     expect(ring.html).toContain('translate(47 47)');
     expect(ring.html).toContain('stroke-dasharray="5 4"');
@@ -171,9 +171,9 @@ describe('focus ring', () => {
 
   test('is not drawn for a focused flag on a non-focusable node', () => {
     const demo = make();
-    demo.rect({ id: 'r', x: 0, y: 0, width: 10, height: 10 });
+    demo.rectangle({ id: 'r', x: 0, y: 0, width: 10, height: 10 });
     (demo.scene.node('r') as unknown as { state: ComponentState }).state = { focused: true };
-    expect(demo.frame().groups.map((g) => g.key)).toEqual(['r']);
+    expect(demo.frameAt().groups.map((g) => g.key)).toEqual(['r']);
   });
 });
 
@@ -184,7 +184,7 @@ describe('icons per demo', () => {
     demo.registerIcon('check', custom);
     expect(demo.resolveIcon('check')).toBe(custom);
     demo.icon({ id: 'i', x: 0, y: 0, icon: 'check' });
-    expect(demo.frame().groups[0].html).toContain('d="M0 0L24 24"');
+    expect(demo.frameAt().groups[0].html).toContain('d="M0 0L24 24"');
     expect(() => demo.resolveIcon('nope')).toThrow(/Unknown icon "nope"/);
     expect(() => demo.registerIcon('', custom)).toThrow();
   });
@@ -195,10 +195,10 @@ describe('icons per demo', () => {
       id: 'b',
       x: 0,
       y: 0,
-      text: 'x',
+      characters: 'x',
       icon: { nodes: [['path', { d: 'M1 1L2 2' }]] },
     });
-    expect(demo.frame().groups[0].html).toContain('d="M1 1L2 2"');
+    expect(demo.frameAt().groups[0].html).toContain('d="M1 1L2 2"');
     expect(node.icon).toEqual({ nodes: [['path', { d: 'M1 1L2 2' }]] });
   });
 });

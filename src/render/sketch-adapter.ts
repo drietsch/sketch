@@ -57,8 +57,8 @@ export class SketchAdapter {
     switch (part.kind) {
       case 'rect':
         drawable =
-          part.radius && part.radius > 0
-            ? this.gen.roundedRectangle(part.x, part.y, part.width, part.height, part.radius, o)
+          part.cornerRadius && part.cornerRadius > 0
+            ? this.gen.roundedRectangle(part.x, part.y, part.width, part.height, part.cornerRadius, o)
             : this.gen.rectangle(part.x, part.y, part.width, part.height, o);
         break;
       case 'ellipse':
@@ -89,10 +89,17 @@ function pathElement(p: PathInfo, rule: 'evenodd' | 'nonzero', style: PartStyle)
     fill: filled ? p.fill : 'none',
   };
   if (filled && rule === 'evenodd') attrs['fill-rule'] = 'evenodd';
+  // Paint opacity: a fill sketch is drawn as strokes in the fill colour, so it takes the fill's opacity.
+  const isFillSketch = p.stroke !== 'none' && p.stroke === style.fill && !filled;
+  if (filled && style.fillOpacity !== undefined) attrs['fill-opacity'] = style.fillOpacity;
+  if (p.stroke !== 'none') {
+    const o = isFillSketch ? style.fillOpacity : style.strokeOpacity;
+    if (o !== undefined) attrs['stroke-opacity'] = o;
+  }
   if (p.stroke !== 'none') {
     attrs['stroke-linecap'] = 'round';
     attrs['stroke-linejoin'] = 'round';
-    if (style.dash && style.dash.length) attrs['stroke-dasharray'] = style.dash.join(' ');
+    if (style.strokeDashes && style.strokeDashes.length) attrs['stroke-dasharray'] = style.strokeDashes.join(' ');
   }
   if (style.opacity !== undefined) attrs.opacity = style.opacity;
   return h('path', attrs);
@@ -104,7 +111,7 @@ export function toOptions(style: PartStyle, seed: number): Options {
     seed,
     fixedDecimalPlaceDigits: PRECISION,
     stroke: style.stroke,
-    strokeWidth: style.strokeWidth,
+    strokeWidth: style.strokeWeight,
     fillStyle: style.fillStyle,
     roughness: style.roughness,
     bowing: style.bowing,

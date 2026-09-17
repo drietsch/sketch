@@ -5,8 +5,8 @@ import { CompileError, defaultCursorStart } from '../../../src/timeline/compile.
 function login() {
   const demo = createDemo({ width: 900, height: 600, seed: 42 });
   demo.input({ id: 'email', x: 250, y: 200, width: 350, placeholder: 'Email' });
-  demo.button({ id: 'login', x: 470, y: 300, text: 'Sign in' });
-  demo.panel({ id: 'side', x: 0, y: 0, width: 200, height: 600 });
+  demo.button({ id: 'login', x: 470, y: 300, characters: 'Sign in' });
+  demo.frame({ id: 'side', x: 0, y: 0, width: 200, height: 600 });
   return demo;
 }
 
@@ -88,17 +88,17 @@ describe('compile', () => {
 
   test('errors name the step and the problem', () => {
     const demo = login();
-    demo.rect({ id: 'ghost', x: 0, y: 0, width: 1, height: 1, hidden: true });
+    demo.rectangle({ id: 'ghost', x: 0, y: 0, width: 1, height: 1, visible: false });
     demo.timeline.moveCursor('nope');
     expect(() => demo.compiled()).toThrow(/step 0: unknown target "nope"/);
     demo.timeline.reset().type('login', 'x');
-    expect(() => demo.compiled()).toThrow(/step 0: target "login" is a button, not an input/);
+    expect(() => demo.compiled()).toThrow(/step 0: target "login" is a BUTTON, not an INPUT/);
     demo.timeline.reset().focus('side');
     expect(() => demo.compiled()).toThrow(/is not focusable/);
     demo.timeline.reset().set('missing', {});
     expect(() => demo.compiled()).toThrow(/unknown target "missing"/);
     demo.timeline.reset().moveCursor('ghost');
-    expect(() => demo.compiled()).toThrow(/is hidden/);
+    expect(() => demo.compiled()).toThrow(/is not visible/);
   });
 
   test('recompiles only when the scene or timeline changes', () => {

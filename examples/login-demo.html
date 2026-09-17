@@ -36,10 +36,24 @@
 
       const demo = createDemo({ width: 900, height: 600, seed: 42, background: null });
       demo.browser({ id: 'browser', x: 40, y: 30, width: 820, height: 540, url: 'https://example.com/login' });
-      demo.panel({ id: 'card', parent: 'browser', x: 210, y: 90, width: 400, height: 300, title: 'Welcome back' });
-      demo.text({ id: 'email-label', parent: 'card', x: 24, y: 20, text: 'Email', style: { color: '#8a8f98' } });
+      demo.frame({ id: 'card', parent: 'browser', x: 210, y: 90, width: 400, height: 300, title: 'Welcome back' });
+      demo.text({
+        id: 'email-label',
+        parent: 'card',
+        x: 24,
+        y: 20,
+        characters: 'Email',
+        style: { fills: [{ type: 'SOLID', color: '#8a8f98' }] },
+      });
       demo.input({ id: 'email', parent: 'card', x: 24, y: 44, width: 352, placeholder: 'you@example.com' });
-      demo.text({ id: 'password-label', parent: 'card', x: 24, y: 100, text: 'Password', style: { color: '#8a8f98' } });
+      demo.text({
+        id: 'password-label',
+        parent: 'card',
+        x: 24,
+        y: 100,
+        characters: 'Password',
+        style: { fills: [{ type: 'SOLID', color: '#8a8f98' }] },
+      });
       demo.input({ id: 'password', parent: 'card', x: 24, y: 124, width: 352, placeholder: 'Password' });
       demo.button({
         id: 'login',
@@ -47,7 +61,7 @@
         x: 24,
         y: 190,
         width: 352,
-        text: 'Sign in',
+        characters: 'Sign in',
         variant: 'primary',
         icon: 'log-in',
       });
@@ -56,10 +70,10 @@
         parent: 'card',
         x: 200,
         y: 240,
-        text: 'Signed in!',
-        align: 'middle',
-        hidden: true,
-        style: { color: '#2f6fed' },
+        characters: 'Signed in!',
+        style: { textAlignHorizontal: 'CENTER' },
+        visible: false,
+        style: { fills: [{ type: 'SOLID', color: '#2f6fed' }] },
       });
 
       demo.timeline
@@ -72,7 +86,7 @@
         .wait(300)
         .moveCursor('login')
         .click()
-        .set('done', { hidden: false })
+        .set('done', { visible: true })
         .wait(800);
 
       const out = document.getElementById('out');

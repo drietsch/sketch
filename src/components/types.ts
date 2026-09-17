@@ -1,20 +1,22 @@
 import type { VElement } from '../render/frame.js';
 import type { IconDef } from '../icons/types.js';
-import type { Bounds, ComponentState, FillStyle, Point, SceneNode, Theme } from '../core/types.js';
+import type { Bounds, ComponentState, FillStyle, Point, SceneNode, TextAlignHorizontal, Theme } from '../core/types.js';
 import type { StrokeFont } from '../text/font.js';
 
 /** Fully resolved sketch style for one part. */
 export interface PartStyle {
   stroke: string;
-  strokeWidth: number;
+  strokeWeight: number;
+  strokeOpacity?: number;
   fill?: string;
+  fillOpacity?: number;
   fillStyle: FillStyle;
   roughness: number;
   bowing: number;
   hachureGap?: number;
   hachureAngle?: number;
   fillWeight?: number;
-  dash?: number[];
+  strokeDashes?: number[];
   opacity?: number;
   disableMultiStroke?: boolean;
   preserveVertices?: boolean;
@@ -26,7 +28,7 @@ export interface PartStyle {
  * entry: a button's box and its label never re-randomise each other.
  */
 export type Part = { key: string; style: PartStyle } & (
-  | { kind: 'rect'; x: number; y: number; width: number; height: number; radius?: number }
+  | { kind: 'rect'; x: number; y: number; width: number; height: number; cornerRadius?: number }
   | { kind: 'ellipse'; x: number; y: number; width: number; height: number }
   | { kind: 'line'; x1: number; y1: number; x2: number; y2: number }
   | { kind: 'path'; d: string }
@@ -36,7 +38,7 @@ export type Part = { key: string; style: PartStyle } & (
       y: number;
       text: string;
       fontSize: number;
-      align: 'start' | 'middle' | 'end';
+      align: TextAlignHorizontal;
       color: string;
     }
   | { kind: 'icon'; x: number; y: number; size: number; icon: IconDef; color: string }

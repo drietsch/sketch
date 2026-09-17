@@ -24,31 +24,37 @@
           id: `t${size}`,
           x: 20,
           y,
-          text: `The quick brown fox jumps over the lazy dog ${size}px`,
+          characters: `The quick brown fox jumps over the lazy dog ${size}px`,
           fontSize: size,
         });
         y += size * 1.6;
       }
-      demo.text({ id: 'symbols', x: 20, y, text: '0123456789 !?@#$%&*()[]{}<>/\\ +-=_ "quoted" éü', fontSize: 18 });
+      demo.text({
+        id: 'symbols',
+        x: 20,
+        y,
+        characters: '0123456789 !?@#$%&*()[]{}<>/\\ +-=_ "quoted" éü',
+        style: { fontSize: 18 },
+      });
       y += 40;
-      demo.text({ id: 'multi', x: 20, y, text: 'Two lines\nof text', fontSize: 16 });
+      demo.text({ id: 'multi', x: 20, y, characters: 'Two lines\nof text', style: { fontSize: 16 } });
       demo.text({
         id: 'centered',
         x: 480,
         y: y,
-        text: 'centred',
+        characters: 'centred',
         fontSize: 16,
-        align: 'middle',
-        style: { color: '#2f6fed' },
+        style: { textAlignHorizontal: 'CENTER' },
+        style: { fills: [{ type: 'SOLID', color: '#2f6fed' }] },
       });
       demo.text({
         id: 'right',
         x: 940,
         y: y,
-        text: 'right-aligned',
+        characters: 'right-aligned',
         fontSize: 16,
-        align: 'end',
-        style: { color: '#b00' },
+        style: { textAlignHorizontal: 'RIGHT' },
+        style: { fills: [{ type: 'SOLID', color: '#b00' }] },
       });
       y += 70;
       iconNames().forEach((name, i) => {
@@ -70,7 +76,7 @@
           rough: true,
         },
         size: 64,
-        style: { color: '#06a' },
+        style: { fills: [{ type: 'SOLID', color: '#06a' }] },
       });
       demo.icon({
         id: 'plain',
@@ -83,7 +89,7 @@
           ],
         },
         size: 64,
-        style: { color: '#06a' },
+        style: { fills: [{ type: 'SOLID', color: '#06a' }] },
       });
 
       document.getElementById('out').innerHTML = demo.toSVG();

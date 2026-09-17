@@ -6,7 +6,7 @@ describe('Timeline builder', () => {
     const tl = new Timeline();
     const v0 = tl.version;
     tl.moveCursor('email').click().type('email', 'hi').wait(100).focus('login').blur().setValue('email', 'x');
-    tl.set('login', { hidden: true }).press({ x: 1, y: 2 }).release().clear('email');
+    tl.set('login', { visible: false }).press({ x: 1, y: 2 }).release().clear('email');
     expect(tl.steps.map((s) => s.type)).toEqual([
       'moveCursor',
       'click',
