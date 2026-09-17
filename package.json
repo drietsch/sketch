@@ -1,6 +1,6 @@
 {
   "name": "@drietsch/sketch",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "description": "API-first library for sketching hand-drawn GUI mockups and animating how they are used. Deterministic SVG output.",
   "type": "module",
   "license": "MIT",
