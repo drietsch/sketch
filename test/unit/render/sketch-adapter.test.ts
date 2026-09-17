@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import { SketchAdapter, toOptions } from '../../../src/render/sketch-adapter.js';
 import type { Part, PartStyle } from '../../../src/components/types.js';
+import { DEFAULT_FONT } from '../../../src/text/index.js';
 
 const style: PartStyle = { stroke: '#000', strokeWidth: 1, fillStyle: 'hachure', roughness: 1, bowing: 1 };
 const rect = (extra: Partial<PartStyle> = {}): Part => ({
@@ -15,7 +16,7 @@ const rect = (extra: Partial<PartStyle> = {}): Part => ({
 
 describe('SketchAdapter', () => {
   test('returns the cached array for an unchanged part and seed', () => {
-    const a = new SketchAdapter();
+    const a = new SketchAdapter(DEFAULT_FONT);
     const first = a.render('n', rect(), 7);
     expect(a.render('n', rect(), 7)).toBe(first);
     expect(a.render('n', rect(), 9)).not.toBe(first);
@@ -23,7 +24,7 @@ describe('SketchAdapter', () => {
   });
 
   test('forget() drops a node without touching others', () => {
-    const a = new SketchAdapter();
+    const a = new SketchAdapter(DEFAULT_FONT);
     const n = a.render('n', rect(), 7);
     const m = a.render('m', rect(), 7);
     a.forget('n');
@@ -32,7 +33,7 @@ describe('SketchAdapter', () => {
   });
 
   test('emits stroke, fill and rounded caps; fill-rule only for self-intersecting shapes', () => {
-    const a = new SketchAdapter();
+    const a = new SketchAdapter(DEFAULT_FONT);
     const [outline] = a.render('n', rect(), 7);
     expect(outline.tag).toBe('path');
     expect(outline.attrs.stroke).toBe('#000');
@@ -58,14 +59,14 @@ describe('SketchAdapter', () => {
   });
 
   test('dash and opacity land on the outline', () => {
-    const a = new SketchAdapter();
+    const a = new SketchAdapter(DEFAULT_FONT);
     const [outline] = a.render('n', rect({ dash: [4, 2], opacity: 0.5 }), 7);
     expect(outline.attrs['stroke-dasharray']).toBe('4 2');
     expect(outline.attrs.opacity).toBe(0.5);
   });
 
   test('every emitted number has at most two decimals', () => {
-    const a = new SketchAdapter();
+    const a = new SketchAdapter(DEFAULT_FONT);
     for (const el of a.render('n', rect({ fill: 'red' }), 7)) {
       for (const n of String(el.attrs.d).match(/-?\d+\.\d+/g) ?? []) {
         expect(n.split('.')[1].length).toBeLessThanOrEqual(2);

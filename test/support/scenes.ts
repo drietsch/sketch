@@ -15,6 +15,30 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
     return demo;
   },
 
+  textAndIcons(seed = 11) {
+    const demo = createDemo({ width: 420, height: 200, seed });
+    demo.text({ id: 'title', x: 16, y: 12, text: 'Sign in', fontSize: 24 });
+    demo.text({
+      id: 'hint',
+      x: 16,
+      y: 50,
+      text: 'Use your work email.\nIt stays private.',
+      fontSize: 13,
+      style: { color: '#8a8f98' },
+    });
+    demo.text({ id: 'centre', x: 210, y: 110, text: 'centred \u00e9', align: 'middle' });
+    demo.icon({ id: 'mail', x: 360, y: 12, icon: 'mail', size: 32 });
+    demo.icon({ id: 'lock', x: 360, y: 56, icon: 'lock', size: 24, style: { color: '#2f6fed' } });
+    demo.icon({
+      id: 'rough',
+      x: 360,
+      y: 96,
+      icon: { nodes: [['circle', { cx: 12, cy: 12, r: 10 }]], rough: true },
+      size: 40,
+    });
+    return demo;
+  },
+
   primitives(seed = 42) {
     const demo = createDemo({ width: 640, height: 360, seed });
     const styles = ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots', 'dashed', 'zigzag-line'] as const;

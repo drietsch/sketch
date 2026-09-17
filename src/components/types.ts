@@ -1,6 +1,7 @@
 import type { VElement } from '../render/frame.js';
 import type { IconDef } from '../icons/types.js';
 import type { Bounds, ComponentState, FillStyle, Point, SceneNode, Theme } from '../core/types.js';
+import type { StrokeFont } from '../text/font.js';
 
 /** Fully resolved sketch style for one part. */
 export interface PartStyle {
@@ -45,6 +46,7 @@ export type Part = { key: string; style: PartStyle } & (
 
 export interface LayoutContext {
   theme: Theme;
+  font: StrokeFont;
 }
 
 export interface RenderContext extends LayoutContext {

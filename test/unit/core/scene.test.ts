@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'vitest';
 import { Scene } from '../../../src/core/scene.js';
 import { DEFAULT_THEME } from '../../../src/core/theme.js';
+import { DEFAULT_FONT } from '../../../src/text/index.js';
 import type { RectNode } from '../../../src/core/types.js';
 
-const make = () => new Scene({ theme: { ...DEFAULT_THEME } });
+const make = () => new Scene({ theme: { ...DEFAULT_THEME }, font: DEFAULT_FONT });
 const rect = (id: string, extra: Partial<RectNode> = {}): RectNode => ({
   id,
   type: 'rect',

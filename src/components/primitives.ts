@@ -1,7 +1,11 @@
 import { pointsOnPath } from 'points-on-path';
-import type { Bounds, EllipseNode, LineNode, PathNode, RectNode } from '../core/types.js';
+import type { Bounds, EllipseNode, IconNode, LineNode, PathNode, RectNode, TextNode } from '../core/types.js';
 import type { ComponentDef } from './types.js';
 import { resolvePartStyle } from './style.js';
+import { layoutText } from '../text/layout.js';
+import { resolveIcon } from '../icons/registry.js';
+
+export const DEFAULT_ICON_SIZE = 20;
 
 export const rect: ComponentDef<RectNode> = {
   localBounds: (node) => ({ x: 0, y: 0, width: node.width, height: node.height }),
@@ -83,4 +87,43 @@ export function pathBounds(d: string): Bounds {
 export const path: ComponentDef<PathNode> = {
   localBounds: (node) => pathBounds(node.d),
   expand: (node, ctx) => [{ key: 'self', kind: 'path', d: node.d, style: resolvePartStyle(ctx.theme, node.style) }],
+};
+
+export const text: ComponentDef<TextNode> = {
+  localBounds: (node, ctx) =>
+    layoutText(ctx.font, node.text, node.fontSize ?? node.style?.fontSize ?? ctx.theme.fontSize, node.align).bounds,
+  expand: (node, ctx) => [
+    {
+      key: 'self',
+      kind: 'text',
+      x: 0,
+      y: 0,
+      text: node.text,
+      fontSize: node.fontSize ?? node.style?.fontSize ?? ctx.theme.fontSize,
+      align: node.align ?? 'start',
+      color: node.style?.color ?? ctx.theme.text,
+      style: resolvePartStyle(ctx.theme, node.style, { roughness: node.style?.roughness ?? ctx.theme.textRoughness }),
+    },
+  ],
+};
+
+export const icon: ComponentDef<IconNode> = {
+  localBounds: (node) => ({
+    x: 0,
+    y: 0,
+    width: node.size ?? DEFAULT_ICON_SIZE,
+    height: node.size ?? DEFAULT_ICON_SIZE,
+  }),
+  expand: (node, ctx) => [
+    {
+      key: 'self',
+      kind: 'icon',
+      x: 0,
+      y: 0,
+      size: node.size ?? DEFAULT_ICON_SIZE,
+      icon: resolveIcon(node.icon),
+      color: node.style?.color ?? node.style?.stroke ?? ctx.theme.stroke,
+      style: resolvePartStyle(ctx.theme, node.style),
+    },
+  ],
 };

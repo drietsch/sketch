@@ -1,12 +1,14 @@
 import type { NodeOf, NodeType, SceneNode } from '../core/types.js';
 import type { ComponentDef } from './types.js';
-import { ellipse, line, path, rect } from './primitives.js';
+import { ellipse, icon, line, path, rect, text } from './primitives.js';
 
 const COMPONENTS: { [T in NodeType]?: ComponentDef<NodeOf<T>> } = {
   rect,
   ellipse,
   line,
   path,
+  text,
+  icon,
 };
 
 export function hasComponent(type: string): type is NodeType {

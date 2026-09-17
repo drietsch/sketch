@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>sketchdemo: text and icons</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Text and icons</h1>
+    <p>Sketched Hershey stroke glyphs at several sizes, and every built-in icon.</p>
+    <div id="out"></div>
+    <script type="module">
+      import { createDemo, iconNames } from '../dist/index.js';
+
+      const demo = createDemo({ width: 960, height: 560, seed: 42 });
+      let y = 16;
+      for (const size of [12, 14, 18, 24, 36]) {
+        demo.text({
+          id: `t${size}`,
+          x: 20,
+          y,
+          text: `The quick brown fox jumps over the lazy dog ${size}px`,
+          fontSize: size,
+        });
+        y += size * 1.6;
+      }
+      demo.text({ id: 'symbols', x: 20, y, text: '0123456789 !?@#$%&*()[]{}<>/\\ +-=_ "quoted" éü', fontSize: 18 });
+      y += 40;
+      demo.text({ id: 'multi', x: 20, y, text: 'Two lines\nof text', fontSize: 16 });
+      demo.text({
+        id: 'centered',
+        x: 480,
+        y: y,
+        text: 'centred',
+        fontSize: 16,
+        align: 'middle',
+        style: { color: '#2f6fed' },
+      });
+      demo.text({
+        id: 'right',
+        x: 940,
+        y: y,
+        text: 'right-aligned',
+        fontSize: 16,
+        align: 'end',
+        style: { color: '#b00' },
+      });
+      y += 70;
+      iconNames().forEach((name, i) => {
+        const col = i % 16;
+        const row = Math.floor(i / 16);
+        demo.icon({ id: `icon-${name}`, x: 20 + col * 58, y: y + row * 58, icon: name, size: 28 });
+      });
+      y += Math.ceil(iconNames().length / 16) * 58;
+      demo.icon({ id: 'big', x: 20, y, icon: 'house', size: 64 });
+      demo.icon({
+        id: 'rough',
+        x: 100,
+        y,
+        icon: {
+          nodes: [
+            ['circle', { cx: 12, cy: 12, r: 10 }],
+            ['path', { d: 'M8 12l3 3 5-6' }],
+          ],
+          rough: true,
+        },
+        size: 64,
+        style: { color: '#06a' },
+      });
+      demo.icon({
+        id: 'plain',
+        x: 180,
+        y,
+        icon: {
+          nodes: [
+            ['circle', { cx: 12, cy: 12, r: 10 }],
+            ['path', { d: 'M8 12l3 3 5-6' }],
+          ],
+        },
+        size: 64,
+        style: { color: '#06a' },
+      });
+
+      document.getElementById('out').innerHTML = demo.toSVG();
+      window.__demo = { demo, duration: 0, nodeIds: demo.scene.visible().map((n) => n.id), seek: () => {} };
+    </script>
+  </body>
+</html>

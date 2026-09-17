@@ -6,10 +6,12 @@ import type { RenderContext } from '../components/types.js';
 import { fmt, serialize, serializeAttrs } from './frame.js';
 import type { Frame, FrameGroup, VElement } from './frame.js';
 import type { SketchAdapter } from './sketch-adapter.js';
+import type { StrokeFont } from '../text/font.js';
 
 export interface FrameContext {
   seed: number;
   theme: Theme;
+  font: StrokeFont;
   adapter: SketchAdapter;
   /** Interaction state per node at the frame's time; empty when there is no timeline. */
   states?: ReadonlyMap<string, ComponentState>;
@@ -34,7 +36,7 @@ function nodeGroup(scene: Scene, node: SceneNode, ctx: FrameContext): FrameGroup
   const def = componentFor(node);
   const authored = 'state' in node ? node.state : undefined;
   const state: ComponentState = { ...authored, ...ctx.states?.get(node.id) };
-  const rctx: RenderContext = { theme: ctx.theme, state };
+  const rctx: RenderContext = { theme: ctx.theme, font: ctx.font, state };
   const variant = node.sketchVariant ?? 0;
   const children: VElement[] = [];
   for (const part of def.expand(node, rctx)) {

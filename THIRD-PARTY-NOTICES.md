@@ -1,9 +1,12 @@
 # Third-party notices
 
 `@drietsch/sketchdemo` is distributed as a single bundled ES module with no
-runtime dependencies. The following MIT-licensed packages are compiled into
-`dist/`, and their copyright notices are reproduced here as the MIT license
-requires.
+runtime dependencies. The following third-party code and data are compiled
+into `dist/`, and their notices are reproduced here as their licenses require.
+
+- [roughjs](#roughjs) and four small libraries it uses: the sketch engine (MIT)
+- [Hershey Fonts](#hershey-fonts): the built-in stroke font (permissive use restriction)
+- [sketchyicons](#sketchyicons), derived from Lucide and Feather: the built-in icons (MIT / ISC / MIT)
 
 The published bundle is not minified and comments are preserved, so the code
 below is also identifiable in `dist/index.js`.
@@ -54,3 +57,109 @@ All four are MIT licensed, © Preet Shihn.
 
 Each carries the MIT license text reproduced above, with copyright held by
 Preet Shihn.
+
+---
+
+## Hershey Fonts
+
+The built-in text font (`src/text/fonts/hershey-sans.ts`) is a converted copy
+of `futural.jhf`, the "Hershey Sans 1-stroke" font from the 1986 Usenet
+distribution of the Hershey Fonts, taken from
+https://github.com/kamalmostafa/hershey-fonts. The original file and the
+distribution's use restriction are in `vendor/hershey/`.
+
+As that restriction requires:
+
+- The Hershey Fonts were originally created by Dr. A. V. Hershey while working
+  at the U. S. National Bureau of Standards.
+- The format of the Font data in this distribution was originally created by
+  James Hurt, Cognition, Inc., 900 Technology Park Drive, Billerica, MA 01821
+  (mit-eddie!ci-dandelion!hurt).
+
+The data is redistributed here in a converted form, not in the format
+distributed by the U.S. NTIS.
+
+---
+
+## sketchyicons
+
+The built-in icons (`src/icons/builtin.ts`) are copied from
+[`@sketchyicons/data`](https://github.com/Fantomiald/sketchyicons), whose
+code is MIT licensed and whose geometry is derived from Lucide (ISC) and, for
+some icons, Feather (MIT). sketchdemo is not affiliated with sketchyicons,
+Lucide or Feather.
+
+```
+MIT License
+
+Copyright (c) 2026 Julien Montagne
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+### Lucide
+
+```
+ISC License
+
+Copyright (c) 2026 Lucide Icons and Contributors
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+```
+
+### Feather
+
+The following built-in icons are Lucide icons derived from the Feather
+project: arrow-left, arrow-right, calendar, check, chevron-down,
+chevron-left, chevron-right, chevron-up, download, info, lock, log-in,
+log-out, minus, plus, search, trash-2, upload, x.
+
+```
+The MIT License (MIT)
+
+Copyright (c) 2013-present Cole Bemis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```

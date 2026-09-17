@@ -6,6 +6,9 @@ export { Scene } from './core/scene.js';
 export { DEFAULT_THEME } from './core/theme.js';
 export { deriveSeed } from './core/ids.js';
 export { frameToSVG } from './render/svg-string.js';
+export { registerIcon, iconNames, BUILTIN_ICONS } from './icons/index.js';
+export { StrokeFont, DEFAULT_FONT, layoutText } from './text/index.js';
+export type { StrokeFontData, StrokeGlyph, TextAlign, TextLayout, PlacedGlyph } from './text/index.js';
 
 export type {
   Bounds,

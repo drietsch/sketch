@@ -1,8 +1,11 @@
 import { RoughGenerator, fillRuleFor } from '../sketch/index.js';
 import type { Drawable, Options, PathInfo } from '../sketch/index.js';
 import type { Part, PartStyle } from '../components/types.js';
+import type { StrokeFont } from '../text/font.js';
 import { h } from './frame.js';
 import type { VElement } from './frame.js';
+import { renderTextPart } from './glyphs.js';
+import { renderIconPart } from './icons.js';
 
 /** Precision of every coordinate the engine emits. Fixed so output is byte-identical across JS engines. */
 export const PRECISION = 2;
@@ -19,11 +22,10 @@ export class SketchAdapter {
   private readonly gen = new RoughGenerator({ seed: 1 });
   private readonly cache = new Map<string, { sig: string; els: VElement[] }>();
 
+  constructor(private readonly font: StrokeFont) {}
+
   render(nodeId: string, part: Part, seed: number): VElement[] {
     if (part.kind === 'raw') return [part.el];
-    if (part.kind === 'text' || part.kind === 'icon') {
-      throw new Error(`Part kind "${part.kind}" is not renderable yet`);
-    }
     const key = `${nodeId}/${part.key}`;
     const sig = signature(part, seed);
     const hit = this.cache.get(key);
@@ -47,7 +49,9 @@ export class SketchAdapter {
     return this.toElements(drawable, style);
   }
 
-  private draw(part: Exclude<Part, { kind: 'raw' | 'text' | 'icon' }>, seed: number): VElement[] {
+  private draw(part: Exclude<Part, { kind: 'raw' }>, seed: number): VElement[] {
+    if (part.kind === 'text') return renderTextPart(this.gen, this.font, part, seed);
+    if (part.kind === 'icon') return renderIconPart(this.gen, part, seed);
     const o = toOptions(part.style, seed);
     let drawable: Drawable;
     switch (part.kind) {
