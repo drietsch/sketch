@@ -168,23 +168,36 @@ export class Scene {
 
   /**
    * Paint order, skipping hidden nodes and everything beneath them, and the
-   * children of nodes whose component hides them (a closed collapsible, an
-   * inactive tab panel). `render` supplies the live context for that check.
+   * children a parent's component hides (a closed collapsible, an inactive
+   * tab panel).
    */
-  visible(render?: (node: SceneNode) => RenderContext): SceneNode[] {
+  visible(): SceneNode[] {
     const out: SceneNode[] = [];
     const walk = (parent: string) => {
-      for (const id of this.children.get(parent)!) {
+      const ids = this.children.get(parent)!;
+      const owner = parent === ROOT ? undefined : this.nodes.get(parent)!;
+      const def = owner ? componentFor(owner) : undefined;
+      ids.forEach((id, index) => {
         const node = this.nodes.get(id)!;
-        if (node.visible === false) continue;
+        if (node.visible === false) return;
+        if (owner && def?.childVisible && !def.childVisible(owner, this.ctx, index)) return;
         out.push(node);
-        const def = componentFor(node);
-        if (def.hidesChildren && render && def.hidesChildren(this.resolved(id), render(node))) continue;
         walk(id);
-      }
+      });
     };
     walk(ROOT);
     return out;
+  }
+
+  /**
+   * Whether the child at `index` of `parent` is shown by its parent's
+   * component. Reads the stored node (live state that affects this is
+   * patched into it), so it is safe to call while the layout is computed.
+   */
+  childShown(parent: string, index: number): boolean {
+    const owner = this.nodes.get(parent)!;
+    const def = componentFor(owner);
+    return !def.childVisible || def.childVisible(owner, this.ctx, index);
   }
 
   /** Layout and per-type validation shared by add() and update(). */
@@ -287,7 +300,7 @@ export class Scene {
    * reverse paint order, so a popup takes clicks from whatever is beneath it.
    */
   hitTestDetailed(point: Point, render?: (node: SceneNode) => RenderContext): Hit | undefined {
-    const nodes = this.visible(render);
+    const nodes = this.visible();
     const inside = (b: Bounds, origin: Point) =>
       point.x >= origin.x + b.x &&
       point.x <= origin.x + b.x + b.width &&

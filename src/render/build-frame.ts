@@ -40,7 +40,7 @@ export function buildFrame(scene: Scene, size: Size, ctx: FrameContext, backgrou
   const overlaying = new Set<string>();
   let focused: SceneNode | undefined;
   const render = (node: SceneNode) => renderContext(scene, ctx, node);
-  for (const node of scene.visible(render)) {
+  for (const node of scene.visible()) {
     const { group: g, state, hasOverlay } = nodeGroup(scene, node, ctx, render(node));
     const lifted = hasOverlay || (node.parent !== undefined && overlaying.has(node.parent));
     if (lifted) {

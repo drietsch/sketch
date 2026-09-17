@@ -4,6 +4,7 @@ import type {
   Bounds,
   ComponentState,
   ControlValue,
+  NodeBase,
   FillStyle,
   Point,
   SceneNode,
@@ -105,7 +106,8 @@ export interface Capabilities {
   hover?: true;
 }
 
-export interface ComponentDef<N extends SceneNode = SceneNode> {
+/** A component definition. `N` is normally one of the built-in node types; custom components may bring their own. */
+export interface ComponentDef<N extends NodeBase & { type: string } = SceneNode> {
   /** Bounds in the node's local space (origin at the node's x, y). May have a negative origin, e.g. a line pointing up-left. */
   localBounds(node: N, ctx: LayoutContext): Bounds;
   expand(node: N, ctx: RenderContext): Part[];
@@ -130,6 +132,12 @@ export interface ComponentDef<N extends SceneNode = SceneNode> {
   validate?(node: N): string | undefined;
   /** A container: children are positioned from `contentOffset` and auto-layout applies. */
   container?: true;
-  /** When true, the node's children are not rendered or hit-tested (a closed collapsible). */
-  hidesChildren?(node: N, ctx: RenderContext): boolean;
+  /** Whether the child at `index` is shown (an inactive tab panel, the body of a closed collapsible). */
+  childVisible?(node: N, ctx: LayoutContext, index: number): boolean;
+  /**
+   * The node's open/value/checked change its geometry or its children's
+   * visibility, so the timeline's live values must reach the layout pass
+   * (they are applied to the scene the frame is built from).
+   */
+  layoutDependsOnState?: true;
 }

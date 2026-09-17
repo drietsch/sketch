@@ -2,7 +2,7 @@ import { beforeAll, describe, expect, test } from 'vitest';
 import { createDemo } from '../../../src/index.js';
 import { registerComponent } from '../../../src/components/index.js';
 import type { ComponentDef, Region } from '../../../src/components/types.js';
-import type { NodeType, SceneNode } from '../../../src/core/types.js';
+import type { NodeBase, NodeType } from '../../../src/core/types.js';
 import { CompileError } from '../../../src/timeline/compile.js';
 import { stateAt } from '../../../src/timeline/state.js';
 import { resolvePartStyle } from '../../../src/components/style.js';
@@ -12,7 +12,7 @@ import { resolvePartStyle } from '../../../src/components/style.js';
  * in-place regions, an overlay region that exists only while open, a drag
  * axis, hidden children while closed, and a per-type validation rule.
  */
-type Fake = SceneNode & { type: 'FAKE'; width: number; height: number; other?: string; label?: string };
+type Fake = NodeBase & { type: 'FAKE'; width: number; height: number; other?: string; label?: string };
 
 const fake: ComponentDef<Fake> = {
   interactive: true,
@@ -80,7 +80,8 @@ const fake: ComponentDef<Fake> = {
     valueAt: (n, _ctx, p) => (p.x / n.width) * 100,
     pointFor: (n, _ctx, v) => ({ x: (v / 100) * n.width, y: n.height / 2 }),
   },
-  hidesChildren: (n, ctx) => !(ctx.open ?? n.open ?? false),
+  childVisible: (n) => !!n.open,
+  layoutDependsOnState: true,
   validate: (n) => (n.width > 0 ? undefined : 'width must be positive'),
 };
 

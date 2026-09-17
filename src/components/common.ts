@@ -1,4 +1,4 @@
-import type { SceneNode, Theme } from '../core/types.js';
+import type { NodeBase, Theme } from '../core/types.js';
 import type { StrokeFont } from '../text/font.js';
 import type { Part, PartStyle } from './types.js';
 import { resolvePartStyle } from './style.js';
@@ -15,7 +15,7 @@ export function centredTextTop(font: StrokeFont, fontSize: number, height: numbe
 export function textPart(
   key: string,
   theme: Theme,
-  node: SceneNode,
+  node: NodeBase,
   opts: { x: number; y: number; text: string; fontSize: number; color: string; align?: TextPart['align'] },
 ): TextPart {
   return {
@@ -35,7 +35,7 @@ export function textPart(
 export function rectPart(
   key: string,
   theme: Theme,
-  node: SceneNode | undefined,
+  node: NodeBase | undefined,
   opts: { x: number; y: number; width: number; height: number; cornerRadius?: number; overrides?: Partial<PartStyle> },
 ): RectPart {
   return {

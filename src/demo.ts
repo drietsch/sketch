@@ -12,13 +12,15 @@ import type {
   Theme,
   NodeType,
   NodeOf,
+  NodePatch,
   VectorNode,
   WindowNode,
 } from './core/types.js';
 import type { IconDef } from './icons/types.js';
 import { resolvePlacement, splitPlacement } from './core/place.js';
 import type { Placement } from './core/place.js';
-import { expandPadding, layoutModeOf } from './core/layout.js';
+import { expandPadding } from './core/layout.js';
+import { componentFor } from './components/index.js';
 import type { Padding } from './core/layout.js';
 import type { DistributiveOmit } from './core/types.js';
 import { getIcon, isBuiltinIcon } from './icons/registry.js';
@@ -382,13 +384,24 @@ export class Demo {
    * rather than per frame.
    */
   private patchedScene(state: InteractionState): SceneType {
-    if (state.patches.size === 0) return this.scene;
+    // Live model state of components whose layout depends on it is applied
+    // like a `set` patch, so the layout pass and child visibility see it.
+    const patches = new Map<string, NodePatch>(state.patches);
+    const layoutState = (id: string, patch: NodePatch) => {
+      const node = this.scene.get(id);
+      if (!node || !componentFor(node).layoutDependsOnState) return;
+      patches.set(id, { ...patches.get(id), ...patch });
+    };
+    for (const [id, open] of state.open) layoutState(id, { open });
+    for (const [id, value] of state.values) layoutState(id, { value });
+    for (const [id, checked] of state.checked) layoutState(id, { checked });
+    if (patches.size === 0) return this.scene;
     const compiled = this.compiled();
-    const key = JSON.stringify([...state.patches]);
+    const key = JSON.stringify([...patches]);
     const c = this.patchedCache;
     if (c && c.compiled === compiled && c.key === key) return c.scene;
     const scene = this.scene.clone();
-    for (const [id, patch] of state.patches) {
+    for (const [id, patch] of patches) {
       if (scene.has(id)) scene.update(id, patch);
     }
     this.patchedCache = { compiled, key, scene };
@@ -434,13 +447,13 @@ export class Demo {
     expandPadding(id, rest);
     if (!placement) {
       if (typeof rest.x !== 'number' || typeof rest.y !== 'number') {
-        // A child of an auto-layout container is positioned by the layout: x/y default to 0.
+        // Inside a container the position may be left to the container: an
+        // auto-layout parent positions the child; any other container puts it
+        // at its content origin.
         const parent = typeof rest.parent === 'string' ? this.scene.get(rest.parent) : undefined;
-        const laidOut =
-          parent !== undefined && layoutModeOf(parent) !== 'NONE' && rest.layoutPositioning !== 'ABSOLUTE';
-        if (!laidOut) {
+        if (parent === undefined || !componentFor(parent).container) {
           throw new Error(
-            `Node "${id}" needs x and y, a placement (below, above, rightOf, leftOf), or an auto-layout parent.`,
+            `Node "${id}" needs x and y, a placement (below, above, rightOf, leftOf), or a container parent.`,
           );
         }
         rest.x ??= 0;

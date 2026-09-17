@@ -196,6 +196,11 @@ export function compile(
       }
       if (action.focus === true) state.focused = id;
       else if (action.focus === false) state.focused = undefined;
+      if (Object.keys(effect).length > 1 && componentFor(working.node(id)).layoutDependsOnState) {
+        const { id: _id, ...patch } = effect;
+        void _id;
+        working.update(id, patch);
+      }
       return Object.keys(effect).length > 1 ? [effect] : [];
     };
 

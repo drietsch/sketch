@@ -75,8 +75,8 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
       const chrome = componentFor(node).contentOffset?.(node, ctx) ?? { x: 0, y: 0 };
       const kids = scene
         .childrenOf(id)
-        .map((k) => scene.node(k))
-        .filter(isAutoChild)
+        .map((k, i) => (scene.childShown(id, i) ? scene.node(k) : undefined))
+        .filter((k): k is SceneNode => k !== undefined && isAutoChild(k))
         .map((k) => measure(k.id));
       const gaps = Math.max(0, kids.length - 1) * (c.itemSpacing ?? 0);
       const main = kids.reduce((s, k) => s + (row ? k.width : k.height), 0) + gaps;
@@ -106,8 +106,9 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
     const chrome = def.contentOffset?.(node, ctx) ?? { x: 0, y: 0 };
     const content = { x: origin.x + chrome.x, y: origin.y + chrome.y };
     const children = scene.childrenOf(id).map((k) => scene.node(k));
+    const shown = new Set(children.filter((_, i) => scene.childShown(id, i)));
     const mode = layoutModeOf(node);
-    const auto = new Set(mode === 'NONE' ? [] : children.filter(isAutoChild));
+    const auto = new Set(mode === 'NONE' ? [] : children.filter((k) => shown.has(k) && isAutoChild(k)));
     for (const k of children) {
       if (!auto.has(k)) arrange(k.id, { x: content.x + k.x, y: content.y + k.y }, measure(k.id));
     }
@@ -218,7 +219,7 @@ export function validateLayoutProps(
     if (node[key] === 'HUG' && !container) return `${key}: only a container can HUG its content`;
     if (node[key] === 'FILL' && !resizable) return `${key}: a ${String(node.type)} cannot FILL; its size is intrinsic`;
   }
-  if (node.type === 'FRAME') {
+  if (container && node.type !== 'WINDOW') {
     // The layout decides a HUG or FILL axis; only a FIXED axis needs a stored size.
     const fixedH = node.layoutSizingHorizontal === undefined || node.layoutSizingHorizontal === 'FIXED';
     const fixedV = node.layoutSizingVertical === undefined || node.layoutSizingVertical === 'FIXED';
