@@ -16,7 +16,7 @@ import { join } from 'node:path';
 
 const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
-const dir = mkdtempSync(join(tmpdir(), 'sketchdemo-consumer-'));
+const dir = mkdtempSync(join(tmpdir(), 'sketch-consumer-'));
 let failed = false;
 const check = (label, ok, detail = '') => {
   console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${label}${detail ? '  ' + detail : ''}`);
@@ -41,7 +41,7 @@ try {
 
   writeFileSync(
     join(dir, 'esm.mjs'),
-    `import { createDemo, Scene, DEFAULT_THEME } from '@drietsch/sketchdemo';
+    `import { createDemo, Scene, DEFAULT_THEME } from '@drietsch/sketch';
      const demo = createDemo({ width: 200, height: 100, seed: 42 });
      demo.rect({ id: 'box', x: 10, y: 10, width: 80, height: 60, style: { fill: 'red', fillStyle: 'dots' } });
      const svg = demo.toSVG();
@@ -57,7 +57,7 @@ try {
   // README says so; this keeps that claim honest.
   writeFileSync(
     join(dir, 'cjs.cjs'),
-    `const m = require('@drietsch/sketchdemo');
+    `const m = require('@drietsch/sketch');
      const demo = m.createDemo({ width: 10, height: 10, seed: 1 });
      demo.rect({ x: 0, y: 0, width: 10, height: 10 });
      if (!demo.toSVG().includes('<path')) { console.error('cjs broken'); process.exit(1); }
@@ -66,15 +66,15 @@ try {
   const cjs = run('node', ['cjs.cjs'], dir);
   check('require() works on this Node', cjs.includes('CJS_OK'));
 
-  const types = readFileSync(join(dir, 'node_modules/@drietsch/sketchdemo/dist/index.d.ts'), 'utf8');
+  const types = readFileSync(join(dir, 'node_modules/@drietsch/sketch/dist/index.d.ts'), 'utf8');
   check('type declarations ship', types.includes('createDemo') && types.includes('SceneNode'));
 
-  const bundle = readFileSync(join(dir, 'node_modules/@drietsch/sketchdemo/dist/index.js'), 'utf8');
+  const bundle = readFileSync(join(dir, 'node_modules/@drietsch/sketch/dist/index.js'), 'utf8');
   const bare = [...bundle.matchAll(/^import .* from ["']([^.][^"']*)["']/gm)].map((m) => m[1]);
   check('bundle has no unresolved bare imports', bare.length === 0, bare.join(', '));
   check(
     'package declares no runtime dependencies',
-    !JSON.parse(readFileSync(join(dir, 'node_modules/@drietsch/sketchdemo/package.json'), 'utf8')).dependencies,
+    !JSON.parse(readFileSync(join(dir, 'node_modules/@drietsch/sketch/package.json'), 'utf8')).dependencies,
   );
 } finally {
   rmSync(dir, { recursive: true, force: true });

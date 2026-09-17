@@ -1,7 +1,7 @@
-# @drietsch/sketchdemo
+# sketch
 
-An API-first JavaScript/TypeScript library for creating and animating
-hand-drawn GUI mockups.
+`@drietsch/sketch`: an API-first JavaScript/TypeScript library for creating
+and animating hand-drawn GUI mockups.
 
 Build complete interfaces (windows, panels, inputs, buttons, icons, text) in a
 sketch-style visual language, then script how someone uses them: the cursor
@@ -14,7 +14,7 @@ byte-identical output.
 > public API representation. A future visual editor uses the same API.
 
 ```ts
-import { createDemo } from '@drietsch/sketchdemo';
+import { createDemo } from '@drietsch/sketch';
 
 const demo = createDemo({ width: 900, height: 600, seed: 42 });
 
@@ -30,7 +30,7 @@ demo.mount(document.querySelector('#stage')).play(); // or play it in the browse
 ## Install
 
 ```sh
-npm install @drietsch/sketchdemo
+npm install @drietsch/sketch
 ```
 
 ESM only, zero runtime dependencies, Node 24+ or any modern browser. Import it

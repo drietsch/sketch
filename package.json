@@ -1,5 +1,5 @@
 {
-  "name": "@drietsch/sketchdemo",
+  "name": "@drietsch/sketch",
   "version": "0.1.0",
   "description": "API-first library for sketching hand-drawn GUI mockups and animating how they are used. Deterministic SVG output.",
   "type": "module",
@@ -8,13 +8,13 @@
   "contributors": [
     "Preet Shihn <preetshihn@gmail.com> (author of roughjs, from which src/sketch is derived)"
   ],
-  "homepage": "https://github.com/drietsch/roughjs#readme",
+  "homepage": "https://github.com/drietsch/sketch#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/drietsch/roughjs.git"
+    "url": "git+https://github.com/drietsch/sketch.git"
   },
   "bugs": {
-    "url": "https://github.com/drietsch/roughjs/issues"
+    "url": "https://github.com/drietsch/sketch/issues"
   },
   "keywords": [
     "sketch",

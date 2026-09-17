@@ -4,7 +4,7 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## 0.1.0
 
-First release of `@drietsch/sketchdemo`: an API-first library for sketching
+First release of sketch (`@drietsch/sketch`): an API-first library for sketching
 hand-drawn GUI mockups and animating how they are used.
 
 - Scene model with semantic ids, parents, z-order, bounds and hit-testing.

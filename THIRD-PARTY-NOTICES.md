@@ -1,6 +1,6 @@
 # Third-party notices
 
-`@drietsch/sketchdemo` is distributed as a single bundled ES module with no
+`@drietsch/sketch` is distributed as a single bundled ES module with no
 runtime dependencies. The following third-party code and data are compiled
 into `dist/`, and their notices are reproduced here as their licenses require.
 
@@ -86,7 +86,7 @@ distributed by the U.S. NTIS.
 The built-in icons (`src/icons/builtin.ts`) are copied from
 [`@sketchyicons/data`](https://github.com/Fantomiald/sketchyicons), whose
 code is MIT licensed and whose geometry is derived from Lucide (ISC) and, for
-some icons, Feather (MIT). sketchdemo is not affiliated with sketchyicons,
+some icons, Feather (MIT). sketch is not affiliated with sketchyicons,
 Lucide or Feather.
 
 ```
