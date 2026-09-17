@@ -160,7 +160,7 @@ export type SceneNode =
 
 export type NodeType = SceneNode['type'];
 export type NodeOf<T extends NodeType> = Extract<SceneNode, { type: T }>;
-type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
+export type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 
 /** A partial update for a node. For the full union this accepts any node type's fields. */
 export type NodePatch<N extends SceneNode = SceneNode> = Partial<DistributiveOmit<N, 'id' | 'type'>>;

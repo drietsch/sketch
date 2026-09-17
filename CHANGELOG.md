@@ -2,6 +2,30 @@
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 0.2.0
+
+### Minor Changes
+
+- Smaller public surface, one way to remove a node, and relative placement.
+  
+  **Breaking.** The package now exports exactly 14 names: `createDemo`,
+  `loadDemo`, `Demo`, `Scene`, `Timeline`, `Player`, `registerIcon`,
+  `iconNames`, `StrokeFont`, `DEFAULT_FONT`, `DEFAULT_THEME`, `CompileError`,
+  `DemoJSONError` and `parseDemoJSON`. The renderer, cursor-path maths, seed
+  derivation, DOM patching, timing constants and `layoutText` are no longer
+  exported, and `Demo.compiled()` is no longer part of the typed surface. Nothing
+  documented in the README was removed.
+  
+  **Breaking.** `demo.remove(id)` is gone. `demo.scene.remove(id)` is the one
+  removal path and now also frees the node's cached geometry, which it did not
+  before.
+  
+  **New.** Relative placement: a node can be added with `below`, `above`,
+  `rightOf` or `leftOf` naming an existing node, plus `gap` and `alignTo`,
+  instead of literal `x`/`y`. The position is resolved once at creation and
+  stored as plain coordinates, so documents and rendering are unchanged. Placed
+  and literal scenes render byte-identically.
+
 ## 0.1.0
 
 First release of sketch (`@drietsch/sketch`): an API-first library for sketching

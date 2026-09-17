@@ -5,6 +5,11 @@ import type { LayoutContext } from '../components/types.js';
 
 const ROOT = '';
 
+export interface SceneHooks {
+  /** Called once per remove() with the id of the removed node and all of its descendants. */
+  onRemove?(ids: readonly string[]): void;
+}
+
 /**
  * The scene: what exists. A flat store of nodes addressed by id, with parent
  * references and a per-parent z-order. Coordinates of a child are relative to
@@ -21,7 +26,10 @@ export class Scene {
   private readonly versions = new Map<string, number>();
   private version_ = 0;
 
-  constructor(private readonly ctx: LayoutContext) {}
+  constructor(
+    private readonly ctx: LayoutContext,
+    private readonly hooks: SceneHooks = {},
+  ) {}
 
   /** Bumps on every mutation; consumers use it to invalidate compiled timelines. */
   get version(): number {
@@ -99,17 +107,25 @@ export class Scene {
 
   /** Removes the node and all of its descendants. */
   remove(id: string): void {
-    const node = this.node(id);
+    this.node(id);
+    const removed: string[] = [];
+    this.removeSubtree(id, removed);
+    this.version_ += 1;
+    this.hooks.onRemove?.(removed);
+  }
+
+  private removeSubtree(id: string, removed: string[]): void {
+    const node = this.nodes.get(id)!;
     // Copy: removing a child splices the very list being walked.
     for (const child of this.children.get(id)!.slice()) {
-      this.remove(child);
+      this.removeSubtree(child, removed);
     }
     const siblings = this.children.get(node.parent ?? ROOT)!;
     siblings.splice(siblings.indexOf(id), 1);
     this.children.delete(id);
     this.nodes.delete(id);
     this.versions.delete(id);
-    this.version_ += 1;
+    removed.push(id);
   }
 
   /** Direct children in z-order (last is topmost). */
@@ -179,7 +195,15 @@ export class Scene {
 
   /** Bounds in the node's own coordinate space. */
   localBounds(id: string): Bounds {
-    const node = this.node(id);
+    return this.measure(this.node(id));
+  }
+
+  /**
+   * Local bounds of a node that need not be in the scene: a pure function of
+   * the node and the layout context, so a node can be measured before it is
+   * added (relative placement needs the new node's size).
+   */
+  measure(node: SceneNode): Bounds {
     return componentFor(node).localBounds(node, this.ctx);
   }
 
@@ -226,7 +250,7 @@ export class Scene {
     return this.versions.get(id);
   }
 
-  /** An independent copy with the same nodes, order and context. */
+  /** An independent copy with the same nodes, order and context. Hooks are not copied: a clone is a throwaway working copy. */
   clone(): Scene {
     const copy = new Scene(this.ctx);
     for (const node of this.all()) copy.add(Object.assign({}, node));
