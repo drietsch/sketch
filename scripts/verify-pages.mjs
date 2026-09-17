@@ -73,17 +73,18 @@ for (const rel of pages) {
 
       const demo = window.__demo;
       if (demo) {
-        const svg = svgs[0];
+        // Re-query after every seek: a page may replace the whole element.
+        const svg = () => document.querySelector('svg');
         // Reserved keys (__focus, __cursor) are chrome, not scene nodes.
-        const groups = [...svg.querySelectorAll('g[data-key]')].filter((g) => !g.dataset.key.startsWith('__')).length;
+        const groups = [...svg().querySelectorAll('g[data-key]')].filter((g) => !g.dataset.key.startsWith('__')).length;
         if (groups !== demo.nodeIds.length) out.push(`expected ${demo.nodeIds.length} node groups, found ${groups}`);
         if (demo.duration > 0) {
-          if (!svg.querySelector('g[data-key="__cursor"]')) out.push('no cursor group');
-          const a = svg.innerHTML;
+          if (!svg().querySelector('g[data-key="__cursor"]')) out.push('no cursor group');
+          const a = svg().innerHTML;
           demo.seek(demo.duration / 2);
-          const b = svg.innerHTML;
+          const b = svg().innerHTML;
           demo.seek(0);
-          const c = svg.innerHTML;
+          const c = svg().innerHTML;
           if (a === b) out.push('seeking did not change the DOM');
           if (a !== c) out.push('seeking back did not restore the DOM');
         }

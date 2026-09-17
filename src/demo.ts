@@ -19,6 +19,13 @@ import type { IconDef } from './icons/types.js';
 import { getIcon, isBuiltinIcon } from './icons/registry.js';
 import { parseDemoJSON } from './core/json.js';
 import type { DemoJSON } from './core/json.js';
+import { Timeline } from './timeline/timeline.js';
+import { compile } from './timeline/compile.js';
+import { caretVisible, stateAt } from './timeline/state.js';
+import type { CompiledTimeline, InteractionState, Step } from './timeline/types.js';
+import { CursorRenderer } from './render/chrome.js';
+import type { NodeInteraction } from './render/build-frame.js';
+import type { Scene as SceneType } from './core/scene.js';
 import { DEFAULT_FONT } from './text/index.js';
 import type { StrokeFont } from './text/font.js';
 import { IdCounter } from './core/ids.js';
@@ -78,6 +85,14 @@ export function loadDemo(json: DemoJSON | string, options: LoadOptions = {}): De
       throw new Error(`loadDemo: nodes[${i}]: ${(e as Error).message}`, { cause: e });
     }
   });
+  if (doc.timeline || doc.cursor) {
+    const timeline: { version: 1; steps: Step[]; cursor?: { x: number; y: number } } = {
+      version: 1,
+      steps: (doc.timeline ?? []) as Step[],
+    };
+    if (doc.cursor) timeline.cursor = doc.cursor;
+    demo.timeline.load(timeline);
+  }
   return demo;
 }
 
@@ -95,9 +110,12 @@ export class Demo {
   readonly scene: Scene;
   /** Icons registered on this demo only; they travel with toJSON(). */
   readonly icons = new Map<string, IconDef>();
+  readonly timeline = new Timeline();
 
   private readonly ids = new IdCounter();
   private readonly adapter: SketchAdapter;
+  private readonly cursor: CursorRenderer;
+  private compiledCache?: CompiledTimeline;
 
   constructor(options: DemoOptions) {
     if (!(options.width > 0) || !(options.height > 0)) {
@@ -111,6 +129,7 @@ export class Demo {
     this.font = options.font ?? DEFAULT_FONT;
     this.adapter = new SketchAdapter(this.font);
     this.scene = new Scene({ theme: this.theme, font: this.font, icons: (icon) => this.resolveIcon(icon) });
+    this.cursor = new CursorRenderer(this.adapter, this.seed, this.theme);
   }
 
   /** Registers an icon for this demo only. Per-demo icons win over global and built-in ones. */
@@ -183,19 +202,61 @@ export class Demo {
     for (const removed of ids) this.adapter.forget(removed);
   }
 
+  /** Total length of the timeline in ms; 0 for a static scene. */
+  get duration(): number {
+    return this.compiled().duration;
+  }
+
+  /** The timeline resolved against the current scene. Recompiled lazily when either changes. */
+  compiled(): CompiledTimeline {
+    const c = this.compiledCache;
+    if (c && c.sceneVersion === this.scene.version && c.timelineVersion === this.timeline.version) return c;
+    const fresh = compile(this.timeline, this.scene, this.seed, { width: this.width, height: this.height });
+    this.compiledCache = fresh;
+    return fresh;
+  }
+
+  /** The interaction state at time t: cursor, focus, pressed node, live values, scene patches. */
+  stateAt(t: number): InteractionState {
+    return stateAt(this.compiled(), t);
+  }
+
   /** The frame at time t (ms) as a virtual SVG tree. Pure: the same inputs always give the same frame. */
   frame(t = 0): Frame {
-    void t;
+    const base = { theme: this.theme, font: this.font, icons: (icon: string | IconDef) => this.resolveIcon(icon) };
+    const size = { width: this.width, height: this.height };
+    if (this.timeline.steps.length === 0) {
+      return buildFrame(this.scene, size, { ...base, seed: this.seed, adapter: this.adapter }, this.background);
+    }
+    const state = this.stateAt(t);
+    const scene = this.patchedScene(state);
+    const interaction = new Map<string, NodeInteraction>();
+    const touch = (id: string): NodeInteraction => {
+      let entry = interaction.get(id);
+      if (!entry) {
+        entry = {};
+        interaction.set(id, entry);
+      }
+      return entry;
+    };
+    for (const node of scene.all()) {
+      // The timeline owns focus: exactly one node can have it.
+      if (scene.isFocusable(node)) touch(node.id).state = { focused: node.id === state.focused };
+    }
+    if (state.pressedNode !== undefined && scene.has(state.pressedNode)) {
+      touch(state.pressedNode).state = { ...touch(state.pressedNode).state, pressed: true };
+    }
+    const hovered = scene.hitTest(state.cursor);
+    if (hovered !== undefined && !state.pressed) touch(hovered).state = { ...touch(hovered).state, hovered: true };
+    for (const [id, value] of state.values) {
+      if (scene.has(id)) touch(id).value = value;
+    }
+    if (state.focused !== undefined && scene.has(state.focused))
+      touch(state.focused).caretVisible = caretVisible(state);
     return buildFrame(
-      this.scene,
-      { width: this.width, height: this.height },
-      {
-        seed: this.seed,
-        theme: this.theme,
-        font: this.font,
-        icons: (icon) => this.resolveIcon(icon),
-        adapter: this.adapter,
-      },
+      scene,
+      size,
+      { ...base, seed: this.seed, adapter: this.adapter, interaction, chrome: [this.cursor.render(state)] },
       this.background,
     );
   }
@@ -203,6 +264,41 @@ export class Demo {
   /** The frame at time t as a complete SVG document string. */
   toSVG(t = 0): string {
     return frameToSVG(this.frame(t));
+  }
+
+  /** Every frame of the timeline at a fixed rate, for export. The last frame is always the end. */
+  *frames(fps = 30): Generator<{ t: number; svg: string }> {
+    const step = 1000 / fps;
+    const duration = this.duration;
+    for (let t = 0; t < duration; t += step) yield { t, svg: this.toSVG(t) };
+    yield { t: duration, svg: this.toSVG(duration) };
+  }
+
+  /**
+   * The node as it is at time t: authored props with the timeline's `set`
+   * patches and live input value applied. The scene itself is never mutated
+   * by playback.
+   */
+  nodeAt<N extends SceneNode = SceneNode>(id: string, t: number): N {
+    const node = this.scene.node<N>(id);
+    if (this.timeline.steps.length === 0) return node;
+    const state = this.stateAt(t);
+    const patch = state.patches.get(id);
+    const value = state.values.get(id);
+    if (!patch && value === undefined) return node;
+    const out = Object.assign({}, node) as N & { value?: string };
+    if (patch) Object.assign(out, patch);
+    if (value !== undefined && node.type === 'input') out.value = value;
+    return out;
+  }
+
+  private patchedScene(state: InteractionState): SceneType {
+    if (state.patches.size === 0) return this.scene;
+    const scene = this.scene.clone();
+    for (const [id, patch] of state.patches) {
+      if (scene.has(id)) scene.update(id, patch);
+    }
+    return scene;
   }
 
   /**
@@ -231,6 +327,9 @@ export class Demo {
       nodes,
     };
     if (Object.keys(icons).length) doc.icons = icons;
+    const timeline = this.timeline.toJSON();
+    if (timeline.steps.length || timeline.cursor) doc.timeline = timeline.steps;
+    if (timeline.cursor) doc.cursor = timeline.cursor;
     return doc;
   }
 

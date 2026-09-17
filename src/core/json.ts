@@ -19,6 +19,8 @@ export interface DemoJSON {
   nodes: SceneNode[];
   /** Timeline steps; see the timeline module. Absent or empty for a static scene. */
   timeline?: unknown[];
+  /** Where the cursor rests before the first step. */
+  cursor?: { x: number; y: number };
 }
 
 export class DemoJSONError extends Error {
@@ -73,5 +75,11 @@ export function parseDemoJSON(input: DemoJSON | string): DemoJSON {
     }
   });
   if (raw.timeline !== undefined && !Array.isArray(raw.timeline)) throw new DemoJSONError('timeline must be an array');
+  if (raw.cursor !== undefined) {
+    const c = raw.cursor as Record<string, unknown> | null;
+    if (!isRecord(c) || typeof c.x !== 'number' || typeof c.y !== 'number') {
+      throw new DemoJSONError('cursor must be a point');
+    }
+  }
   return raw as unknown as DemoJSON;
 }

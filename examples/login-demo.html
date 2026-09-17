@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>sketchdemo: login demo</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 24px;
+        background: #f4f4f6;
+      }
+      #controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      input[type='range'] {
+        width: 480px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Login demo</h1>
+    <p>
+      The briefing's timeline: move to the email field, click, type, move to the button, click. Scrub the slider to
+      seek.
+    </p>
+    <div id="controls">
+      <input id="time" type="range" min="0" max="1000" value="0" />
+      <span id="readout">0 ms</span>
+    </div>
+    <div id="out"></div>
+    <script type="module">
+      import { createDemo } from '../dist/index.js';
+
+      const demo = createDemo({ width: 900, height: 600, seed: 42, background: null });
+      demo.browser({ id: 'browser', x: 40, y: 30, width: 820, height: 540, url: 'https://example.com/login' });
+      demo.panel({ id: 'card', parent: 'browser', x: 210, y: 90, width: 400, height: 300, title: 'Welcome back' });
+      demo.text({ id: 'email-label', parent: 'card', x: 24, y: 20, text: 'Email', style: { color: '#8a8f98' } });
+      demo.input({ id: 'email', parent: 'card', x: 24, y: 44, width: 352, placeholder: 'you@example.com' });
+      demo.text({ id: 'password-label', parent: 'card', x: 24, y: 100, text: 'Password', style: { color: '#8a8f98' } });
+      demo.input({ id: 'password', parent: 'card', x: 24, y: 124, width: 352, placeholder: 'Password' });
+      demo.button({
+        id: 'login',
+        parent: 'card',
+        x: 24,
+        y: 190,
+        width: 352,
+        text: 'Sign in',
+        variant: 'primary',
+        icon: 'log-in',
+      });
+      demo.text({
+        id: 'done',
+        parent: 'card',
+        x: 200,
+        y: 240,
+        text: 'Signed in!',
+        align: 'middle',
+        hidden: true,
+        style: { color: '#2f6fed' },
+      });
+
+      demo.timeline
+        .moveCursor('email')
+        .click()
+        .type('email', 'hello@example.com')
+        .moveCursor('password')
+        .click()
+        .type('password', 'hunter2')
+        .wait(300)
+        .moveCursor('login')
+        .click()
+        .set('done', { hidden: false })
+        .wait(800);
+
+      const out = document.getElementById('out');
+      const slider = document.getElementById('time');
+      const readout = document.getElementById('readout');
+      slider.max = String(demo.duration);
+      const seek = (t) => {
+        out.innerHTML = demo.toSVG(t);
+        slider.value = String(t);
+        readout.textContent = `${Math.round(t)} ms / ${Math.round(demo.duration)} ms`;
+      };
+      slider.addEventListener('input', () => seek(Number(slider.value)));
+      seek(0);
+
+      window.__demo = { demo, duration: demo.duration, nodeIds: demo.scene.visible().map((n) => n.id), seek };
+    </script>
+  </body>
+</html>

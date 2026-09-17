@@ -226,6 +226,13 @@ export class Scene {
     return this.versions.get(id);
   }
 
+  /** An independent copy with the same nodes, order and context. */
+  clone(): Scene {
+    const copy = new Scene(this.ctx);
+    for (const node of this.all()) copy.add(Object.assign({}, node));
+    return copy;
+  }
+
   /** Plain copies of every node in paint order. */
   toJSON(): SceneNode[] {
     return this.all().map((n) => Object.assign({}, n));

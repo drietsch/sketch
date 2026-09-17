@@ -3,6 +3,22 @@
 export { createDemo, loadDemo, Demo } from './demo.js';
 export type { DemoOptions, LoadOptions, Props } from './demo.js';
 export { DemoJSONError, parseDemoJSON } from './core/json.js';
+export { Timeline, validateStep } from './timeline/timeline.js';
+export type { StepOptions } from './timeline/timeline.js';
+export { CompileError } from './timeline/compile.js';
+export { stateAt, caretVisible, CARET_PERIOD, RIPPLE_DURATION } from './timeline/state.js';
+export { cursorAt, planCursorPath, samplePath, fittsDuration } from './timeline/cursor-path.js';
+export type {
+  Step,
+  StepType,
+  Target,
+  TimelineJSON,
+  CursorPath,
+  TypingPlan,
+  CompiledStep,
+  CompiledTimeline,
+  InteractionState,
+} from './timeline/types.js';
 export type { DemoJSON } from './core/json.js';
 export { Scene } from './core/scene.js';
 export { DEFAULT_THEME } from './core/theme.js';

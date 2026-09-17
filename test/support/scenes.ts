@@ -86,6 +86,23 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
     return demo;
   },
 
+  /** The briefing's timeline over the login form. */
+  loginDemo(seed = 42) {
+    const demo = createDemo({ width: 900, height: 600, seed });
+    demo.input({ id: 'email', x: 250, y: 200, width: 350, placeholder: 'Email' });
+    demo.button({ id: 'login', x: 470, y: 300, text: 'Sign in' });
+    demo.text({ id: 'done', x: 470, y: 360, text: 'Signed in!', hidden: true });
+    demo.timeline
+      .moveCursor('email')
+      .click()
+      .type('email', 'hello@example.com')
+      .moveCursor('login')
+      .click()
+      .set('done', { hidden: false })
+      .wait(400);
+    return demo;
+  },
+
   primitives(seed = 42) {
     const demo = createDemo({ width: 640, height: 360, seed });
     const styles = ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots', 'dashed', 'zigzag-line'] as const;
