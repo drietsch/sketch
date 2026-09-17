@@ -384,11 +384,28 @@ viewport cannot be a target until `drag(area, offset)` brings it into view.
 
 ### Text and icons
 
-Text is drawn as sketched strokes from a built-in single-stroke font (the
-Hershey sans), so measurement, carets and bounds are exact and identical in
-every environment. Printable ASCII is covered, plus the typographic
-characters UI copy uses (`…`, curly quotes, en and em dashes); other
-characters draw as a small box. A custom `StrokeFont` can be passed to `createDemo`.
+Text is drawn from glyph data that ships with the package, so measurement,
+carets and bounds are exact and identical in every environment and the SVG
+needs no fonts. The default font is
+[Grape Nuts](https://fonts.google.com/specimen/Grape+Nuts), a handwriting
+face, set in capitals: every string is folded to upper case when it is drawn
+and measured, so `characters: 'Sign in'` reads SIGN IN while the model keeps
+`'Sign in'`. It covers printable ASCII, the Latin-1 letters and common
+symbols, and the typographic characters UI copy uses (`…`, curly quotes,
+dashes); anything else draws as a small box.
+
+The previous default, the Hershey sans drawn as sketched single strokes, is
+still there as `HERSHEY_FONT` (mixed case, ASCII only):
+
+```ts
+import { createDemo, HERSHEY_FONT } from '@drietsch/sketch';
+
+const demo = createDemo({ width: 400, height: 200, font: HERSHEY_FONT });
+```
+
+A custom `StrokeFont` built from `StrokeFontData` (stroke polylines or
+outline paths) can be passed the same way; a document saved with one must be
+loaded with it.
 
 Icons use the [`@sketchyicons/data`](https://github.com/Fantomiald/sketchyicons)
 shape: 47 common icons are built in (`iconNames()` lists them), any of that
@@ -403,7 +420,7 @@ The pages in [`examples/`](examples/) load the built bundle. Run
 `pnpm run verify:pages` to render them all in headless Chromium).
 
 - `sketch-styles.html`: every fill style and primitive
-- `text-and-icons.html`: the stroke font at several sizes, every built-in icon
+- `text-and-icons.html`: both fonts at several sizes, every built-in icon
 - `login-form.html`: the briefing's mockup with every component state
 - `login-demo.html`: the same, animated, with a scrub bar over `toSVG(t)`
 - `player.html`: mounted into a live SVG and driven by the `Player`
@@ -432,8 +449,9 @@ of those is missing.
 
 The sketch-geometry engine in `src/sketch/` is derived from
 [roughjs](https://github.com/rough-stuff/rough) by Preet Shihn (MIT). Text
-uses the Hershey Fonts; icons come from sketchyicons, derived from Lucide and
-Feather. See [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+uses Grape Nuts by Robert Leuschke (SIL OFL) and the Hershey Fonts; icons
+come from sketchyicons, derived from Lucide and Feather. See
+[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 
 ## License
 

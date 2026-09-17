@@ -12,20 +12,26 @@
   </head>
   <body>
     <h1>Text and icons</h1>
-    <p>Sketched Hershey stroke glyphs at several sizes, and every built-in icon.</p>
+    <p>
+      The default font (Grape Nuts, in capitals) and the Hershey stroke font at several sizes, symbols, alignment, and
+      every built-in icon.
+    </p>
     <div id="out"></div>
     <script type="module">
-      import { createDemo, iconNames } from '../dist/index.js';
+      import { createDemo, iconNames, HERSHEY_FONT } from '../dist/index.js';
 
-      const demo = createDemo({ width: 960, height: 560, seed: 42 });
+      const demo = createDemo({ width: 960, height: 620, seed: 42 });
+      // The Hershey font on the right is a second demo rendered into the same page.
+      const hershey = createDemo({ width: 460, height: 260, seed: 42, font: HERSHEY_FONT, background: null });
       let y = 16;
       for (const size of [12, 14, 18, 24, 36]) {
-        demo.text({
-          id: `t${size}`,
-          x: 20,
+        demo.text({ id: `t${size}`, x: 20, y, characters: `The quick brown fox ${size}px`, style: { fontSize: size } });
+        hershey.text({
+          id: `h${size}`,
+          x: 0,
           y,
-          characters: `The quick brown fox jumps over the lazy dog ${size}px`,
-          fontSize: size,
+          characters: `The quick brown fox ${size}px`,
+          style: { fontSize: size },
         });
         y += size * 1.6;
       }
@@ -33,7 +39,7 @@
         id: 'symbols',
         x: 20,
         y,
-        characters: '0123456789 !?@#$%&*()[]{}<>/\\ +-=_ "quoted" éü',
+        characters: '0123456789 !?@#$%&*()[]{}<>/\\ +-=_ "quoted" ‘single’ … – — éüßÀ €£',
         style: { fontSize: 18 },
       });
       y += 40;
@@ -41,20 +47,16 @@
       demo.text({
         id: 'centered',
         x: 480,
-        y: y,
+        y,
         characters: 'centred',
-        fontSize: 16,
-        style: { textAlignHorizontal: 'CENTER' },
-        style: { fills: [{ type: 'SOLID', color: '#2f6fed' }] },
+        style: { fontSize: 16, textAlignHorizontal: 'CENTER', fills: [{ type: 'SOLID', color: '#2f6fed' }] },
       });
       demo.text({
         id: 'right',
         x: 940,
-        y: y,
+        y,
         characters: 'right-aligned',
-        fontSize: 16,
-        style: { textAlignHorizontal: 'RIGHT' },
-        style: { fills: [{ type: 'SOLID', color: '#b00' }] },
+        style: { fontSize: 16, textAlignHorizontal: 'RIGHT', fills: [{ type: 'SOLID', color: '#b00' }] },
       });
       y += 70;
       iconNames().forEach((name, i) => {
@@ -92,7 +94,14 @@
         style: { fills: [{ type: 'SOLID', color: '#06a' }] },
       });
 
-      document.getElementById('out').innerHTML = demo.toSVG();
+      const out = document.getElementById('out');
+      out.style.position = 'relative';
+      out.innerHTML = demo.toSVG();
+      // The Hershey sample sits over the empty right half of the first document.
+      const side = document.createElement('div');
+      side.style.cssText = 'position:absolute;left:480px;top:0';
+      side.innerHTML = hershey.toSVG();
+      out.appendChild(side);
       window.__demo = { demo, duration: 0, nodeIds: demo.scene.visible().map((n) => n.id), seek: () => {} };
     </script>
   </body>

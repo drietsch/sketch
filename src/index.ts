@@ -22,7 +22,7 @@ export { Player } from './player/player.js';
 export type { Clock, PlayerEvent, PlayerOptions } from './player/player.js';
 
 export { registerIcon, iconNames } from './icons/index.js';
-export { StrokeFont, DEFAULT_FONT } from './text/index.js';
+export { StrokeFont, DEFAULT_FONT, HERSHEY_FONT } from './text/index.js';
 export { DEFAULT_THEME } from './core/theme.js';
 
 export { CompileError } from './timeline/compile.js';
@@ -33,7 +33,7 @@ export type { Placement, Align, PlaceDirection } from './core/place.js';
 export type { Padding, Layout, LayoutEntry } from './core/layout.js';
 export type { Step, StepType, Target, TimelineJSON, InteractionState } from './timeline/types.js';
 export type { IconDef, IconElement } from './icons/types.js';
-export type { StrokeFontData, StrokeGlyph, TextAlign, TextLayout, PlacedGlyph } from './text/index.js';
+export type { StrokeFontData, StrokeGlyph, OutlineGlyph, TextAlign, TextLayout, PlacedGlyph } from './text/index.js';
 export type { Frame, FrameGroup, VElement } from './render/frame.js';
 export type {
   Bounds,

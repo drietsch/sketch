@@ -35,21 +35,22 @@ runtime dependencies and never touches the DOM unless `mount` or
 
 ### `createDemo(options: DemoOptions): Demo`
 
-| Option       | Type             | Default                          | Notes                                                                                |
-| ------------ | ---------------- | -------------------------------- | ------------------------------------------------------------------------------------ |
-| `width`      | `number`         | required                         | Document width in px. Must be positive.                                              |
-| `height`     | `number`         | required                         | Document height in px. Must be positive.                                             |
-| `seed`       | `number`         | random                           | Integer in `[0, 2^31)`. Read `demo.seed` to reproduce a run that used a random seed. |
-| `theme`      | `Partial<Theme>` | `DEFAULT_THEME`                  | Colours, stroke weight, roughness, corner radius, font size. See [Theme](#theme).    |
-| `background` | `string \| null` | the theme background (`#ffffff`) | A CSS colour, or `null` for a transparent document.                                  |
-| `font`       | `StrokeFont`     | `DEFAULT_FONT`                   | A single-stroke font for all text. The default is the vendored Hershey sans.         |
+| Option       | Type             | Default                          | Notes                                                                                                     |
+| ------------ | ---------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `width`      | `number`         | required                         | Document width in px. Must be positive.                                                                   |
+| `height`     | `number`         | required                         | Document height in px. Must be positive.                                                                  |
+| `seed`       | `number`         | random                           | Integer in `[0, 2^31)`. Read `demo.seed` to reproduce a run that used a random seed.                      |
+| `theme`      | `Partial<Theme>` | `DEFAULT_THEME`                  | Colours, stroke weight, roughness, corner radius, font size. See [Theme](#theme).                         |
+| `background` | `string \| null` | the theme background (`#ffffff`) | A CSS colour, or `null` for a transparent document.                                                       |
+| `font`       | `StrokeFont`     | `DEFAULT_FONT`                   | The font for all text: Grape Nuts in capitals by default, `HERSHEY_FONT` for mixed-case sketched strokes. |
 
 ### `loadDemo(json: DemoJSON | string, options?: { font?: StrokeFont }): Demo`
 
 Rebuilds a demo from `demo.toJSON()` output (an object or its JSON string).
 The result renders byte-identically to the original at every time. A
-document saved with a custom font must be loaded with that font, or `loadDemo`
-throws. Invalid documents throw `DemoJSONError`.
+document saved with either built-in font loads as it was; one saved with a
+custom font must be loaded with that font, or `loadDemo` throws. Invalid
+documents throw `DemoJSONError`.
 
 ### `parseDemoJSON(json: unknown): DemoJSON`
 
@@ -375,13 +376,15 @@ Returned by `demo.mount(container, options)`.
 
 ## Icons, fonts, theme
 
-| Export                       | Notes                                                                                                                                                                                 |
-| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `iconNames()`                | The 47 built-in icon names plus globally registered ones.                                                                                                                             |
-| `registerIcon(name, def)`    | Registers an icon for the whole process. `demo.registerIcon` scopes it to one demo and saves it with the document.                                                                    |
-| `IconDef`                    | `{ viewBox?: string, nodes: [tag, attrs][], rough?: boolean }`, the shape of `@sketchyicons/data`; any of its 1,756 icons can be passed directly. `rough: true` sketches clean paths. |
-| `DEFAULT_FONT`, `StrokeFont` | The built-in Hershey sans covers printable ASCII plus `…`, curly quotes, en and em dashes; other characters draw as a small box. A `StrokeFont` is built from `StrokeFontData`.       |
-| `DEFAULT_THEME`              | See below.                                                                                                                                                                            |
+| Export                    | Notes                                                                                                                                                                                                                                                                             |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `iconNames()`             | The 47 built-in icon names plus globally registered ones.                                                                                                                                                                                                                         |
+| `registerIcon(name, def)` | Registers an icon for the whole process. `demo.registerIcon` scopes it to one demo and saves it with the document.                                                                                                                                                                |
+| `IconDef`                 | `{ viewBox?: string, nodes: [tag, attrs][], rough?: boolean }`, the shape of `@sketchyicons/data`; any of its 1,756 icons can be passed directly. `rough: true` sketches clean paths.                                                                                             |
+| `DEFAULT_FONT`            | Grape Nuts (SIL OFL) as vendored glyph outlines, drawn in capitals: text is folded to upper case when measured and drawn, the model keeps its case. Covers printable ASCII, Latin-1 letters and common symbols, `…`, curly quotes and dashes; anything else draws as a small box. |
+| `HERSHEY_FONT`            | The Hershey sans, single strokes drawn through the sketch engine, mixed case, printable ASCII plus `…`, curly quotes and dashes. The default before 0.8.0.                                                                                                                        |
+| `StrokeFont`              | Built from `StrokeFontData`: `kind` (`stroke` polylines or `outline` paths), `uppercase`, `lineHeight`, metrics and `glyphs`. Methods: `measure`, `advance`, `caretX`, `glyph`, `fold`, `ascent`, `descent`, `capHeight`, `lineHeight`, `scale`, `outline`.                       |
+| `DEFAULT_THEME`           | See below.                                                                                                                                                                                                                                                                        |
 
 Built-in icons: arrow-left, arrow-right, bell, bookmark, calendar, check,
 chevron-down, chevron-left, chevron-right, chevron-up, circle-alert,
@@ -467,15 +470,15 @@ are `DemoJSONError`s.
 ## Exports
 
 Runtime: `createDemo`, `loadDemo`, `Demo`, `Scene`, `Timeline`, `Player`,
-`registerIcon`, `iconNames`, `StrokeFont`, `DEFAULT_FONT`, `DEFAULT_THEME`,
-`CompileError`, `DemoJSONError`, `parseDemoJSON`.
+`registerIcon`, `iconNames`, `StrokeFont`, `DEFAULT_FONT`, `HERSHEY_FONT`,
+`DEFAULT_THEME`, `CompileError`, `DemoJSONError`, `parseDemoJSON`.
 
 Types: `DemoOptions`, `LoadOptions`, `DemoJSON`, `Props`, `RelativeProps`,
 `LayoutChildProps`, `ContainerProps`, `AnchoredProps`, `NodeProps`,
 `StepOptions`, `Step`, `StepType`, `Target`, `TimelineJSON`,
 `InteractionState`, `PlayerOptions`, `PlayerEvent`, `Clock`, `Placement`,
 `Align`, `PlaceDirection`, `Padding`, `Layout`, `LayoutEntry`, `IconDef`,
-`IconElement`, `StrokeFontData`, `StrokeGlyph`, `TextAlign`, `TextLayout`,
+`IconElement`, `StrokeFontData`, `StrokeGlyph`, `OutlineGlyph`, `TextAlign`, `TextLayout`,
 `PlacedGlyph`, `Frame`, `FrameGroup`, `VElement`, `Bounds`, `Point`, `Size`,
 `Color`, `ColorLike`, `Paint`, `SolidPaint`, `FillStyle`, `SketchStyle`,
 `TypeStyle`, `TextAlignHorizontal`, `Theme`, `ComponentState`, `ControlValue`,

@@ -1,22 +1,22 @@
 import { createDemo } from '../../src/index.js';
-import type { Demo } from '../../src/index.js';
+import type { Demo, StrokeFont } from '../../src/index.js';
 
 /**
  * Fixture demos shared by the golden, determinism and dist tests. Each is a
  * function so every test gets a fresh instance; a fixture must be a pure
  * function of its seed.
  */
-export const SCENES: Record<string, (seed?: number) => Demo> = {
+export const SCENES: Record<string, (seed?: number, font?: StrokeFont) => Demo> = {
   /** Small enough for its full SVG to be snapshotted and read in a diff. */
-  minimal(seed = 7) {
-    const demo = createDemo({ width: 200, height: 120, seed, background: null });
+  minimal(seed = 7, font?: StrokeFont) {
+    const demo = createDemo({ width: 200, height: 120, seed, font, background: null });
     demo.rectangle({ id: 'box', x: 20, y: 20, width: 100, height: 60, cornerRadius: 6 });
     demo.line({ id: 'underline', x: 20, y: 100, x2: 180, y2: 100 });
     return demo;
   },
 
-  textAndIcons(seed = 11) {
-    const demo = createDemo({ width: 420, height: 200, seed });
+  textAndIcons(seed = 11, font?: StrokeFont) {
+    const demo = createDemo({ width: 420, height: 200, seed, font });
     demo.text({ id: 'title', x: 16, y: 12, characters: 'Sign in', style: { fontSize: 24 } });
     demo.text({
       id: 'hint',
@@ -43,8 +43,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
    * out with relative placement; the golden pins that it produces exactly the
    * coordinates the literal version did.
    */
-  loginForm(seed = 42) {
-    const demo = createDemo({ width: 900, height: 600, seed, background: null });
+  loginForm(seed = 42, font?: StrokeFont) {
+    const demo = createDemo({ width: 900, height: 600, seed, font, background: null });
     demo.browser({ id: 'browser', x: 40, y: 30, width: 820, height: 540, url: 'https://example.com/login' });
     demo.frame({ id: 'card', parent: 'browser', x: 210, y: 70, width: 400, height: 330, title: 'Welcome back' });
     demo.text({
@@ -104,8 +104,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** A plain window with a titled panel and mixed content. */
-  window(seed = 5) {
-    const demo = createDemo({ width: 520, height: 360, seed });
+  window(seed = 5, font?: StrokeFont) {
+    const demo = createDemo({ width: 520, height: 360, seed, font });
     demo.window({ id: 'win', x: 20, y: 20, width: 480, height: 320, title: 'Preferences' });
     demo.frame({ id: 'general', parent: 'win', x: 16, y: 16, width: 448, height: 120, title: 'General' });
     demo.text({ id: 'name-label', parent: 'general', x: 16, y: 14, characters: 'Display name' });
@@ -116,8 +116,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** The briefing's timeline over the login form. */
-  loginDemo(seed = 42) {
-    const demo = createDemo({ width: 900, height: 600, seed });
+  loginDemo(seed = 42, font?: StrokeFont) {
+    const demo = createDemo({ width: 900, height: 600, seed, font });
     demo.input({ id: 'email', x: 250, y: 200, width: 350, placeholder: 'Email' });
     demo.button({ id: 'login', x: 470, y: 300, characters: 'Sign in' });
     demo.text({ id: 'done', x: 470, y: 360, characters: 'Signed in!', visible: false });
@@ -133,8 +133,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** A form laid out by auto-layout: a HUG frame, FILL inputs, a SPACE_BETWEEN button row. */
-  layoutForm(seed = 21) {
-    const demo = createDemo({ width: 520, height: 420, seed });
+  layoutForm(seed = 21, font?: StrokeFont) {
+    const demo = createDemo({ width: 520, height: 420, seed, font });
     demo.frame({
       id: 'form',
       x: 40,
@@ -183,8 +183,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
     return demo;
   },
 
-  primitives(seed = 42) {
-    const demo = createDemo({ width: 640, height: 360, seed });
+  primitives(seed = 42, font?: StrokeFont) {
+    const demo = createDemo({ width: 640, height: 360, seed, font });
     const styles = ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots', 'dashed', 'zigzag-line'] as const;
     styles.forEach((fillStyle, i) => {
       demo.rectangle({
@@ -232,8 +232,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** Every in-place leaf control, in its resting and its active state. */
-  controls(seed = 13) {
-    const demo = createDemo({ width: 560, height: 420, seed });
+  controls(seed = 13, font?: StrokeFont) {
+    const demo = createDemo({ width: 560, height: 420, seed, font });
     demo.checkbox({ id: 'cb', x: 20, y: 20, characters: 'Remember me' });
     demo.checkbox({ id: 'cb-on', below: 'cb', gap: 10, characters: 'Checked', checked: true });
     demo.checkbox({ id: 'cb-mixed', below: 'cb-on', gap: 10, characters: 'Some', checked: true, indeterminate: true });
@@ -276,8 +276,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** FIELD, FIELDSET and FORM under auto-layout, driven by the semantic steps. */
-  formLayout(seed = 17) {
-    const demo = createDemo({ width: 520, height: 460, seed });
+  formLayout(seed = 17, font?: StrokeFont) {
+    const demo = createDemo({ width: 520, height: 460, seed, font });
     demo.form({ id: 'signup', x: 30, y: 30, width: 280, layoutSizingVertical: 'HUG' });
     demo.field({ id: 'f-name', parent: 'signup', label: 'Name', width: 280 });
     demo.input({ id: 'name', parent: 'f-name', width: 280, placeholder: 'Ada Lovelace' });
@@ -302,8 +302,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** TABS, ACCORDION, COLLAPSIBLE and TOOLBAR, with panels shown and hidden over time. */
-  tabsAccordion(seed = 9) {
-    const demo = createDemo({ width: 560, height: 420, seed });
+  tabsAccordion(seed = 9, font?: StrokeFont) {
+    const demo = createDemo({ width: 560, height: 420, seed, font });
     demo.tabs({ id: 'tabs', x: 20, y: 20, width: 250, height: 120, tabs: ['General', 'Billing'], value: 'General' });
     demo.text({ id: 'general', parent: 'tabs', x: 0, y: 10, characters: 'General settings' });
     demo.button({ id: 'billing', parent: 'tabs', x: 0, y: 10, characters: 'Add card', icon: 'plus' });
@@ -342,8 +342,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** MENU, CONTEXT_MENU, SELECT, COMBOBOX and AUTOCOMPLETE opening and choosing over a timeline. */
-  menusAndSelects(seed = 23) {
-    const demo = createDemo({ width: 560, height: 420, seed });
+  menusAndSelects(seed = 23, font?: StrokeFont) {
+    const demo = createDemo({ width: 560, height: 420, seed, font });
     demo.menu({
       id: 'file',
       x: 20,
@@ -401,8 +401,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** TOOLTIP, POPOVER, DIALOG, ALERT_DIALOG, DRAWER and TOAST: hover, open, act, close. */
-  dialogs(seed = 29) {
-    const demo = createDemo({ width: 560, height: 420, seed });
+  dialogs(seed = 29, font?: StrokeFont) {
+    const demo = createDemo({ width: 560, height: 420, seed, font });
     demo.button({ id: 'save', x: 20, y: 20, characters: 'Save', icon: 'check', variant: 'primary' });
     demo.tooltip({ id: 'save-tip', anchor: 'save', characters: 'Saves to the cloud' });
     demo.button({ id: 'share', rightOf: 'save', gap: 12, characters: 'Share', icon: 'send' });
@@ -466,8 +466,8 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
   },
 
   /** MENUBAR, NAVIGATION_MENU, PREVIEW_CARD and a SCROLL_AREA that is dragged. */
-  navigation(seed = 31) {
-    const demo = createDemo({ width: 560, height: 420, seed });
+  navigation(seed = 31, font?: StrokeFont) {
+    const demo = createDemo({ width: 560, height: 420, seed, font });
     demo.menubar({
       id: 'bar',
       x: 20,
