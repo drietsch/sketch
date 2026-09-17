@@ -1,6 +1,6 @@
 import type { Scene } from './scene.js';
 import type { AutoLayoutProps, Bounds, LayoutMode, LayoutSizing, Point, SceneNode, Size } from './types.js';
-import type { LayoutContext } from '../components/types.js';
+import type { Anchoring, LayoutContext } from '../components/types.js';
 import { componentFor } from '../components/index.js';
 
 export interface LayoutEntry {
@@ -25,9 +25,54 @@ export function layoutModeOf(node: SceneNode): LayoutMode {
   return isContainer(node) ? (node.layoutMode ?? 'NONE') : 'NONE';
 }
 
-/** Whether a child is positioned by its parent's layout (as opposed to sitting at its own x/y). */
+/** The anchoring of a popup node, if its component declares one. */
+export function anchoringOf(node: SceneNode): Anchoring | undefined {
+  return componentFor(node).anchor?.(node);
+}
+
+/** Whether a child is positioned by its parent's layout (as opposed to sitting at its own x/y, or on its anchor). */
 export function isAutoChild(node: SceneNode): boolean {
-  return node.layoutPositioning !== 'ABSOLUTE' && node.visible !== false;
+  return node.layoutPositioning !== 'ABSOLUTE' && node.visible !== false && anchoringOf(node) === undefined;
+}
+
+/** The top-left of a box of `size` placed by `a` against the anchor box (a node's bounds, or the document). */
+export function placeAnchored(a: Anchoring, anchor: Bounds, size: Size, document: Size, inside: boolean): Point {
+  const gap = a.gap ?? 0;
+  const align = a.align ?? 'center';
+  const along = (start: number, length: number, own: number) =>
+    align === 'start' ? start : align === 'end' ? start + length - own : start + (length - own) / 2;
+  let x: number;
+  let y: number;
+  if (inside) {
+    // Against the document's edges, the gap is an inset.
+    const ax = (edge: 'start' | 'end' | 'center') =>
+      edge === 'start' ? gap : edge === 'end' ? anchor.width - size.width - gap : (anchor.width - size.width) / 2;
+    const ay = (edge: 'start' | 'end' | 'center') =>
+      edge === 'start' ? gap : edge === 'end' ? anchor.height - size.height - gap : (anchor.height - size.height) / 2;
+    if (a.side === 'center') [x, y] = [ax('center'), ay('center')];
+    else if (a.side === 'top' || a.side === 'bottom') {
+      y = ay(a.side === 'top' ? 'start' : 'end');
+      x = ax(align);
+    } else {
+      x = ax(a.side === 'left' ? 'start' : 'end');
+      y = ay(align);
+    }
+  } else if (a.side === 'center') {
+    x = anchor.x + (anchor.width - size.width) / 2;
+    y = anchor.y + (anchor.height - size.height) / 2;
+  } else if (a.side === 'top' || a.side === 'bottom') {
+    y = a.side === 'top' ? anchor.y - gap - size.height : anchor.y + anchor.height + gap;
+    x = along(anchor.x, anchor.width, size.width);
+  } else {
+    x = a.side === 'left' ? anchor.x - gap - size.width : anchor.x + anchor.width + gap;
+    y = along(anchor.y, anchor.height, size.height);
+  }
+  if (!inside) {
+    // Keep a popup on the page.
+    x = Math.max(0, Math.min(document.width - size.width, x));
+    y = Math.max(0, Math.min(document.height - size.height, y));
+  }
+  return { x: x + (a.offset?.x ?? 0), y: y + (a.offset?.y ?? 0) };
 }
 
 function sizing(node: SceneNode, axis: 'H' | 'V'): LayoutSizing {
@@ -60,6 +105,8 @@ interface Measured extends Size {
 export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
   const measured = new Map<string, Measured>();
   const entries = new Map<string, LayoutEntry>();
+  // Popups are placed against their anchors once those have geometry.
+  const anchored: string[] = [];
 
   const measure = (id: string): Measured => {
     const hit = measured.get(id);
@@ -117,7 +164,8 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
     const mode = layoutModeOf(node);
     const auto = new Set(mode === 'NONE' ? [] : children.filter((k) => shown.has(k) && isAutoChild(k)));
     for (const k of children) {
-      if (!auto.has(k)) arrange(k.id, { x: content.x + k.x, y: content.y + k.y }, measure(k.id));
+      if (anchoringOf(k)) anchored.push(k.id);
+      else if (!auto.has(k)) arrange(k.id, { x: content.x + k.x, y: content.y + k.y }, measure(k.id));
     }
     if (auto.size === 0) return;
 
@@ -159,7 +207,44 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
 
   for (const id of scene.childrenOf()) {
     const n = scene.node(id);
-    arrange(id, { x: n.x, y: n.y }, measure(id));
+    if (anchoringOf(n)) anchored.push(id);
+    else arrange(id, { x: n.x, y: n.y }, measure(id));
+  }
+  // A popup anchored to another popup waits for it; an unknown anchor falls back to the node's own x, y.
+  let pending = anchored;
+  while (pending.length) {
+    const later: string[] = [];
+    for (const id of pending) {
+      const node = scene.node(id);
+      const a = anchoringOf(node)!;
+      const m = measure(id);
+      if (a.id !== undefined && !entries.has(a.id) && scene.has(a.id) && anchored.includes(a.id)) {
+        later.push(id);
+        continue;
+      }
+      const target = a.id !== undefined ? entries.get(a.id)?.bounds : undefined;
+      let origin: Point;
+      if (a.id !== undefined && target === undefined) origin = { x: node.x, y: node.y };
+      else {
+        const box = placeAnchored(
+          a,
+          target ?? { x: 0, y: 0, width: ctx.document.width, height: ctx.document.height },
+          m,
+          ctx.document,
+          a.id === undefined,
+        );
+        origin = { x: box.x - m.local.x, y: box.y - m.local.y };
+      }
+      arrange(id, origin, m);
+    }
+    if (later.length === pending.length) {
+      for (const id of later) {
+        const node = scene.node(id);
+        arrange(id, { x: node.x, y: node.y }, measure(id));
+      }
+      break;
+    }
+    pending = later;
   }
   return entries;
 }
@@ -204,6 +289,7 @@ export function validateLayoutProps(
   node: Record<string, unknown>,
   resizable: boolean,
   container: boolean,
+  sizeRequired = container,
 ): string | undefined {
   for (const [key, values] of Object.entries(ENUMS)) {
     const v = node[key];
@@ -226,7 +312,7 @@ export function validateLayoutProps(
     if (node[key] === 'HUG' && !container) return `${key}: only a container can HUG its content`;
     if (node[key] === 'FILL' && !resizable) return `${key}: a ${String(node.type)} cannot FILL; its size is intrinsic`;
   }
-  if (container && node.type !== 'WINDOW') {
+  if (container && sizeRequired) {
     // The layout decides a HUG or FILL axis; only a FIXED axis needs a stored size.
     const fixedH = node.layoutSizingHorizontal === undefined || node.layoutSizingHorizontal === 'FIXED';
     const fixedV = node.layoutSizingVertical === undefined || node.layoutSizingVertical === 'FIXED';

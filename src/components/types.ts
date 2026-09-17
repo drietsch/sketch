@@ -106,6 +106,21 @@ export interface Capabilities {
   hover?: true;
 }
 
+/**
+ * Where a popup sits. With `id`, outside that node on the given side, aligned
+ * along it; without, inside the document at that edge (or centred). A node
+ * anchored this way ignores its own x and y, is positioned after everything
+ * else, and takes no part in a parent's auto-layout flow.
+ */
+export interface Anchoring {
+  id?: string;
+  side: 'top' | 'bottom' | 'left' | 'right' | 'center';
+  align?: 'start' | 'center' | 'end';
+  gap?: number;
+  /** Shifts the placed box, e.g. to stack toasts. */
+  offset?: Point;
+}
+
 /** A component definition. `N` is normally one of the built-in node types; custom components may bring their own. */
 export interface ComponentDef<N extends NodeBase & { type: string } = SceneNode> {
   /** Bounds in the node's local space (origin at the node's x, y). May have a negative origin, e.g. a line pointing up-left. */
@@ -134,6 +149,8 @@ export interface ComponentDef<N extends NodeBase & { type: string } = SceneNode>
   validate?(node: N): string | undefined;
   /** A container: children are positioned from `contentOffset` and auto-layout applies. */
   container?: true;
+  /** A container with a default size, so a stored width or height is optional even on a FIXED axis. */
+  intrinsicSize?: true;
   /** Whether the child at `index` is shown (an inactive tab panel, the body of a closed collapsible). */
   childVisible?(node: N, ctx: LayoutContext, index: number): boolean;
   /**
@@ -142,4 +159,18 @@ export interface ComponentDef<N extends NodeBase & { type: string } = SceneNode>
    * (they are applied to the scene the frame is built from).
    */
   layoutDependsOnState?: true;
+  /** A popup: where it is placed relative to its anchor node or the document. */
+  anchor?(node: N): Anchoring | undefined;
+  /**
+   * How a popup with an anchor node opens from it: a click on the anchor
+   * toggles it, or hovering the anchor opens it (after the node's `delay`)
+   * and leaving closes it.
+   */
+  trigger?: 'click' | 'hover';
+  /** An open popup closes when a click lands outside it and its anchor. */
+  dismissOnOutside?: true;
+  /** Typing into the node opens it (a combobox's list). */
+  opensOnType?: true;
+  /** Descendants are clipped to this local box (a scroll area's viewport). */
+  clip?(node: N, ctx: LayoutContext): Bounds;
 }

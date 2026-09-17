@@ -50,3 +50,25 @@ export function layoutText(font: StrokeFont, text: string, fontSize: number, ali
   const height = (lines.length - 1) * lineHeight + ascent + font.descent(fontSize);
   return { glyphs, lineWidths, bounds: { x: minX, y: 0, width: maxX - minX, height } };
 }
+
+/**
+ * Breaks text into lines no wider than `maxWidth`, at spaces, keeping explicit
+ * newlines. A single word wider than the limit stays on its own line.
+ */
+export function wrapText(font: StrokeFont, text: string, fontSize: number, maxWidth: number): string {
+  const out: string[] = [];
+  for (const paragraph of text.split('\n')) {
+    let line = '';
+    for (const word of paragraph.split(' ')) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && font.measure(candidate, fontSize) > maxWidth) {
+        out.push(line);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    }
+    out.push(line);
+  }
+  return out.join('\n');
+}

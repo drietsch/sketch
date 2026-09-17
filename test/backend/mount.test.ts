@@ -16,7 +16,8 @@ function serializeDom(el: Element): string {
     else if (child.nodeType === 3)
       inner += (child.textContent ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
-  const tag = el.tagName.toLowerCase();
+  // localName keeps SVG's camel-case names (clipPath) that tagName may fold.
+  const tag = el.localName;
   return inner ? `<${tag}${attrs}>${inner}</${tag}>` : `<${tag}${attrs}/>`;
 }
 

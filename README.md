@@ -162,6 +162,49 @@ demo.button({ id: 'billing', parent: 'tabs', characters: 'Add card' }); // shown
 `demo.nodeAt(id, t)` returns a node with the live `value`, `checked`, `open`
 (or `pressed` for a toggle) at time `t`.
 
+#### Popups and overlays
+
+Everything that opens over the page. A popup with an `anchor` sits against
+that node (`side`: `top`, `bottom`, `left`, `right`) and needs no `x`/`y`;
+dialogs, drawers and toasts sit against the page. Popups draw on an overlay
+layer above every ordinary node, and their children (a dialog's buttons, a
+popover's form) come with them. All of them keep `open` as model state.
+
+| Factory               | Type              | Props                                                                                     |
+| --------------------- | ----------------- | ----------------------------------------------------------------------------------------- |
+| `demo.tooltip`        | `TOOLTIP`         | `anchor`, `characters`, `side?` top, `delay?` 400; opens while hovered                    |
+| `demo.previewCard`    | `PREVIEW_CARD`    | `anchor`, `title?`, `description?`, `width?` 240; opens while hovered                     |
+| `demo.popover`        | `POPOVER`         | `anchor`, `title?`, `description?`, `width?` 260; a click toggles it; container           |
+| `demo.menu`           | `MENU`            | `characters?`, `icon?`, `items`; a button that drops the list; `value` is the last choice |
+| `demo.contextMenu`    | `CONTEXT_MENU`    | `anchor`, `items`; a click on the anchor opens it over it                                 |
+| `demo.menubar`        | `MENUBAR`         | `menus: { label, items }[]`; `value` is the open menu                                     |
+| `demo.navigationMenu` | `NAVIGATION_MENU` | `items: { label, items? }[]`; links and dropdowns                                         |
+| `demo.select`         | `SELECT`          | `width`, `options`, `value?`, `placeholder?`                                              |
+| `demo.combobox`       | `COMBOBOX`        | `width`, `options`, `value?`, `placeholder?`; typing filters the list                     |
+| `demo.autocomplete`   | `AUTOCOMPLETE`    | as combobox, without the chevron; the list appears while typing                           |
+| `demo.dialog`         | `DIALOG`          | `title`, `description?`, `width?` 420; centred over a backdrop; container                 |
+| `demo.alertDialog`    | `ALERT_DIALOG`    | as dialog, but only its own buttons close it                                              |
+| `demo.drawer`         | `DRAWER`          | `title?`, `side?` right, `width?` 320; a page-edge panel; container                       |
+| `demo.toast`          | `TOAST`           | `title`, `description?`, `variant?`, `stack?`; bottom-right, shown by default             |
+| `demo.scrollArea`     | `SCROLL_AREA`     | `width`, `height`, `contentHeight`, `value?`; clips and scrolls its children              |
+
+Menu items are labels, `{ label, icon?, disabled? }` objects, or `'-'` for a
+separator.
+
+```ts
+demo.button({ id: 'share', x: 20, y: 20, characters: 'Share' });
+demo.tooltip({ anchor: 'share', characters: 'Share this file' });
+demo.popover({ id: 'share-pop', anchor: 'share', title: 'Share', width: 260 });
+demo.input({ id: 'email', parent: 'share-pop', width: 236, placeholder: 'name@example.com' });
+demo.button({ id: 'send', parent: 'share-pop', characters: 'Send', variant: 'primary' });
+
+demo.dialog({ id: 'confirm', title: 'Delete this file?', description: 'It moves to the trash.' });
+demo.button({ id: 'cancel', parent: 'confirm', characters: 'Cancel' });
+
+demo.timeline.hover('share').open('share-pop').type('email', 'grace@example.com').click('send').close('share-pop');
+demo.timeline.open('confirm').click('cancel').close('confirm');
+```
+
 Common props on every node: `x`, `y`, `parent`, `visible`, `opacity`,
 `interactive`, `sketchVariant`, and the Figma-shaped visual properties:
 
@@ -319,6 +362,16 @@ a tab activates, a slider jumps to the cursor. A step a control cannot take
 type; a step already satisfied (`check` on a checked box) only moves the
 cursor there.
 
+Popups follow the same rules through their anchors. `hover(anchor)` (or
+`hover(tooltip)`) opens a tooltip or preview card after its delay and rests on
+it; moving away closes it. `open(popover)` clicks its anchor, as does a plain
+`click(anchor)`, which toggles it. `choose(select, option)` opens the list if
+needed and clicks the option; on a menubar, choose the menu first, then its
+item. A click outside an open menu, select or popover dismisses it; a dialog
+closes from its backdrop or its close mark (`close(dialog)` clicks that), an
+alert dialog only from `close()`. A row scrolled out of a scroll area's
+viewport cannot be a target until `drag(area, offset)` brings it into view.
+
 ### Text and icons
 
 Text is drawn as sketched strokes from a built-in single-stroke font (the
@@ -346,6 +399,7 @@ The pages in [`examples/`](examples/) load the built bundle. Run
 - `player.html`: mounted into a live SVG and driven by the `Player`
 - `auto-layout.html`: a signup form laid out entirely by auto-layout, playing on a loop
 - `controls.html`: every control in its states, then a form driven by the semantic steps
+- `overlays.html`: menus, selects, a popover, a dialog, a drawer, toasts and a scroll area over one timeline
 
 ## Development
 

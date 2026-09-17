@@ -35,6 +35,21 @@ import type {
   CollapsibleNode,
   AccordionNode,
   TabsNode,
+  TooltipNode,
+  PreviewCardNode,
+  PopoverNode,
+  MenuNode,
+  ContextMenuNode,
+  MenubarNode,
+  SelectNode,
+  ComboboxNode,
+  AutocompleteNode,
+  DialogNode,
+  AlertDialogNode,
+  DrawerNode,
+  ToastNode,
+  NavigationMenuNode,
+  ScrollAreaNode,
 } from './core/types.js';
 import type { IconDef } from './icons/types.js';
 import { resolvePlacement, splitPlacement } from './core/place.js';
@@ -99,6 +114,13 @@ export type RelativeProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' | '
 export type LayoutChildProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' | 'y'> & {
   id?: string;
   parent: string;
+  x?: number;
+  y?: number;
+};
+
+/** Node props for a popup: it is placed by its anchor or the page, so `x`/`y` are optional. */
+export type AnchoredProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' | 'y'> & {
+  id?: string;
   x?: number;
   y?: number;
 };
@@ -363,6 +385,99 @@ export class Demo {
     return this.add('TABS', props);
   }
 
+  // --- popups and overlays. Anchored ones need no x/y: they sit by their anchor or the page's edge.
+
+  /** A short label shown while `anchor` is hovered. */
+  tooltip(props: AnchoredProps<TooltipNode>): TooltipNode {
+    return this.add('TOOLTIP', props as NodeProps<TooltipNode>);
+  }
+
+  previewCard(props: AnchoredProps<PreviewCardNode>): PreviewCardNode {
+    return this.add('PREVIEW_CARD', props as NodeProps<PreviewCardNode>);
+  }
+
+  /** A panel toggled by a click on `anchor`; children are its content, stacked vertically by default. */
+  popover(props: AnchoredProps<PopoverNode> & { padding?: Padding }): PopoverNode {
+    return this.add('POPOVER', {
+      layoutMode: 'VERTICAL',
+      layoutSizingVertical: 'HUG',
+      padding: 12,
+      itemSpacing: 8,
+      ...props,
+    } as NodeProps<PopoverNode>);
+  }
+
+  /** A button that drops a list of items. */
+  menu(props: NodeProps<MenuNode>): MenuNode {
+    return this.add('MENU', props);
+  }
+
+  /** A list of items opened by a click on `anchor`. */
+  contextMenu(props: AnchoredProps<ContextMenuNode>): ContextMenuNode {
+    return this.add('CONTEXT_MENU', props as NodeProps<ContextMenuNode>);
+  }
+
+  menubar(props: NodeProps<MenubarNode>): MenubarNode {
+    return this.add('MENUBAR', props);
+  }
+
+  select(props: NodeProps<SelectNode>): SelectNode {
+    return this.add('SELECT', props);
+  }
+
+  combobox(props: NodeProps<ComboboxNode>): ComboboxNode {
+    return this.add('COMBOBOX', props);
+  }
+
+  autocomplete(props: NodeProps<AutocompleteNode>): AutocompleteNode {
+    return this.add('AUTOCOMPLETE', props);
+  }
+
+  /** A modal centred on the page over a backdrop; children stack below the description. */
+  dialog(props: AnchoredProps<DialogNode> & { padding?: Padding }): DialogNode {
+    return this.add('DIALOG', {
+      layoutMode: 'VERTICAL',
+      layoutSizingVertical: 'HUG',
+      padding: 20,
+      itemSpacing: 12,
+      ...props,
+    } as NodeProps<DialogNode>);
+  }
+
+  alertDialog(props: AnchoredProps<AlertDialogNode> & { padding?: Padding }): AlertDialogNode {
+    return this.add('ALERT_DIALOG', {
+      layoutMode: 'VERTICAL',
+      layoutSizingVertical: 'HUG',
+      padding: 20,
+      itemSpacing: 12,
+      ...props,
+    } as NodeProps<AlertDialogNode>);
+  }
+
+  /** A panel at a page edge (right by default) over a backdrop. */
+  drawer(props: AnchoredProps<DrawerNode> & { padding?: Padding }): DrawerNode {
+    return this.add('DRAWER', {
+      layoutMode: 'VERTICAL',
+      padding: 20,
+      itemSpacing: 12,
+      ...props,
+    } as NodeProps<DrawerNode>);
+  }
+
+  /** A notice in the bottom-right corner, shown unless `open: false`. */
+  toast(props: AnchoredProps<ToastNode>): ToastNode {
+    return this.add('TOAST', { open: true, ...props } as NodeProps<ToastNode>);
+  }
+
+  navigationMenu(props: NodeProps<NavigationMenuNode>): NavigationMenuNode {
+    return this.add('NAVIGATION_MENU', props);
+  }
+
+  /** A viewport over taller content: children are clipped and scrolled by `value`. */
+  scrollArea(props: ContainerProps<ScrollAreaNode>): ScrollAreaNode {
+    return this.add('SCROLL_AREA', props);
+  }
+
   /** Total length of the timeline in ms; 0 for a static scene. */
   get duration(): number {
     return this.compiled().duration;
@@ -574,7 +689,8 @@ export class Demo {
         // auto-layout parent positions the child; any other container puts it
         // at its content origin.
         const parent = typeof rest.parent === 'string' ? this.scene.get(rest.parent) : undefined;
-        if (parent === undefined || !componentFor(parent).container) {
+        const anchored = componentFor({ type } as SceneNode).anchor?.({ ...rest, id, type } as SceneNode) !== undefined;
+        if (!anchored && (parent === undefined || !componentFor(parent).container)) {
           throw new Error(
             `Node "${id}" needs x and y, a placement (below, above, rightOf, leftOf), or a container parent.`,
           );

@@ -13,8 +13,14 @@ const HOLD_MIN = 60;
 const HOLD_JITTER = 60;
 const CLEAR_DURATION = 180;
 const HOVER_DELAY = 400;
+/** How long the cursor rests on something it opened by hovering. */
+const HOVER_DWELL = 700;
 /** A cursor already this close to its destination does not move. */
 const SNAP_DISTANCE = 2;
+
+const anchorOf = (node: SceneNode): string | undefined => componentFor(node).anchor?.(node)?.id;
+const insideBox = (p: Point, b: { x: number; y: number; width: number; height: number }) =>
+  p.x >= b.x && p.x <= b.x + b.width && p.y >= b.y && p.y <= b.y + b.height;
 
 export class CompileError extends Error {
   constructor(
@@ -91,6 +97,20 @@ export function compile(
   const regionsOf = (node: SceneNode): Region[] =>
     componentFor(node).regions?.(working.resolved(node.id), render(node)) ?? [];
 
+  /** Popups opened from `id` by the given trigger. */
+  const listeners = (id: string, trigger: 'click' | 'hover'): SceneNode[] =>
+    working.visible().filter((n) => componentFor(n).trigger === trigger && anchorOf(n) === id);
+  /** Whether a point is over the popup's own overlay (its open panel) or its anchor. */
+  const overPopup = (popup: SceneNode, p: Point): boolean => {
+    const origin = working.position(popup.id);
+    for (const r of regionsOf(popup)) {
+      if (r.layer === 'overlay' && insideBox(p, { ...r.bounds, x: origin.x + r.bounds.x, y: origin.y + r.bounds.y }))
+        return true;
+    }
+    const anchor = anchorOf(popup);
+    return anchor !== undefined && working.has(anchor) && insideBox(p, working.bounds(anchor));
+  };
+
   const steps: CompiledStep[] = [];
   let clock = 0;
   timeline.steps.forEach((step, authored) => {
@@ -127,6 +147,7 @@ export function compile(
       const node = working.get(target);
       if (!node) throw new CompileError(authored, `unknown target "${target}"`);
       if (node.visible === false) throw new CompileError(authored, `target "${target}" is not visible`);
+      if (!working.isInView(target)) throw new CompileError(authored, `target "${target}" is scrolled out of view`);
       return node;
     };
 
@@ -172,7 +193,15 @@ export function compile(
       }
       const cursor = planCursorPath(state.cursor, dest.point, dest.width, stream('cursor'), duration);
       state.cursor = dest.point;
-      emit({ step: stepLabel, cursor, duration: cursor.duration });
+      // Leaving a hover-opened popup's anchor (and its panel) closes it.
+      const effects: WidgetEffect[] = [];
+      for (const popup of working.visible()) {
+        if (componentFor(popup).trigger !== 'hover' || !liveOpen(popup)) continue;
+        if (!overPopup(popup, dest.point)) effects.push(...applyAction({ target: popup.id, open: false }, popup.id));
+      }
+      const compiled: Emit = { step: stepLabel, cursor, duration: cursor.duration };
+      if (effects.length) compiled.effects = effects;
+      emit(compiled);
       return true;
     };
 
@@ -212,8 +241,8 @@ export function compile(
       const def = node ? componentFor(node) : undefined;
       let action = hit?.region?.action;
       if (!action && node && def) {
-        if (def.drag) {
-          // A click anywhere on a draggable control jumps its value to the cursor.
+        if (def.drag && hit?.region) {
+          // A click on a draggable control's track jumps its value to the cursor.
           const origin = working.position(node.id);
           const local = { x: state.cursor.x - origin.x, y: state.cursor.y - origin.y };
           action = { value: def.drag.valueAt(working.resolved(node.id), render(node), local) };
@@ -223,6 +252,25 @@ export function compile(
       }
       state.focused = node && working.isFocusable(node) ? hit!.id : undefined;
       const effects = applyAction(action, hit?.id);
+      // What the click is "on", for popups: the hit node, else the topmost visible node under the cursor
+      // (a plain rectangle with a context menu is not interactive), and everything above it in the tree.
+      const under =
+        hit?.id ??
+        working.visible().findLast((n) => !componentFor(n).anchor && insideBox(state.cursor, working.bounds(n.id)))?.id;
+      const onOrIn = (id: string) => under !== undefined && (under === id || working.isDescendant(under, id));
+      // An open popup that dismisses on an outside click closes unless the click is on it, in it, or on its anchor.
+      for (const popup of working.visible()) {
+        if (!componentFor(popup).dismissOnOutside || !liveOpen(popup)) continue;
+        const anchor = anchorOf(popup);
+        if (!onOrIn(popup.id) && (anchor === undefined || !onOrIn(anchor)))
+          effects.push(...applyAction({ target: popup.id, open: false }, popup.id));
+      }
+      // A click on a popup's anchor (or inside it) toggles the popup.
+      for (const popup of working.visible()) {
+        const anchor = anchorOf(popup);
+        if (componentFor(popup).trigger === 'click' && anchor !== undefined && onOrIn(anchor))
+          effects.push(...applyAction({ target: popup.id, open: !liveOpen(popup) }, popup.id));
+      }
       const c: NonNullable<CompiledStep['click']> = { pressAt: 0, releaseAt: hold };
       if (hit) c.hit = hit.id;
       if (state.focused !== undefined) c.focus = state.focused;
@@ -284,8 +332,44 @@ export function compile(
         clickAt(pointIn(working.bounds(node.id)));
         return;
       }
+      const anchor = anchorOf(node);
+      if (anchor !== undefined && working.has(anchor) && def.trigger === 'click') {
+        // The anchor is the trigger: a click there toggles the popup.
+        clickAt(pointIn(working.bounds(anchor)));
+        return;
+      }
+      if (anchor !== undefined && working.has(anchor) && def.trigger === 'hover' && open) {
+        hoverOver(anchor);
+        return;
+      }
       // No trigger to click (a dialog closed by "escape"): apply the change instantly.
       emit({ step, duration: 0, effects: applyAction({ target: node.id, open }, node.id) });
+    };
+
+    /** Moves over a node and rests there long enough for anything it opens on hover. */
+    const hoverOver = (id: string, duration?: number): void => {
+      const node = working.node(id);
+      moveTo(pointIn(working.bounds(id)), { type: 'moveCursor', target: id });
+      const def = componentFor(node);
+      const effects: WidgetEffect[] = [];
+      let delay = 0;
+      if (def.capabilities?.hover) {
+        delay = (node as { delay?: number }).delay ?? HOVER_DELAY;
+        const hoverRegion = regionsOf(node).find((r) => r.key === 'hover');
+        const action = hoverRegion?.action ?? def.click?.(working.resolved(id), render(node));
+        effects.push(...applyAction(action, id));
+      }
+      for (const popup of listeners(id, 'hover')) {
+        delay = Math.max(delay, (popup as { delay?: number }).delay ?? HOVER_DELAY);
+        if (!liveOpen(popup)) effects.push(...applyAction({ target: popup.id, open: true }, popup.id));
+      }
+      if (effects.length) {
+        // The popup appears after the delay, then the cursor rests so it can be seen.
+        emit({ step: { type: 'hover', target: id }, duration: delay, effects });
+        emit({ step: { type: 'hover', target: id }, duration: duration ?? HOVER_DWELL });
+      } else {
+        emit({ step: { type: 'hover', target: id }, duration: duration ?? 0 });
+      }
     };
 
     const requireInput = (target: string) => require(target, 'text', 'typed into');
@@ -331,6 +415,14 @@ export function compile(
         const base = typeof current === 'string' ? current : current === undefined ? '' : String(current);
         const focuses = state.focused !== step.target;
         const typing = planTyping(step.target, base, step.text, stream('type'), focuses, step.duration);
+        if (componentFor(node).opensOnType && !liveOpen(node)) {
+          // The list appears as typing starts.
+          emit({
+            step: { type: 'open', target: node.id },
+            duration: 0,
+            effects: applyAction({ target: node.id, open: true }, node.id),
+          });
+        }
         state.focused = step.target;
         state.values.set(step.target, applyAll(typing.base, typing.ops));
         emit({ step, typing, duration: typing.opEnds.at(-1) ?? 0 });
@@ -443,16 +535,9 @@ export function compile(
       }
       case 'hover': {
         const node = nodeOf(step.target);
-        moveTo(pointIn(working.bounds(node.id)), { type: 'moveCursor', target: node.id });
-        const def = componentFor(node);
-        if (def.capabilities?.hover) {
-          const delay = (node as { delay?: number }).delay ?? HOVER_DELAY;
-          const hoverRegion = regionsOf(node).find((r) => r.key === 'hover');
-          const action = hoverRegion?.action ?? def.click?.(working.resolved(node.id), render(node));
-          emit({ step, duration: step.duration ?? delay, effects: applyAction(action, node.id) });
-        } else {
-          emit({ step, duration: step.duration ?? 0 });
-        }
+        // Hovering a tooltip means hovering what it annotates.
+        const anchor = anchorOf(node);
+        hoverOver(componentFor(node).trigger === 'hover' && anchor !== undefined ? anchor : node.id, step.duration);
         break;
       }
       case 'drag': {
@@ -481,13 +566,13 @@ export function compile(
           duration: cursor.duration,
         });
         state.pressed = false;
-        state.values.set(node.id, to);
+        const effects = applyAction({ target: node.id, value: to }, node.id);
         const c: NonNullable<CompiledStep['click']> = { pressAt: 0, releaseAt: 0, hit: node.id };
         if (working.isFocusable(node)) {
           state.focused = node.id;
           c.focus = node.id;
         }
-        emit({ step: { type: 'release' }, click: c, duration: 0, effects: [{ id: node.id, value: to }] });
+        emit({ step: { type: 'release' }, click: c, duration: 0, effects });
         break;
       }
     }

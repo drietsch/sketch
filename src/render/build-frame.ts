@@ -1,5 +1,5 @@
 import type { Scene } from '../core/scene.js';
-import type { ComponentState, ControlValue, SceneNode, Size } from '../core/types.js';
+import type { Bounds, ComponentState, ControlValue, SceneNode, Size } from '../core/types.js';
 import { deriveSeed, fnv1a32 } from '../core/ids.js';
 import { componentFor } from '../components/index.js';
 import type { LayoutContext, RenderContext } from '../components/types.js';
@@ -38,10 +38,21 @@ export function buildFrame(scene: Scene, size: Size, ctx: FrameContext, backgrou
   // all ordinary nodes so a popup sits above later siblings of its ancestors.
   const overlay: FrameGroup[] = [];
   const overlaying = new Set<string>();
+  // Absolute clip boxes by node: a clipping container's descendants inherit its viewport.
+  const clips = new Map<string, Bounds>();
   let focused: SceneNode | undefined;
   const render = (node: SceneNode) => renderContext(scene, ctx, node);
   for (const node of scene.visible()) {
-    const { group: g, state, hasOverlay } = nodeGroup(scene, node, ctx, render(node));
+    const inherited = node.parent !== undefined ? clips.get(node.parent) : undefined;
+    const own = componentFor(node).clip?.(scene.resolved(node.id), ctx);
+    if (own) {
+      const o = scene.position(node.id);
+      const abs = { x: o.x + own.x, y: o.y + own.y, width: own.width, height: own.height };
+      clips.set(node.id, inherited ? intersect(inherited, abs) : abs);
+    } else if (inherited) {
+      clips.set(node.id, inherited);
+    }
+    const { group: g, state, hasOverlay } = nodeGroup(scene, node, ctx, render(node), inherited);
     const lifted = hasOverlay || (node.parent !== undefined && overlaying.has(node.parent));
     if (lifted) {
       overlaying.add(node.id);
@@ -51,8 +62,10 @@ export function buildFrame(scene: Scene, size: Size, ctx: FrameContext, backgrou
     }
     if (state.focused && scene.isFocusable(node)) focused = node;
   }
+  // The focus ring sits above its node but under any popup, unless its node is in one.
+  if (focused && !overlaying.has(focused.id)) groups.push(focusRing(scene, focused, ctx));
   groups.push(...overlay);
-  if (focused) groups.push(focusRing(scene, focused, ctx));
+  if (focused && overlaying.has(focused.id)) groups.push(focusRing(scene, focused, ctx));
   if (ctx.chrome) groups.push(...ctx.chrome);
   const frame: Frame = { width: size.width, height: size.height, groups };
   if (background !== undefined) frame.background = background;
@@ -79,27 +92,52 @@ export function renderContext(scene: Scene, ctx: FrameContext, node: SceneNode):
   return rctx;
 }
 
+function intersect(a: Bounds, b: Bounds): Bounds {
+  const x = Math.max(a.x, b.x);
+  const y = Math.max(a.y, b.y);
+  const right = Math.min(a.x + a.width, b.x + b.width);
+  const bottom = Math.min(a.y + a.height, b.y + b.height);
+  return { x, y, width: Math.max(0, right - x), height: Math.max(0, bottom - y) };
+}
+
 function nodeGroup(
   scene: Scene,
   node: SceneNode,
   ctx: FrameContext,
   rctx: RenderContext,
+  clip?: Bounds,
 ): { group: FrameGroup; state: ComponentState; hasOverlay: boolean } {
   const def = componentFor(node);
   const state = rctx.state;
   const variant = node.sketchVariant ?? 0;
   const children: VElement[] = [];
   let hasOverlay = false;
-  for (const part of def.expand(scene.resolved(node.id), rctx)) {
-    if (part.layer === 'overlay') hasOverlay = true;
-    const seed = deriveSeed(ctx.seed, 'sketch', node.id, part.key, variant);
-    children.push(...ctx.adapter.render(node.id, part, seed));
-  }
   const pos = scene.position(node.id);
   const attrs: VElement['attrs'] = {
     'data-type': node.type,
     transform: `translate(${fmt(pos.x)} ${fmt(pos.y)})`,
   };
+  if (clip) {
+    // The clip is defined in this group's own space, so it is self-contained
+    // and the id cannot collide between two mounted demos.
+    const id = `clip-${fnv1a32(`${ctx.seed}:${node.id}`).toString(36)}`;
+    attrs['clip-path'] = `url(#${id})`;
+    children.push({
+      tag: 'clipPath',
+      attrs: { id },
+      children: [
+        {
+          tag: 'rect',
+          attrs: { x: fmt(clip.x - pos.x), y: fmt(clip.y - pos.y), width: fmt(clip.width), height: fmt(clip.height) },
+        },
+      ],
+    });
+  }
+  for (const part of def.expand(scene.resolved(node.id), rctx)) {
+    if (part.layer === 'overlay') hasOverlay = true;
+    const seed = deriveSeed(ctx.seed, 'sketch', node.id, part.key, variant);
+    children.push(...ctx.adapter.render(node.id, part, seed));
+  }
   if (state.disabled) attrs.opacity = 0.45;
   return { group: group(node.id, attrs, children), state, hasOverlay };
 }

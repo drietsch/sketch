@@ -57,7 +57,8 @@ function validateNode(node: unknown, at: string): void {
   }
   const def = componentFor(node as unknown as SceneNode);
   const invalid =
-    validateLayoutProps(node, !!def.resizable, !!def.container) ?? def.validate?.(node as unknown as SceneNode);
+    validateLayoutProps(node, !!def.resizable, !!def.container, !!def.container && !def.intrinsicSize) ??
+    def.validate?.(node as unknown as SceneNode);
   if (invalid) throw new DemoJSONError(`${label}: ${invalid}`);
   if ('parent' in node) throw new DemoJSONError(`${label} must nest under its parent instead of naming it`);
   for (const key of ['fills', 'strokes'] as const) {

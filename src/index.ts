@@ -12,6 +12,7 @@ export type {
   RelativeProps,
   LayoutChildProps,
   ContainerProps,
+  AnchoredProps,
   NodeProps,
 } from './demo.js';
 export { Scene } from './core/scene.js';
@@ -92,5 +93,25 @@ export type {
   AccordionItem,
   AccordionNode,
   TabsNode,
+  Side,
+  MenuItem,
+  MenuGroup,
+  NavigationItem,
+  ToastVariant,
+  TooltipNode,
+  PreviewCardNode,
+  PopoverNode,
+  MenuNode,
+  ContextMenuNode,
+  MenubarNode,
+  SelectNode,
+  ComboboxNode,
+  AutocompleteNode,
+  DialogNode,
+  AlertDialogNode,
+  DrawerNode,
+  ToastNode,
+  NavigationMenuNode,
+  ScrollAreaNode,
 } from './core/types.js';
-export type { Region, WidgetAction, Capabilities } from './components/types.js';
+export type { Region, WidgetAction, Capabilities, Anchoring } from './components/types.js';
