@@ -1,5 +1,5 @@
 import type { Scene } from '../core/scene.js';
-import type { ComponentState, SceneNode, Size } from '../core/types.js';
+import type { ComponentState, ControlValue, SceneNode, Size } from '../core/types.js';
 import { deriveSeed, fnv1a32 } from '../core/ids.js';
 import { componentFor } from '../components/index.js';
 import type { LayoutContext, RenderContext } from '../components/types.js';
@@ -10,7 +10,9 @@ import type { SketchAdapter } from './sketch-adapter.js';
 /** What the timeline contributes to one node at time t. */
 export interface NodeInteraction {
   state?: ComponentState;
-  value?: string;
+  value?: ControlValue;
+  checked?: boolean;
+  open?: boolean;
   caretVisible?: boolean;
 }
 
@@ -32,12 +34,24 @@ export const FOCUS_RING_KEY = '__focus';
  */
 export function buildFrame(scene: Scene, size: Size, ctx: FrameContext, background?: string): Frame {
   const groups: FrameGroup[] = [];
+  // Nodes that draw an overlay part, and everything beneath them, paint after
+  // all ordinary nodes so a popup sits above later siblings of its ancestors.
+  const overlay: FrameGroup[] = [];
+  const overlaying = new Set<string>();
   let focused: SceneNode | undefined;
+  const render = (node: SceneNode) => renderContext(scene, ctx, node);
   for (const node of scene.visible()) {
-    const { group: g, state } = nodeGroup(scene, node, ctx);
-    groups.push(g);
+    const { group: g, state, hasOverlay } = nodeGroup(scene, node, ctx, render(node));
+    const lifted = hasOverlay || (node.parent !== undefined && overlaying.has(node.parent));
+    if (lifted) {
+      overlaying.add(node.id);
+      overlay.push(g);
+    } else {
+      groups.push(g);
+    }
     if (state.focused && scene.isFocusable(node)) focused = node;
   }
+  groups.push(...overlay);
   if (focused) groups.push(focusRing(scene, focused, ctx));
   if (ctx.chrome) groups.push(...ctx.chrome);
   const frame: Frame = { width: size.width, height: size.height, groups };
@@ -45,17 +59,39 @@ export function buildFrame(scene: Scene, size: Size, ctx: FrameContext, backgrou
   return frame;
 }
 
-function nodeGroup(scene: Scene, node: SceneNode, ctx: FrameContext): { group: FrameGroup; state: ComponentState } {
-  const def = componentFor(node);
+/** The render context for one node: theme and font, plus the timeline's live state for it. */
+export function renderContext(scene: Scene, ctx: FrameContext, node: SceneNode): RenderContext {
   const authored = 'state' in node ? node.state : undefined;
   const live = ctx.interaction?.get(node.id);
   const state: ComponentState = { ...authored, ...live?.state };
-  const rctx: RenderContext = { theme: ctx.theme, font: ctx.font, icons: ctx.icons, state };
+  const rctx: RenderContext = {
+    theme: ctx.theme,
+    font: ctx.font,
+    icons: ctx.icons,
+    document: ctx.document,
+    state,
+    bounds: (id) => scene.bounds(id),
+  };
   if (live?.value !== undefined) rctx.value = live.value;
+  if (live?.checked !== undefined) rctx.checked = live.checked;
+  if (live?.open !== undefined) rctx.open = live.open;
   if (live?.caretVisible !== undefined) rctx.caretVisible = live.caretVisible;
+  return rctx;
+}
+
+function nodeGroup(
+  scene: Scene,
+  node: SceneNode,
+  ctx: FrameContext,
+  rctx: RenderContext,
+): { group: FrameGroup; state: ComponentState; hasOverlay: boolean } {
+  const def = componentFor(node);
+  const state = rctx.state;
   const variant = node.sketchVariant ?? 0;
   const children: VElement[] = [];
+  let hasOverlay = false;
   for (const part of def.expand(scene.resolved(node.id), rctx)) {
+    if (part.layer === 'overlay') hasOverlay = true;
     const seed = deriveSeed(ctx.seed, 'sketch', node.id, part.key, variant);
     children.push(...ctx.adapter.render(node.id, part, seed));
   }
@@ -65,7 +101,7 @@ function nodeGroup(scene: Scene, node: SceneNode, ctx: FrameContext): { group: F
     transform: `translate(${fmt(pos.x)} ${fmt(pos.y)})`,
   };
   if (state.disabled) attrs.opacity = 0.45;
-  return { group: group(node.id, attrs, children), state };
+  return { group: group(node.id, attrs, children), state, hasOverlay };
 }
 
 /** A dashed, lightly sketched ring around the focused node's bounds. */

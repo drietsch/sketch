@@ -1,4 +1,4 @@
-import type { SceneNode, Theme, TypeStyle } from '../core/types.js';
+import type { NodeBase, Theme, TypeStyle } from '../core/types.js';
 import { resolvePaint } from '../core/paint.js';
 import type { PartStyle } from './types.js';
 
@@ -10,7 +10,7 @@ import type { PartStyle } from './types.js';
  */
 export function resolvePartStyle(
   theme: Theme,
-  node: SceneNode | undefined,
+  node: NodeBase | undefined,
   overrides: Partial<PartStyle> = {},
 ): PartStyle {
   const sketch = node?.sketch;
@@ -48,7 +48,7 @@ export function resolvePartStyle(
 }
 
 /** Whether the node sets its own fill (present and non-empty), so a component default should not apply. */
-export function hasOwnFill(node: SceneNode): boolean {
+export function hasOwnFill(node: NodeBase): boolean {
   return resolvePaint(node.fills) !== undefined;
 }
 

@@ -1,5 +1,50 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`controls > digest > t=0 1`] = `
+{
+  "bytes": 119411,
+  "groups": 30,
+  "paths": 107,
+  "sha256": "7957d8f7e9f60017",
+}
+`;
+
+exports[`formLayout > digest > t=0 1`] = `
+{
+  "bytes": 55818,
+  "groups": 17,
+  "paths": 41,
+  "sha256": "d3843c47d677d2de",
+}
+`;
+
+exports[`formLayout > digest > t=1175 1`] = `
+{
+  "bytes": 52444,
+  "groups": 18,
+  "paths": 42,
+  "sha256": "b8110bf13b6a0cc8",
+}
+`;
+
+exports[`formLayout > digest > t=2349 1`] = `
+{
+  "bytes": 52966,
+  "groups": 18,
+  "paths": 42,
+  "sha256": "514a3676a54dfa3c",
+}
+`;
+
+exports[`formLayout > digest > t=4698 1`] = `
+{
+  "bytes": 53133,
+  "groups": 18,
+  "paths": 42,
+  "sha256": "682935ef6d1a42f5",
+}
+`;
+
 exports[`layoutForm > digest > t=0 1`] = `
 {
   "bytes": 45020,
@@ -106,6 +151,42 @@ exports[`primitives > digest > t=0 1`] = `
   "groups": 14,
   "paths": 23,
   "sha256": "3fdf5a51dc0d7b83",
+}
+`;
+
+exports[`tabsAccordion > digest > t=0 1`] = `
+{
+  "bytes": 69053,
+  "groups": 18,
+  "paths": 42,
+  "sha256": "9f37100ba6b10446",
+}
+`;
+
+exports[`tabsAccordion > digest > t=856 1`] = `
+{
+  "bytes": 67488,
+  "groups": 20,
+  "paths": 47,
+  "sha256": "799acb7a5f8acf20",
+}
+`;
+
+exports[`tabsAccordion > digest > t=1711 1`] = `
+{
+  "bytes": 60007,
+  "groups": 20,
+  "paths": 46,
+  "sha256": "44939c9fc9124b87",
+}
+`;
+
+exports[`tabsAccordion > digest > t=3422 1`] = `
+{
+  "bytes": 60044,
+  "groups": 20,
+  "paths": 46,
+  "sha256": "9155d11e85201917",
 }
 `;
 

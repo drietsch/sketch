@@ -5,7 +5,13 @@ import { DEFAULT_FONT } from '../../../src/text/index.js';
 import { resolveIcon } from '../../../src/icons/index.js';
 import type { RectangleNode } from '../../../src/core/types.js';
 
-const make = () => new Scene({ theme: { ...DEFAULT_THEME }, font: DEFAULT_FONT, icons: resolveIcon });
+const make = () =>
+  new Scene({
+    theme: { ...DEFAULT_THEME },
+    font: DEFAULT_FONT,
+    icons: resolveIcon,
+    document: { width: 800, height: 600 },
+  });
 const rect = (id: string, extra: Partial<RectangleNode> = {}): RectangleNode => ({
   id,
   type: 'RECTANGLE',

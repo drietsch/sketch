@@ -58,6 +58,29 @@ records.forEach((body, index) => {
   glyphs[String.fromCharCode(code)] = { advance: right - left, strokes };
 });
 
+// Typographic characters that UI copy uses all the time and the ASCII font lacks.
+// Each is drawn from ASCII strokes so text with them measures and renders
+// instead of falling back to the tofu box.
+const ALIASES = {
+  '\u2018': "'",
+  '\u2019': "'",
+  '\u201a': "'",
+  '\u201c': '"',
+  '\u201d': '"',
+  '\u201e': '"',
+  '\u2013': '-',
+  '\u2014': '-',
+  '\u00a0': ' ',
+};
+for (const [alias, source] of Object.entries(ALIASES)) glyphs[alias] = glyphs[source];
+const dot = glyphs['.'];
+glyphs['\u2026'] = {
+  advance: dot.advance * 3,
+  strokes: [0, 1, 2].flatMap((n) =>
+    dot.strokes.map((stroke) => stroke.map((v, i) => (i % 2 === 0 ? v + n * dot.advance : v))),
+  ),
+};
+
 const entries = Object.entries(glyphs)
   .map(([ch, g]) => `  ${JSON.stringify(ch)}: [${g.advance}, ${JSON.stringify(g.strokes)}],`)
   .join('\n');

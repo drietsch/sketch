@@ -1,5 +1,5 @@
 import type { Scene } from './scene.js';
-import type { Bounds, FrameNode, LayoutMode, LayoutSizing, Point, SceneNode, Size, WindowNode } from './types.js';
+import type { AutoLayoutProps, Bounds, LayoutMode, LayoutSizing, Point, SceneNode, Size } from './types.js';
 import type { LayoutContext } from '../components/types.js';
 import { componentFor } from '../components/index.js';
 
@@ -14,10 +14,11 @@ export interface LayoutEntry {
 
 export type Layout = ReadonlyMap<string, LayoutEntry>;
 
-type Container = FrameNode | WindowNode;
+type Container = SceneNode & AutoLayoutProps;
 
+/** Any component that declares itself a container takes auto-layout props and may HUG. */
 export function isContainer(node: SceneNode): node is Container {
-  return node.type === 'FRAME' || node.type === 'WINDOW';
+  return !!componentFor(node).container;
 }
 
 export function layoutModeOf(node: SceneNode): LayoutMode {
@@ -71,17 +72,23 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
       const c = node as Container;
       const row = mode === 'HORIZONTAL';
       const p = pad(c);
-      const chrome = componentFor(node).contentOffset?.(node, ctx) ?? { x: 0, y: 0 };
+      const def = componentFor(node);
+      const chrome = def.contentOffset?.(node, ctx) ?? { x: 0, y: 0 };
+      const trailing = def.contentTrailing?.(node, ctx) ?? { x: 0, y: 0 };
       const kids = scene
         .childrenOf(id)
-        .map((k) => scene.node(k))
-        .filter(isAutoChild)
+        .map((k, i) => (scene.childShown(id, i) ? scene.node(k) : undefined))
+        .filter((k): k is SceneNode => k !== undefined && isAutoChild(k))
         .map((k) => measure(k.id));
       const gaps = Math.max(0, kids.length - 1) * (c.itemSpacing ?? 0);
       const main = kids.reduce((s, k) => s + (row ? k.width : k.height), 0) + gaps;
       const cross = kids.reduce((s, k) => Math.max(s, row ? k.height : k.width), 0);
-      if (sizing(c, 'H') === 'HUG') m.width = chrome.x + p.l + (row ? main : cross) + p.r;
-      if (sizing(c, 'V') === 'HUG') m.height = chrome.y + p.t + (row ? cross : main) + p.b;
+      // A component that hides all its children (a closed collapsible) hugs to its chrome alone.
+      const collapsed = kids.length === 0 && def.childVisible !== undefined && scene.childrenOf(id).length > 0;
+      if (sizing(c, 'H') === 'HUG')
+        m.width = collapsed ? chrome.x : chrome.x + p.l + (row ? main : cross) + p.r + trailing.x;
+      if (sizing(c, 'V') === 'HUG')
+        m.height = collapsed ? chrome.y : chrome.y + p.t + (row ? cross : main) + p.b + trailing.y;
     }
     measured.set(id, m);
     return m;
@@ -103,10 +110,12 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
       bounds: { x: origin.x + local.x, y: origin.y + local.y, width: local.width, height: local.height },
     });
     const chrome = def.contentOffset?.(node, ctx) ?? { x: 0, y: 0 };
+    const trailing = def.contentTrailing?.(node, ctx) ?? { x: 0, y: 0 };
     const content = { x: origin.x + chrome.x, y: origin.y + chrome.y };
     const children = scene.childrenOf(id).map((k) => scene.node(k));
+    const shown = new Set(children.filter((_, i) => scene.childShown(id, i)));
     const mode = layoutModeOf(node);
-    const auto = new Set(mode === 'NONE' ? [] : children.filter(isAutoChild));
+    const auto = new Set(mode === 'NONE' ? [] : children.filter((k) => shown.has(k) && isAutoChild(k)));
     for (const k of children) {
       if (!auto.has(k)) arrange(k.id, { x: content.x + k.x, y: content.y + k.y }, measure(k.id));
     }
@@ -116,8 +125,8 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
     const row = mode === 'HORIZONTAL';
     const p = pad(c);
     const spacing = c.itemSpacing ?? 0;
-    const innerW = size.width - chrome.x - p.l - p.r;
-    const innerH = size.height - chrome.y - p.t - p.b;
+    const innerW = size.width - chrome.x - trailing.x - p.l - p.r;
+    const innerH = size.height - chrome.y - trailing.y - p.t - p.b;
     const innerMain = row ? innerW : innerH;
     const innerCross = row ? innerH : innerW;
     const items = [...auto].map((k) => ({ k, km: measure(k.id), fill: sizing(k, row ? 'H' : 'V') === 'FILL' }));
@@ -191,8 +200,11 @@ const DEFAULTS: Record<string, unknown> = {
 };
 
 /** Message describing what is wrong with a node's layout props, or undefined. `resizable` says whether FILL is allowed. */
-export function validateLayoutProps(node: Record<string, unknown>, resizable: boolean): string | undefined {
-  const container = node.type === 'FRAME' || node.type === 'WINDOW';
+export function validateLayoutProps(
+  node: Record<string, unknown>,
+  resizable: boolean,
+  container: boolean,
+): string | undefined {
   for (const [key, values] of Object.entries(ENUMS)) {
     const v = node[key];
     if (v !== undefined && !(values as readonly string[]).includes(v as string)) {
@@ -207,14 +219,14 @@ export function validateLayoutProps(node: Record<string, unknown>, resizable: bo
   }
   if (!container) {
     for (const key of CONTAINER_ONLY) {
-      if (node[key] !== undefined) return `${key} only applies to FRAME and WINDOW nodes, not ${String(node.type)}`;
+      if (node[key] !== undefined) return `${key} only applies to container nodes, not ${String(node.type)}`;
     }
   }
   for (const key of ['layoutSizingHorizontal', 'layoutSizingVertical'] as const) {
-    if (node[key] === 'HUG' && !container) return `${key}: only FRAME and WINDOW can HUG their content`;
+    if (node[key] === 'HUG' && !container) return `${key}: only a container can HUG its content`;
     if (node[key] === 'FILL' && !resizable) return `${key}: a ${String(node.type)} cannot FILL; its size is intrinsic`;
   }
-  if (node.type === 'FRAME') {
+  if (container && node.type !== 'WINDOW') {
     // The layout decides a HUG or FILL axis; only a FIXED axis needs a stored size.
     const fixedH = node.layoutSizingHorizontal === undefined || node.layoutSizingHorizontal === 'FIXED';
     const fixedV = node.layoutSizingVertical === undefined || node.layoutSizingVertical === 'FIXED';

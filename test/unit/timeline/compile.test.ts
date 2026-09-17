@@ -28,7 +28,13 @@ describe('compile', () => {
   test('a move lands inside the target and a click decides focus', () => {
     const demo = login();
     demo.timeline.moveCursor('email').click().click('side').click('login');
-    const [move, clickEmail, clickSide, clickLogin] = demo.compiled().steps;
+    // A click with a target expands into a move and a click; group by authored step.
+    const steps = demo.compiled().steps;
+    const of = (authored: number) => steps.filter((s) => s.authored === authored);
+    const [move] = of(0);
+    const [clickEmail] = of(1);
+    const [moveSide, clickSide] = of(2);
+    const [moveLogin, clickLogin] = of(3);
     const b = demo.scene.bounds('email');
     const p = move.cursor!.to;
     expect(p.x).toBeGreaterThan(b.x + b.width * 0.25);
@@ -41,11 +47,11 @@ describe('compile', () => {
     expect(clickEmail.end - clickEmail.start).toBeGreaterThanOrEqual(60);
     expect(clickEmail.end - clickEmail.start).toBeLessThanOrEqual(120);
     // A panel is hit but not focusable: focus clears.
-    expect(clickSide.cursor).toBeDefined();
+    expect(moveSide.cursor).toBeDefined();
     expect(clickSide.click).toMatchObject({ hit: 'side' });
     expect(clickSide.click!.focus).toBeUndefined();
     expect(clickLogin.click).toMatchObject({ hit: 'login', focus: 'login' });
-    expect(clickLogin.click!.pressAt).toBe(clickLogin.cursor!.duration);
+    expect(clickLogin.start).toBe(moveLogin.end);
   });
 
   test('typing focuses implicitly only when needed and chains values', () => {
@@ -92,7 +98,7 @@ describe('compile', () => {
     demo.timeline.moveCursor('nope');
     expect(() => demo.compiled()).toThrow(/step 0: unknown target "nope"/);
     demo.timeline.reset().type('login', 'x');
-    expect(() => demo.compiled()).toThrow(/step 0: target "login" is a BUTTON, not an INPUT/);
+    expect(() => demo.compiled()).toThrow(/step 0: target "login" is a BUTTON, which cannot be typed into/);
     demo.timeline.reset().focus('side');
     expect(() => demo.compiled()).toThrow(/is not focusable/);
     demo.timeline.reset().set('missing', {});

@@ -3,9 +3,10 @@
 `@drietsch/sketch`: an API-first JavaScript/TypeScript library for creating
 and animating hand-drawn GUI mockups.
 
-Build complete interfaces (windows, panels, inputs, buttons, icons, text) in a
-sketch-style visual language, then script how someone uses them: the cursor
-moves, clicks, focuses and types on a seekable timeline. Output is SVG, as a
+Build complete interfaces (windows, panels, forms, buttons, inputs, checkboxes,
+sliders, tabs, icons, text) in a sketch-style visual language, then script how
+someone uses them: the cursor moves, clicks, checks, chooses, drags and types
+on a seekable timeline. Output is SVG, as a
 string in Node or a live document in the browser, and everything is
 deterministic: the same document, seed and timestamp always produce
 byte-identical output.
@@ -114,6 +115,52 @@ and sketch's own `ICON`, `BUTTON`, `INPUT`, `WINDOW`.
 | `demo.input`                   | `INPUT`     | `width`, `height?`, `value?`, `placeholder?`, `state?`                       |
 | `demo.frame`                   | `FRAME`     | `width`, `height`, `title?` (children start below the title bar)             |
 | `demo.window` / `demo.browser` | `WINDOW`    | `width`, `height`, `title?`, `url?`                                          |
+
+#### Controls
+
+Base UI's catalogue of controls, as node types. Their model state follows
+Base UI's names (`checked`, `pressed`, `open`, `value`) and is a prop on the
+node, which the timeline can change live (see [Semantic steps](#semantic-steps)).
+List-like controls take their items as props; their entries are drawn parts
+with clickable regions, not nodes.
+
+| Factory              | Type             | Props                                                                        |
+| -------------------- | ---------------- | ---------------------------------------------------------------------------- |
+| `demo.checkbox`      | `CHECKBOX`       | `characters?`, `checked?`, `indeterminate?`                                  |
+| `demo.checkboxGroup` | `CHECKBOX_GROUP` | `options`, `value?: string[]`, `orientation?` (`vertical`)                   |
+| `demo.switch`        | `SWITCH`         | `characters?`, `checked?`                                                    |
+| `demo.toggle`        | `TOGGLE`         | `characters?`, `icon?`, `pressed?`                                           |
+| `demo.toggleGroup`   | `TOGGLE_GROUP`   | `options`, `value?`, `multiple?`, `orientation?` (`horizontal`)              |
+| `demo.radioGroup`    | `RADIO_GROUP`    | `options`, `value?`, `orientation?` (`vertical`)                             |
+| `demo.slider`        | `SLIDER`         | `width`, `value?`, `min?` 0, `max?` 100, `step?` 1                           |
+| `demo.progress`      | `PROGRESS`       | `width`, `value?`, `max?` 100, `indeterminate?`, `characters?`               |
+| `demo.meter`         | `METER`          | `width`, `value`, `min?` 0, `max?` 100, `characters?`                        |
+| `demo.separator`     | `SEPARATOR`      | `length`, `orientation?` (`horizontal`)                                      |
+| `demo.avatar`        | `AVATAR`         | `characters?` (initials), `icon?`, `size?` 36                                |
+| `demo.numberField`   | `NUMBER_FIELD`   | `width`, `value?`, `min?`, `max?`, `step?` 1, `placeholder?`                 |
+| `demo.otpField`      | `OTP_FIELD`      | `length?` 6, `value?`                                                        |
+| `demo.field`         | `FIELD`          | `label?`, `description?`, `error?`; a vertical HUG container for one control |
+| `demo.fieldset`      | `FIELDSET`       | `width`, `height`, `legend?`; children start below the legend                |
+| `demo.form`          | `FORM`           | a vertical container with `itemSpacing: 10` by default                       |
+| `demo.toolbar`       | `TOOLBAR`        | `orientation?`; a padded row (or column) of its children                     |
+| `demo.collapsible`   | `COLLAPSIBLE`    | `characters` (header), `open?`; hides its children while closed              |
+| `demo.accordion`     | `ACCORDION`      | `width`, `items` (labels or `{ label, characters? }`), `value?`, `multiple?` |
+| `demo.tabs`          | `TABS`           | `width`, `height`, `tabs`, `value?`; shows the child at the active index     |
+
+```ts
+demo.form({ id: 'signup', x: 30, y: 30, width: 280, layoutSizingVertical: 'HUG' });
+demo.field({ id: 'f-plan', parent: 'signup', label: 'Plan', description: 'Change any time.', width: 280 });
+demo.radioGroup({ id: 'plan', parent: 'f-plan', options: ['Free', 'Team'], value: 'Free' });
+demo.field({ id: 'f-volume', parent: 'signup', label: 'Volume', width: 280 });
+demo.slider({ id: 'volume', parent: 'f-volume', width: 280, value: 20 });
+
+demo.tabs({ id: 'tabs', x: 340, y: 30, width: 250, height: 120, tabs: ['General', 'Billing'] });
+demo.text({ id: 'general', parent: 'tabs', characters: 'General settings' }); // shown with the first tab
+demo.button({ id: 'billing', parent: 'tabs', characters: 'Add card' }); // shown with the second
+```
+
+`demo.nodeAt(id, t)` returns a node with the live `value`, `checked`, `open`
+(or `pressed` for a toggle) at time `t`.
 
 Common props on every node: `x`, `y`, `parent`, `visible`, `opacity`,
 `interactive`, `sketchVariant`, and the Figma-shaped visual properties:
@@ -247,12 +294,38 @@ demo.timeline
 A step's `key` pins its random streams, so inserting steps before it never
 changes its path or cadence.
 
+#### Semantic steps
+
+A control is used by what it does, not by where its parts are. Each of these
+compiles into the cursor moves and clicks that a person would make, on the
+exact region of the control (an option, a tab header, the increment button,
+the slider thumb), and records the state change so `stateAt(t)` stays a pure
+replay:
+
+```ts
+demo.timeline
+  .check('remember') // a CHECKBOX, SWITCH or TOGGLE; uncheck() and toggle() likewise
+  .check('toppings', 'Olives') // one option of a CHECKBOX_GROUP or multiple TOGGLE_GROUP
+  .choose('plan', 'Team') // a RADIO_GROUP, TOGGLE_GROUP, TABS or ACCORDION option
+  .choose('seats', 3) // a NUMBER_FIELD: clicks the stepper until it gets there
+  .drag('volume', 75) // a SLIDER: press the thumb, move, release; snaps to the step
+  .open('advanced') // a COLLAPSIBLE (or an ACCORDION item); close() likewise
+  .hover('save'); // moves there and rests
+```
+
+A plain `click(id)` applies the control's natural effect: a checkbox toggles,
+a tab activates, a slider jumps to the cursor. A step a control cannot take
+(`check` on a `BUTTON`) is a `CompileError` naming the step, the node and its
+type; a step already satisfied (`check` on a checked box) only moves the
+cursor there.
+
 ### Text and icons
 
 Text is drawn as sketched strokes from a built-in single-stroke font (the
 Hershey sans), so measurement, carets and bounds are exact and identical in
-every environment. Printable ASCII is covered; other characters draw as a
-small box. A custom `StrokeFont` can be passed to `createDemo`.
+every environment. Printable ASCII is covered, plus the typographic
+characters UI copy uses (`…`, curly quotes, en and em dashes); other
+characters draw as a small box. A custom `StrokeFont` can be passed to `createDemo`.
 
 Icons use the [`@sketchyicons/data`](https://github.com/Fantomiald/sketchyicons)
 shape: 47 common icons are built in (`iconNames()` lists them), any of that
@@ -272,6 +345,7 @@ The pages in [`examples/`](examples/) load the built bundle. Run
 - `login-demo.html`: the same, animated, with a scrub bar over `toSVG(t)`
 - `player.html`: mounted into a live SVG and driven by the `Player`
 - `auto-layout.html`: a signup form laid out entirely by auto-layout, playing on a loop
+- `controls.html`: every control in its states, then a form driven by the semantic steps
 
 ## Development
 

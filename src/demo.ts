@@ -12,13 +12,35 @@ import type {
   Theme,
   NodeType,
   NodeOf,
+  NodePatch,
   VectorNode,
   WindowNode,
+  CheckboxNode,
+  CheckboxGroupNode,
+  SwitchNode,
+  ToggleNode,
+  ToggleGroupNode,
+  RadioGroupNode,
+  SliderNode,
+  ProgressNode,
+  MeterNode,
+  SeparatorNode,
+  AvatarNode,
+  NumberFieldNode,
+  OtpFieldNode,
+  FieldNode,
+  FieldsetNode,
+  FormNode,
+  ToolbarNode,
+  CollapsibleNode,
+  AccordionNode,
+  TabsNode,
 } from './core/types.js';
 import type { IconDef } from './icons/types.js';
 import { resolvePlacement, splitPlacement } from './core/place.js';
 import type { Placement } from './core/place.js';
-import { expandPadding, layoutModeOf } from './core/layout.js';
+import { expandPadding } from './core/layout.js';
+import { componentFor } from './components/index.js';
 import type { Padding } from './core/layout.js';
 import type { DistributiveOmit } from './core/types.js';
 import { getIcon, isBuiltinIcon } from './icons/registry.js';
@@ -85,7 +107,7 @@ export type LayoutChildProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' 
 export type NodeProps<N extends SceneNode> = Props<N> | RelativeProps<N> | LayoutChildProps<N>;
 
 /** Container props may also give `padding` as a shorthand for the four sides. */
-export type ContainerProps<N extends FrameNode | WindowNode> = NodeProps<N> & { padding?: Padding };
+export type ContainerProps<N extends SceneNode> = NodeProps<N> & { padding?: Padding };
 
 export function createDemo(options: DemoOptions): Demo {
   return new Demo(options);
@@ -165,7 +187,12 @@ export class Demo {
     this.font = options.font ?? DEFAULT_FONT;
     this.adapter = new SketchAdapter(this.font);
     this.scene = new Scene(
-      { theme: this.theme, font: this.font, icons: (icon) => this.resolveIcon(icon) },
+      {
+        theme: this.theme,
+        font: this.font,
+        icons: (icon) => this.resolveIcon(icon),
+        document: { width: this.width, height: this.height },
+      },
       // Removing a node through the scene is the one removal path; it frees the
       // node's cached geometry here so nothing leaks.
       { onRemove: (ids) => ids.forEach((id) => this.adapter.forget(id)) },
@@ -240,6 +267,102 @@ export class Demo {
     return this.add('WINDOW', { ...props, chrome: 'browser' } as NodeProps<WindowNode>);
   }
 
+  // --- controls (Base UI's catalogue) ------------------------------------
+
+  checkbox(props: NodeProps<CheckboxNode>): CheckboxNode {
+    return this.add('CHECKBOX', props);
+  }
+
+  checkboxGroup(props: NodeProps<CheckboxGroupNode>): CheckboxGroupNode {
+    return this.add('CHECKBOX_GROUP', props);
+  }
+
+  switch(props: NodeProps<SwitchNode>): SwitchNode {
+    return this.add('SWITCH', props);
+  }
+
+  toggle(props: NodeProps<ToggleNode>): ToggleNode {
+    return this.add('TOGGLE', props);
+  }
+
+  toggleGroup(props: NodeProps<ToggleGroupNode>): ToggleGroupNode {
+    return this.add('TOGGLE_GROUP', props);
+  }
+
+  radioGroup(props: NodeProps<RadioGroupNode>): RadioGroupNode {
+    return this.add('RADIO_GROUP', props);
+  }
+
+  slider(props: NodeProps<SliderNode>): SliderNode {
+    return this.add('SLIDER', props);
+  }
+
+  progress(props: NodeProps<ProgressNode>): ProgressNode {
+    return this.add('PROGRESS', props);
+  }
+
+  meter(props: NodeProps<MeterNode>): MeterNode {
+    return this.add('METER', props);
+  }
+
+  separator(props: NodeProps<SeparatorNode>): SeparatorNode {
+    return this.add('SEPARATOR', props);
+  }
+
+  avatar(props: NodeProps<AvatarNode>): AvatarNode {
+    return this.add('AVATAR', props);
+  }
+
+  numberField(props: NodeProps<NumberFieldNode>): NumberFieldNode {
+    return this.add('NUMBER_FIELD', props);
+  }
+
+  otpField(props: NodeProps<OtpFieldNode>): OtpFieldNode {
+    return this.add('OTP_FIELD', props);
+  }
+
+  /** A label above one control, with an optional description or error below. Hugs its control vertically by default. */
+  field(props: ContainerProps<FieldNode>): FieldNode {
+    return this.add('FIELD', { layoutMode: 'VERTICAL', layoutSizingVertical: 'HUG', ...props } as NodeProps<FieldNode>);
+  }
+
+  fieldset(props: ContainerProps<FieldsetNode>): FieldsetNode {
+    return this.add('FIELDSET', props);
+  }
+
+  /** A vertical stack of fields by default. */
+  form(props: ContainerProps<FormNode>): FormNode {
+    return this.add('FORM', { layoutMode: 'VERTICAL', itemSpacing: 10, ...props } as NodeProps<FormNode>);
+  }
+
+  /** A row of controls by default. */
+  toolbar(props: ContainerProps<ToolbarNode>): ToolbarNode {
+    const vertical = (props as { orientation?: string }).orientation === 'vertical';
+    return this.add('TOOLBAR', {
+      layoutMode: vertical ? 'VERTICAL' : 'HORIZONTAL',
+      padding: 6,
+      itemSpacing: 6,
+      ...props,
+    } as NodeProps<ToolbarNode>);
+  }
+
+  collapsible(props: ContainerProps<CollapsibleNode>): CollapsibleNode {
+    return this.add('COLLAPSIBLE', {
+      layoutMode: 'VERTICAL',
+      layoutSizingVertical: 'HUG',
+      itemSpacing: 10,
+      ...props,
+    } as NodeProps<CollapsibleNode>);
+  }
+
+  accordion(props: NodeProps<AccordionNode>): AccordionNode {
+    return this.add('ACCORDION', props);
+  }
+
+  tabs(props: ContainerProps<TabsNode>): TabsNode {
+    return this.add('TABS', props);
+  }
+
   /** Total length of the timeline in ms; 0 for a static scene. */
   get duration(): number {
     return this.compiled().duration;
@@ -254,7 +377,13 @@ export class Demo {
   compiled(): CompiledTimeline {
     const c = this.compiledCache;
     if (c && c.sceneVersion === this.scene.version && c.timelineVersion === this.timeline.version) return c;
-    const fresh = compile(this.timeline, this.scene, this.seed, { width: this.width, height: this.height });
+    const size = { width: this.width, height: this.height };
+    const fresh = compile(this.timeline, this.scene, this.seed, size, {
+      theme: this.theme,
+      font: this.font,
+      icons: (icon) => this.resolveIcon(icon),
+      document: size,
+    });
     this.compiledCache = fresh;
     return fresh;
   }
@@ -266,8 +395,13 @@ export class Demo {
 
   /** The frame at time t (ms) as a virtual SVG tree. Pure: the same inputs always give the same frame. */
   frameAt(t = 0): Frame {
-    const base = { theme: this.theme, font: this.font, icons: (icon: string | IconDef) => this.resolveIcon(icon) };
     const size = { width: this.width, height: this.height };
+    const base = {
+      theme: this.theme,
+      font: this.font,
+      icons: (icon: string | IconDef) => this.resolveIcon(icon),
+      document: size,
+    };
     if (this.timeline.steps.length === 0) {
       return buildFrame(this.scene, size, { ...base, seed: this.seed, adapter: this.adapter }, this.background);
     }
@@ -293,6 +427,12 @@ export class Demo {
     if (hovered !== undefined && !state.pressed) touch(hovered).state = { ...touch(hovered).state, hovered: true };
     for (const [id, value] of state.values) {
       if (scene.has(id)) touch(id).value = value;
+    }
+    for (const [id, checked] of state.checked) {
+      if (scene.has(id)) touch(id).checked = checked;
+    }
+    for (const [id, open] of state.open) {
+      if (scene.has(id)) touch(id).open = open;
     }
     if (state.focused !== undefined && scene.has(state.focused))
       touch(state.focused).caretVisible = caretVisible(state);
@@ -338,8 +478,8 @@ export class Demo {
 
   /**
    * The node as it is at time t: authored props with the timeline's `set`
-   * patches and live input value applied. The scene itself is never mutated
-   * by playback.
+   * patches and live value, checked and open state applied. The scene itself
+   * is never mutated by playback.
    */
   nodeAt<N extends SceneNode = SceneNode>(id: string, t: number): N {
     const node = this.scene.node<N>(id);
@@ -347,10 +487,15 @@ export class Demo {
     const state = this.stateAt(t);
     const patch = state.patches.get(id);
     const value = state.values.get(id);
-    if (!patch && value === undefined) return node;
-    const out = Object.assign({}, node) as N & { value?: string };
+    const checked = state.checked.get(id);
+    const open = state.open.get(id);
+    if (!patch && value === undefined && checked === undefined && open === undefined) return node;
+    const out = Object.assign({}, node) as N;
     if (patch) Object.assign(out, patch);
-    if (value !== undefined && node.type === 'INPUT') out.value = value;
+    if (value !== undefined) out.value = value;
+    // A TOGGLE keeps its "checked" state under Base UI's name for it.
+    if (checked !== undefined) out[node.type === 'TOGGLE' ? 'pressed' : 'checked'] = checked;
+    if (open !== undefined) out.open = open;
     return out;
   }
 
@@ -362,14 +507,25 @@ export class Demo {
    * rather than per frame.
    */
   private patchedScene(state: InteractionState): SceneType {
-    if (state.patches.size === 0) return this.scene;
+    // Live model state of components whose layout depends on it is applied
+    // like a `set` patch, so the layout pass and child visibility see it.
+    const patches = new Map<string, NodePatch>(state.patches);
+    const layoutState = (id: string, patch: NodePatch) => {
+      const node = this.scene.get(id);
+      if (!node || !componentFor(node).layoutDependsOnState) return;
+      patches.set(id, { ...patches.get(id), ...patch });
+    };
+    for (const [id, open] of state.open) layoutState(id, { open });
+    for (const [id, value] of state.values) layoutState(id, { value });
+    for (const [id, checked] of state.checked) layoutState(id, { checked });
+    if (patches.size === 0) return this.scene;
     const compiled = this.compiled();
-    const key = JSON.stringify([...state.patches]);
+    const key = JSON.stringify([...patches]);
     const c = this.patchedCache;
     if (c && c.compiled === compiled && c.key === key) return c.scene;
     const scene = this.scene.clone();
-    for (const [id, patch] of state.patches) {
-      if (scene.has(id)) scene.update(id, patch);
+    for (const [id, patch] of patches) {
+      if (scene.has(id)) scene.update<SceneNode>(id, patch);
     }
     this.patchedCache = { compiled, key, scene };
     return scene;
@@ -414,13 +570,13 @@ export class Demo {
     expandPadding(id, rest);
     if (!placement) {
       if (typeof rest.x !== 'number' || typeof rest.y !== 'number') {
-        // A child of an auto-layout container is positioned by the layout: x/y default to 0.
+        // Inside a container the position may be left to the container: an
+        // auto-layout parent positions the child; any other container puts it
+        // at its content origin.
         const parent = typeof rest.parent === 'string' ? this.scene.get(rest.parent) : undefined;
-        const laidOut =
-          parent !== undefined && layoutModeOf(parent) !== 'NONE' && rest.layoutPositioning !== 'ABSOLUTE';
-        if (!laidOut) {
+        if (parent === undefined || !componentFor(parent).container) {
           throw new Error(
-            `Node "${id}" needs x and y, a placement (below, above, rightOf, leftOf), or an auto-layout parent.`,
+            `Node "${id}" needs x and y, a placement (below, above, rightOf, leftOf), or a container parent.`,
           );
         }
         rest.x ??= 0;

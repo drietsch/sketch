@@ -31,18 +31,20 @@ describe('stateAt', () => {
     const demo = login();
     demo.timeline.click('login');
     const c = demo.compiled();
-    const step = c.steps[0];
-    const { pressAt, releaseAt } = step.click!;
-    const mid = stateAt(c, pressAt / 2);
+    // click('login') compiles into a move and then the click itself.
+    const [move, click] = c.steps;
+    const pressAt = click.start + click.click!.pressAt;
+    const releaseAt = click.start + click.click!.releaseAt;
+    const mid = stateAt(c, move.end / 2);
     expect(mid.activeStep).toBe(0);
     expect(mid.pressed).toBe(false);
-    expect(mid.cursor).not.toEqual(step.cursor!.to);
+    expect(mid.cursor).not.toEqual(move.cursor!.to);
     expect(stateAt(c, pressAt).pressed).toBe(true);
     expect(stateAt(c, pressAt).pressedNode).toBe('login');
     expect(stateAt(c, releaseAt - 1).pressed).toBe(true);
     expect(stateAt(c, releaseAt).pressed).toBe(false);
     expect(stateAt(c, releaseAt).focused).toBe('login');
-    expect(stateAt(c, releaseAt).lastRelease).toEqual({ at: step.cursor!.to, time: releaseAt });
+    expect(stateAt(c, releaseAt).lastRelease).toEqual({ at: move.cursor!.to, time: releaseAt });
   });
 
   test('typing reveals a prefix at every op boundary', () => {
@@ -66,9 +68,10 @@ describe('stateAt', () => {
     expect(stateAt(c, 0).focused).toBe('email');
     expect(stateAt(c, 50).focused).toBe('email');
     expect(stateAt(c, 100).focused).toBeUndefined();
-    const clickSide = c.steps[4];
+    const clickSide = c.steps.filter((s) => s.authored === 4).at(-1)!;
     expect(stateAt(c, clickSide.end - 1).focused).toBeUndefined();
-    expect(stateAt(c, c.steps[5].start).focused).toBe('password');
+    const focusPassword = c.steps.find((s) => s.authored === 5)!;
+    expect(stateAt(c, focusPassword.start).focused).toBe('password');
     expect(stateAt(c, c.duration).focused).toBeUndefined();
   });
 

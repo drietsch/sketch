@@ -311,7 +311,7 @@ describe('auto-layout', () => {
       /a TEXT cannot FILL/,
     );
     expect(() => demo.rectangle({ id: 'r', x: 0, y: 0, width: 1, height: 1, layoutMode: 'VERTICAL' } as never)).toThrow(
-      /layoutMode only applies to FRAME and WINDOW/,
+      /layoutMode only applies to container nodes/,
     );
     expect(() => demo.frame({ id: 'f', x: 0, y: 0, layoutMode: 'ROW' } as never)).toThrow(/layoutMode must be one of/);
     expect(() => demo.frame({ id: 'f', x: 0, y: 0, width: 10, height: 10, itemSpacing: -1 })).toThrow(
@@ -326,10 +326,14 @@ describe('auto-layout', () => {
     expect(() => loadDemo(json)).toThrow(/children\[0\] \("c"\): layoutMode must be one of/);
   });
 
-  test('a child without coordinates needs an auto-layout parent', () => {
+  test('a child without coordinates needs a container parent', () => {
     const demo = make();
-    demo.frame({ id: 'plain', x: 0, y: 0, width: 100, height: 100 });
+    demo.rectangle({ id: 'plain', x: 0, y: 0, width: 100, height: 100 });
     expect(() => demo.rectangle({ id: 'r', parent: 'plain', width: 1, height: 1 } as never)).toThrow(/needs x and y/);
+    expect(() => demo.rectangle({ id: 'r', width: 1, height: 1 } as never)).toThrow(/needs x and y/);
+    demo.frame({ id: 'f', x: 10, y: 10, width: 100, height: 100, title: 'T' });
+    expect(demo.rectangle({ id: 'at-origin', parent: 'f', width: 1, height: 1 })).toMatchObject({ x: 0, y: 0 });
+    expect(demo.scene.bounds('at-origin')).toMatchObject({ x: 10, y: 10 + FRAME_TITLE_HEIGHT });
     demo.frame({ id: 'c', x: 0, y: 0, width: 100, height: 100, layoutMode: 'VERTICAL' });
     expect(demo.rectangle({ id: 'ok', parent: 'c', width: 1, height: 1 })).toMatchObject({ x: 0, y: 0 });
   });

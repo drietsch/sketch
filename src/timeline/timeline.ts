@@ -1,4 +1,4 @@
-import type { NodePatch, Point } from '../core/types.js';
+import type { ControlValue, NodePatch, Point } from '../core/types.js';
 import type { Step, StepType, Target, TimelineJSON } from './types.js';
 
 export interface StepOptions {
@@ -18,7 +18,19 @@ const STEP_TYPES = new Set<StepType>([
   'blur',
   'setValue',
   'set',
+  'check',
+  'uncheck',
+  'toggle',
+  'open',
+  'close',
+  'hover',
+  'choose',
+  'drag',
 ]);
+
+function isValue(v: unknown): v is ControlValue {
+  return typeof v === 'string' || typeof v === 'number' || (Array.isArray(v) && v.every((x) => typeof x === 'string'));
+}
 
 function isPoint(v: unknown): v is Point {
   return (
@@ -55,7 +67,22 @@ export function validateStep(step: unknown): string | undefined {
       return typeof s.duration === 'number' && s.duration >= 0 ? undefined : 'wait needs a duration';
     case 'setValue':
       if (typeof s.target !== 'string') return 'setValue needs a target id';
-      return typeof s.value === 'string' ? undefined : 'setValue needs a value';
+      return isValue(s.value) ? undefined : 'setValue needs a value';
+    case 'check':
+    case 'uncheck':
+      if (typeof s.target !== 'string') return `${s.type} needs a target id`;
+      return s.option === undefined || typeof s.option === 'string' ? undefined : `${s.type} option must be a string`;
+    case 'toggle':
+    case 'open':
+    case 'close':
+    case 'hover':
+      return typeof s.target === 'string' ? undefined : `${s.type} needs a target id`;
+    case 'choose':
+      if (typeof s.target !== 'string') return 'choose needs a target id';
+      return typeof s.value === 'string' || typeof s.value === 'number' ? undefined : 'choose needs a value';
+    case 'drag':
+      if (typeof s.target !== 'string') return 'drag needs a target id';
+      return typeof s.value === 'number' && Number.isFinite(s.value) ? undefined : 'drag needs a numeric value';
     case 'set':
       if (typeof s.target !== 'string') return 'set needs a target id';
       return typeof s.patch === 'object' && s.patch !== null ? undefined : 'set needs a patch object';
@@ -156,9 +183,51 @@ export class Timeline {
     return this.add({ type: 'blur', ...options });
   }
 
-  /** Sets an input's value instantly. */
-  setValue(target: string, value: string, options: Omit<StepOptions, 'duration'> = {}): this {
+  /** Sets a control's value instantly, without the cursor. */
+  setValue(target: string, value: ControlValue, options: Omit<StepOptions, 'duration'> = {}): this {
     return this.add({ type: 'setValue', target, value, ...options });
+  }
+
+  /** Makes sure a checkbox or switch is checked, clicking it if it is not. With `option`, one entry of a group. */
+  check(target: string, option?: string, options: StepOptions = {}): this {
+    return this.add(
+      option === undefined ? { type: 'check', target, ...options } : { type: 'check', target, option, ...options },
+    );
+  }
+
+  uncheck(target: string, option?: string, options: StepOptions = {}): this {
+    return this.add(
+      option === undefined ? { type: 'uncheck', target, ...options } : { type: 'uncheck', target, option, ...options },
+    );
+  }
+
+  /** Clicks a two-state control whatever its state. */
+  toggle(target: string, options: StepOptions = {}): this {
+    return this.add({ type: 'toggle', target, ...options });
+  }
+
+  /** Picks a value: a radio option, a tab, a select entry (opening it first), a menu item. */
+  choose(target: string, value: string | number, options: StepOptions = {}): this {
+    return this.add({ type: 'choose', target, value, ...options });
+  }
+
+  /** Opens a collapsible, select, menu, dialog…, clicking its trigger when it has one. */
+  open(target: string, options: StepOptions = {}): this {
+    return this.add({ type: 'open', target, ...options });
+  }
+
+  close(target: string, options: StepOptions = {}): this {
+    return this.add({ type: 'close', target, ...options });
+  }
+
+  /** Moves the cursor onto a node and rests there; tooltips open after their delay. */
+  hover(target: string, options: StepOptions = {}): this {
+    return this.add({ type: 'hover', target, ...options });
+  }
+
+  /** Drags a slider-like control to a value: press on the handle, move, release. */
+  drag(target: string, value: number, options: StepOptions = {}): this {
+    return this.add({ type: 'drag', target, value, ...options });
   }
 
   /** Patches a scene node from this point on (show a dialog, change a label, move something). */

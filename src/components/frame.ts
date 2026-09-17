@@ -9,6 +9,7 @@ const PADDING_X = 12;
 /** A container with an optional title bar. Children are positioned from below the bar. */
 export const frame: ComponentDef<FrameNode> = {
   resizable: true,
+  container: true,
   interactive: true,
   // Under HUG sizing the layout pass supplies the size; a bare HUG frame measures as 0 until then.
   localBounds: (node) => ({ x: 0, y: 0, width: node.width ?? 0, height: node.height ?? 0 }),

@@ -1,4 +1,4 @@
-import type { NodePatch, Point } from '../core/types.js';
+import type { ControlValue, NodePatch, Point } from '../core/types.js';
 
 /** A node id, or a point in document coordinates. */
 export type Target = string | Point;
@@ -27,8 +27,17 @@ export type Step = StepBase &
     | { type: 'wait'; duration: number }
     | { type: 'focus'; target: string }
     | { type: 'blur' }
-    | { type: 'setValue'; target: string; value: string }
+    | { type: 'setValue'; target: string; value: ControlValue }
     | { type: 'set'; target: string; patch: NodePatch }
+    /** Semantic steps: each expands into cursor moves and clicks on the component's regions. */
+    | { type: 'check'; target: string; option?: string }
+    | { type: 'uncheck'; target: string; option?: string }
+    | { type: 'toggle'; target: string }
+    | { type: 'choose'; target: string; value: string | number }
+    | { type: 'open'; target: string }
+    | { type: 'close'; target: string }
+    | { type: 'hover'; target: string }
+    | { type: 'drag'; target: string; value: number }
   );
 
 export type StepType = Step['type'];
@@ -71,8 +80,19 @@ export interface TypingPlan {
   focuses: boolean;
 }
 
+/** A change to a node's model state, decided at compile time and replayed by stateAt(). */
+export interface WidgetEffect {
+  id: string;
+  checked?: boolean;
+  open?: boolean;
+  value?: ControlValue;
+}
+
 export interface CompiledStep {
+  /** Position in the compiled sequence. */
   index: number;
+  /** Index of the authored step this came from; a semantic step expands into several compiled ones. */
+  authored: number;
   key: string;
   step: Step;
   /** Absolute ms. */
@@ -89,6 +109,10 @@ export interface CompiledStep {
     releaseAt: number;
   };
   typing?: TypingPlan;
+  /** A slider-like value that follows the cursor during this step. */
+  drag?: { target: string; from: number; to: number };
+  /** Model-state changes applied when the step completes. */
+  effects?: WidgetEffect[];
 }
 
 export interface CompiledTimeline {
@@ -113,8 +137,10 @@ export interface InteractionState {
   focusedAt: number;
   /** Absolute ms of the last typed character. */
   lastKeyAt: number;
-  /** Live input values, by node id. */
-  values: Map<string, string>;
+  /** Live model values (input text, slider numbers, selections), by node id. */
+  values: Map<string, ControlValue>;
+  checked: Map<string, boolean>;
+  open: Map<string, boolean>;
   lastRelease?: { at: Point; time: number };
   /** Accumulated scene patches from completed `set` steps. */
   patches: Map<string, NodePatch>;

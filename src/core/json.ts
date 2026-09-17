@@ -55,8 +55,10 @@ function validateNode(node: unknown, at: string): void {
       throw new DemoJSONError(`${label}.${key} must be a finite number`);
     }
   }
-  const layoutProblem = validateLayoutProps(node, !!componentFor(node as unknown as SceneNode).resizable);
-  if (layoutProblem) throw new DemoJSONError(`${label}: ${layoutProblem}`);
+  const def = componentFor(node as unknown as SceneNode);
+  const invalid =
+    validateLayoutProps(node, !!def.resizable, !!def.container) ?? def.validate?.(node as unknown as SceneNode);
+  if (invalid) throw new DemoJSONError(`${label}: ${invalid}`);
   if ('parent' in node) throw new DemoJSONError(`${label} must nest under its parent instead of naming it`);
   for (const key of ['fills', 'strokes'] as const) {
     const problem = validatePaints(node[key], `${label}.${key}`);

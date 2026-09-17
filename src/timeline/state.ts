@@ -1,6 +1,6 @@
 import type { NodePatch } from '../core/types.js';
 import type { CompiledStep, CompiledTimeline, InteractionState } from './types.js';
-import { cursorAt } from './cursor-path.js';
+import { cursorAt, ease } from './cursor-path.js';
 import { applyOps, opsDone } from './typing.js';
 
 /** Blink period of the caret, in ms; solid for this long after a key. */
@@ -16,6 +16,8 @@ function initialState(c: CompiledTimeline, t: number): InteractionState {
     focusedAt: 0,
     lastKeyAt: -Infinity,
     values: new Map(),
+    checked: new Map(),
+    open: new Map(),
     patches: new Map(),
     activeStep: -1,
   };
@@ -36,7 +38,7 @@ export function stateAt(c: CompiledTimeline, t: number): InteractionState {
       applyComplete(s, step);
     } else if (step.start <= t) {
       applyPartial(s, step, t - step.start);
-      s.activeStep = step.index;
+      s.activeStep = step.authored;
       break;
     } else {
       break;
@@ -53,9 +55,19 @@ function setFocus(s: InteractionState, id: string | undefined, at: number): void
   else s.focused = id;
 }
 
+function applyEffects(s: InteractionState, cs: CompiledStep): void {
+  for (const e of cs.effects ?? []) {
+    if (e.checked !== undefined) s.checked.set(e.id, e.checked);
+    if (e.open !== undefined) s.open.set(e.id, e.open);
+    if (e.value !== undefined) s.values.set(e.id, e.value);
+  }
+}
+
 function applyComplete(s: InteractionState, cs: CompiledStep): void {
   const { step } = cs;
   if (cs.cursor) s.cursor = { ...cs.cursor.to };
+  if (cs.drag) s.values.set(cs.drag.target, cs.drag.to);
+  applyEffects(s, cs);
   switch (step.type) {
     case 'click':
     case 'release':
@@ -89,13 +101,20 @@ function applyComplete(s: InteractionState, cs: CompiledStep): void {
       setFocus(s, undefined, cs.start);
       break;
     case 'setValue':
-      s.values.set(step.target, step.value);
       break;
     case 'set':
       s.patches.set(step.target, { ...s.patches.get(step.target), ...step.patch } as NodePatch);
       break;
     case 'moveCursor':
     case 'wait':
+    case 'check':
+    case 'uncheck':
+    case 'toggle':
+    case 'choose':
+    case 'open':
+    case 'close':
+    case 'hover':
+    case 'drag':
       break;
   }
 }
@@ -103,6 +122,11 @@ function applyComplete(s: InteractionState, cs: CompiledStep): void {
 function applyPartial(s: InteractionState, cs: CompiledStep, local: number): void {
   const { step } = cs;
   if (cs.cursor) s.cursor = cursorAt(cs.cursor, local);
+  if (cs.drag && cs.cursor) {
+    // The value follows the cursor's eased progress along its path.
+    const progress = cs.cursor.duration > 0 ? ease(local / cs.cursor.duration) : 1;
+    s.values.set(cs.drag.target, cs.drag.from + (cs.drag.to - cs.drag.from) * progress);
+  }
   switch (step.type) {
     case 'click':
     case 'press':

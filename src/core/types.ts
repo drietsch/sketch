@@ -85,8 +85,10 @@ export interface ComponentState {
   pressed?: boolean;
   hovered?: boolean;
   disabled?: boolean;
-  checked?: boolean;
 }
+
+/** A model value a control carries: text, a number, a selection, or several selections. */
+export type ControlValue = string | number | string[];
 
 export type LayoutMode = 'NONE' | 'HORIZONTAL' | 'VERTICAL';
 export type PrimaryAxisAlignItems = 'MIN' | 'CENTER' | 'MAX' | 'SPACE_BETWEEN';
@@ -142,6 +144,14 @@ export interface NodeBase {
   interactive?: boolean;
   /** Re-rolls this node's sketch jitter without changing the document seed. */
   sketchVariant?: number;
+  /**
+   * Model state, Base UI's names. Authored here; the timeline overrides it live
+   * (a click toggles `checked`, `choose` sets `value`) without writing back.
+   */
+  checked?: boolean;
+  open?: boolean;
+  value?: ControlValue;
+  pressed?: boolean;
 }
 
 export interface RectangleNode extends NodeBase {
@@ -229,6 +239,173 @@ export interface WindowNode extends NodeBase, AutoLayoutProps {
   style?: TypeStyle;
 }
 
+export type Orientation = 'horizontal' | 'vertical';
+
+/** Props shared by the in-place controls: an optional label and text styling. */
+interface ControlBase extends NodeBase {
+  /** Label drawn next to the control. */
+  characters?: string;
+  /** Styling of the label. */
+  style?: TypeStyle;
+  state?: ComponentState;
+}
+
+export interface CheckboxNode extends ControlBase {
+  type: 'CHECKBOX';
+  /** A dash instead of a check, for "some of these". */
+  indeterminate?: boolean;
+}
+
+export interface CheckboxGroupNode extends ControlBase {
+  type: 'CHECKBOX_GROUP';
+  options: string[];
+  /** The checked options. */
+  value?: string[];
+  orientation?: Orientation;
+}
+
+export interface SwitchNode extends ControlBase {
+  type: 'SWITCH';
+}
+
+export interface ToggleNode extends ControlBase {
+  type: 'TOGGLE';
+  icon?: string | IconDef;
+}
+
+export interface ToggleGroupNode extends ControlBase {
+  type: 'TOGGLE_GROUP';
+  options: string[];
+  /** One option, or several when `multiple`. */
+  value?: string | string[];
+  multiple?: boolean;
+  orientation?: Orientation;
+}
+
+export interface RadioGroupNode extends ControlBase {
+  type: 'RADIO_GROUP';
+  options: string[];
+  value?: string;
+  orientation?: Orientation;
+}
+
+export interface SliderNode extends ControlBase {
+  type: 'SLIDER';
+  min?: number;
+  max?: number;
+  step?: number;
+  value?: number;
+  width: number;
+}
+
+export interface ProgressNode extends ControlBase {
+  type: 'PROGRESS';
+  value?: number;
+  max?: number;
+  indeterminate?: boolean;
+  width: number;
+}
+
+export interface MeterNode extends ControlBase {
+  type: 'METER';
+  value?: number;
+  min?: number;
+  max?: number;
+  width: number;
+}
+
+export interface SeparatorNode extends NodeBase {
+  type: 'SEPARATOR';
+  orientation?: Orientation;
+  length: number;
+}
+
+export interface AvatarNode extends NodeBase {
+  type: 'AVATAR';
+  /** Initials. */
+  characters?: string;
+  icon?: string | IconDef;
+  size?: number;
+  style?: TypeStyle;
+}
+
+export interface NumberFieldNode extends ControlBase {
+  type: 'NUMBER_FIELD';
+  value?: number;
+  min?: number;
+  max?: number;
+  step?: number;
+  width: number;
+  placeholder?: string;
+}
+
+export interface OtpFieldNode extends ControlBase {
+  type: 'OTP_FIELD';
+  /** Number of character slots. */
+  length?: number;
+  value?: string;
+}
+
+/** Containers: optional size like a frame (required on a FIXED axis), auto-layout props. */
+interface ContainerBase extends NodeBase, AutoLayoutProps {
+  width?: number;
+  height?: number;
+  style?: TypeStyle;
+}
+
+export interface FieldNode extends ContainerBase {
+  type: 'FIELD';
+  label?: string;
+  description?: string;
+  error?: string;
+}
+
+export interface FieldsetNode extends ContainerBase {
+  type: 'FIELDSET';
+  legend?: string;
+}
+
+export interface FormNode extends ContainerBase {
+  type: 'FORM';
+}
+
+export interface ToolbarNode extends ContainerBase {
+  type: 'TOOLBAR';
+  orientation?: Orientation;
+}
+
+export interface CollapsibleNode extends ContainerBase {
+  type: 'COLLAPSIBLE';
+  /** The header text; clicking it toggles `open`. */
+  characters: string;
+  state?: ComponentState;
+}
+
+export interface AccordionItem {
+  label: string;
+  /** Body text shown while the item is open. */
+  characters?: string;
+}
+
+export interface AccordionNode extends NodeBase {
+  type: 'ACCORDION';
+  items: (string | AccordionItem)[];
+  /** Open item label(s). */
+  value?: string | string[];
+  multiple?: boolean;
+  width: number;
+  style?: TypeStyle;
+  state?: ComponentState;
+}
+
+export interface TabsNode extends ContainerBase {
+  type: 'TABS';
+  tabs: string[];
+  /** The active tab; the child at its index is shown, the others hidden. */
+  value?: string;
+  state?: ComponentState;
+}
+
 export type SceneNode =
   | RectangleNode
   | EllipseNode
@@ -239,7 +416,27 @@ export type SceneNode =
   | ButtonNode
   | InputNode
   | FrameNode
-  | WindowNode;
+  | WindowNode
+  | CheckboxNode
+  | CheckboxGroupNode
+  | SwitchNode
+  | ToggleNode
+  | ToggleGroupNode
+  | RadioGroupNode
+  | SliderNode
+  | ProgressNode
+  | MeterNode
+  | SeparatorNode
+  | AvatarNode
+  | NumberFieldNode
+  | OtpFieldNode
+  | FieldNode
+  | FieldsetNode
+  | FormNode
+  | ToolbarNode
+  | CollapsibleNode
+  | AccordionNode
+  | TabsNode;
 
 export type NodeType = SceneNode['type'];
 export type NodeOf<T extends NodeType> = Extract<SceneNode, { type: T }>;
