@@ -17,6 +17,11 @@ import { numberField } from './number-field.js';
 import { otpField } from './otp-field.js';
 import { field, fieldset, form, toolbar } from './form-containers.js';
 import { accordion, collapsible, tabs } from './disclosure.js';
+import { popover, previewCard, tooltip } from './tooltip.js';
+import { contextMenu, menu, menubar, navigationMenu } from './menu.js';
+import { autocomplete, combobox, select } from './select.js';
+import { alertDialog, dialog, drawer, toast } from './dialog.js';
+import { scrollArea } from './scroll-area.js';
 
 const COMPONENTS: { [T in NodeType]?: ComponentDef<NodeOf<T>> } = {
   RECTANGLE: rectangle,
@@ -49,6 +54,21 @@ const COMPONENTS: { [T in NodeType]?: ComponentDef<NodeOf<T>> } = {
   COLLAPSIBLE: collapsible,
   ACCORDION: accordion,
   TABS: tabs,
+  TOOLTIP: tooltip,
+  PREVIEW_CARD: previewCard,
+  POPOVER: popover,
+  MENU: menu,
+  CONTEXT_MENU: contextMenu,
+  MENUBAR: menubar,
+  SELECT: select,
+  COMBOBOX: combobox,
+  AUTOCOMPLETE: autocomplete,
+  DIALOG: dialog,
+  ALERT_DIALOG: alertDialog,
+  DRAWER: drawer,
+  TOAST: toast,
+  NAVIGATION_MENU: navigationMenu,
+  SCROLL_AREA: scrollArea,
 };
 
 export function hasComponent(type: string): type is NodeType {

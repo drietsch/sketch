@@ -203,10 +203,42 @@ export class Scene {
   /** Layout and per-type validation shared by add() and update(). */
   private validateNode(node: SceneNode): string | undefined {
     const def = componentFor(node);
+    const anchor = def.anchor?.(node)?.id;
+    if (anchor === node.id) return 'a node cannot anchor to itself';
+    if (anchor !== undefined && !this.nodes.has(anchor)) return `anchor "${anchor}" does not exist`;
     return (
-      validateLayoutProps(node as unknown as Record<string, unknown>, !!def.resizable, !!def.container) ??
-      def.validate?.(node)
+      validateLayoutProps(
+        node as unknown as Record<string, unknown>,
+        !!def.resizable,
+        !!def.container,
+        !!def.container && !def.intrinsicSize,
+      ) ?? def.validate?.(node)
     );
+  }
+
+  /** Whether the node's centre is inside every clipping ancestor's viewport (false when scrolled out of view). */
+  isInView(id: string): boolean {
+    const b = this.bounds(id);
+    return !this.clippedOut(this.node(id), { x: b.x + b.width / 2, y: b.y + b.height / 2 });
+  }
+
+  /** Whether an ancestor's clip (a scroll area's viewport) excludes the point. */
+  private clippedOut(node: SceneNode, point: Point): boolean {
+    for (let p = node.parent; p !== undefined; p = this.nodes.get(p)?.parent) {
+      const owner = this.nodes.get(p);
+      if (!owner) break;
+      const clip = componentFor(owner).clip?.(this.resolved(p), this.ctx);
+      if (!clip) continue;
+      const o = this.position(p);
+      if (
+        point.x < o.x + clip.x ||
+        point.x > o.x + clip.x + clip.width ||
+        point.y < o.y + clip.y ||
+        point.y > o.y + clip.y + clip.height
+      )
+        return true;
+    }
+    return false;
   }
 
   bringToFront(id: string): void {
@@ -306,6 +338,26 @@ export class Scene {
       point.x <= origin.x + b.x + b.width &&
       point.y >= origin.y + b.y &&
       point.y <= origin.y + b.y + b.height;
+    /** The topmost interactive node among `candidates` under the point, with its in-place region. */
+    const ordinary = (candidates: SceneNode[]): Hit | undefined => {
+      for (let i = candidates.length - 1; i >= 0; i--) {
+        const node = candidates[i];
+        if (!this.isInteractive(node)) continue;
+        if (!inside(this.localBounds(node.id), this.position(node.id))) continue;
+        if (this.clippedOut(node, point)) continue;
+        const def = componentFor(node);
+        if (render && def.regions) {
+          const origin = this.position(node.id);
+          const regions = def.regions(this.resolved(node.id), render(node));
+          for (let r = regions.length - 1; r >= 0; r--) {
+            if (regions[r].layer !== 'overlay' && inside(regions[r].bounds, origin))
+              return { id: node.id, region: regions[r] };
+          }
+        }
+        return { id: node.id };
+      }
+      return undefined;
+    };
     if (render) {
       for (let i = nodes.length - 1; i >= 0; i--) {
         const node = nodes[i];
@@ -314,27 +366,23 @@ export class Scene {
         const origin = this.position(node.id);
         const regions = def.regions(this.resolved(node.id), render(node));
         for (let r = regions.length - 1; r >= 0; r--) {
-          if (regions[r].layer === 'overlay' && inside(regions[r].bounds, origin))
-            return { id: node.id, region: regions[r] };
+          if (regions[r].layer === 'overlay' && inside(regions[r].bounds, origin)) {
+            // The popup's own children (a dialog's buttons) sit above its body.
+            const descendants = nodes.filter((n) => this.isDescendant(n.id, node.id));
+            return ordinary(descendants) ?? { id: node.id, region: regions[r] };
+          }
         }
       }
     }
-    for (let i = nodes.length - 1; i >= 0; i--) {
-      const node = nodes[i];
-      if (!this.isInteractive(node)) continue;
-      if (!inside(this.localBounds(node.id), this.position(node.id))) continue;
-      const def = componentFor(node);
-      if (render && def.regions) {
-        const origin = this.position(node.id);
-        const regions = def.regions(this.resolved(node.id), render(node));
-        for (let r = regions.length - 1; r >= 0; r--) {
-          if (regions[r].layer !== 'overlay' && inside(regions[r].bounds, origin))
-            return { id: node.id, region: regions[r] };
-        }
-      }
-      return { id: node.id };
+    return ordinary(nodes);
+  }
+
+  /** Whether `id` is below `ancestor` in the tree. */
+  isDescendant(id: string, ancestor: string): boolean {
+    for (let p = this.nodes.get(id)?.parent; p !== undefined; p = this.nodes.get(p)?.parent) {
+      if (p === ancestor) return true;
     }
-    return undefined;
+    return false;
   }
 
   /** Per-node version, bumped by update(); `undefined` for unknown ids. */

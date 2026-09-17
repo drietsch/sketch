@@ -340,4 +340,182 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
       .toggle('logs');
     return demo;
   },
+
+  /** MENU, CONTEXT_MENU, SELECT, COMBOBOX and AUTOCOMPLETE opening and choosing over a timeline. */
+  menusAndSelects(seed = 23) {
+    const demo = createDemo({ width: 560, height: 420, seed });
+    demo.menu({
+      id: 'file',
+      x: 20,
+      y: 20,
+      characters: 'File',
+      items: ['New', 'Open…', '-', { label: 'Quit', icon: 'log-out' }],
+    });
+    demo.select({
+      id: 'country',
+      x: 20,
+      y: 80,
+      width: 200,
+      options: ['Austria', 'Germany', 'Spain'],
+      value: 'Austria',
+    });
+    demo.combobox({
+      id: 'city',
+      below: 'country',
+      gap: 14,
+      width: 200,
+      options: ['Berlin', 'Bern', 'Vienna'],
+      placeholder: 'City',
+    });
+    demo.autocomplete({
+      id: 'q',
+      below: 'city',
+      gap: 14,
+      width: 200,
+      options: ['Invoices', 'Inventory', 'Reports'],
+      placeholder: 'Search…',
+    });
+    demo.rectangle({ id: 'canvas', x: 300, y: 20, width: 240, height: 200, strokeDashes: [6, 4] });
+    demo.text({
+      id: 'hint',
+      parent: 'canvas',
+      x: 12,
+      y: 12,
+      characters: 'Click for options',
+      style: { fills: [{ type: 'SOLID', color: '#8a8f98' }] },
+    });
+    demo.contextMenu({
+      id: 'ctx',
+      anchor: 'canvas',
+      items: ['Paste', 'Select all', '-', { label: 'Clear', icon: 'x', disabled: true }],
+    });
+    demo.timeline
+      .choose('file', 'Quit')
+      .choose('country', 'Germany')
+      .type('city', 'Ber')
+      .choose('city', 'Bern')
+      .type('q', 'Inv')
+      .open('ctx')
+      .choose('ctx', 'Select all');
+    return demo;
+  },
+
+  /** TOOLTIP, POPOVER, DIALOG, ALERT_DIALOG, DRAWER and TOAST: hover, open, act, close. */
+  dialogs(seed = 29) {
+    const demo = createDemo({ width: 560, height: 420, seed });
+    demo.button({ id: 'save', x: 20, y: 20, characters: 'Save', icon: 'check', variant: 'primary' });
+    demo.tooltip({ id: 'save-tip', anchor: 'save', characters: 'Saves to the cloud' });
+    demo.button({ id: 'share', rightOf: 'save', gap: 12, characters: 'Share', icon: 'send' });
+    demo.popover({
+      id: 'share-pop',
+      anchor: 'share',
+      title: 'Share',
+      description: 'Anyone with the link can view.',
+      width: 240,
+    });
+    demo.input({ id: 'share-email', parent: 'share-pop', width: 216, placeholder: 'name@example.com' });
+    demo.button({ id: 'share-send', parent: 'share-pop', characters: 'Send', variant: 'primary' });
+    demo.button({ id: 'trash', rightOf: 'share', gap: 12, characters: 'Delete', icon: 'x' });
+    demo.dialog({
+      id: 'confirm',
+      title: 'Delete this file?',
+      description: 'It moves to the trash for 30 days.',
+      width: 320,
+    });
+    demo.toolbar({
+      id: 'confirm-actions',
+      parent: 'confirm',
+      height: 48,
+      layoutSizingHorizontal: 'FILL',
+      primaryAxisAlignItems: 'MAX',
+      fills: [],
+      strokes: [],
+    });
+    demo.button({ id: 'cancel', parent: 'confirm-actions', characters: 'Cancel' });
+    demo.button({ id: 'delete', parent: 'confirm-actions', characters: 'Delete', variant: 'primary' });
+    demo.alertDialog({ id: 'lost', title: 'Connection lost', description: 'Reconnecting…', width: 280 });
+    demo.button({ id: 'prefs', x: 20, y: 80, characters: 'Settings', icon: 'settings' });
+    demo.drawer({ id: 'settings', title: 'Settings', width: 240 });
+    demo.switch({ id: 'dark', parent: 'settings', characters: 'Dark mode' });
+    demo.toast({
+      id: 'saved',
+      title: 'Saved',
+      description: 'All changes are in the cloud.',
+      variant: 'success',
+      open: false,
+    });
+    demo.toast({ id: 'offline', title: 'You are offline', variant: 'warning', stack: 1 });
+    demo.timeline
+      .hover('save')
+      .open('share-pop')
+      .type('share-email', 'grace@example.com')
+      .click('share-send')
+      .close('share-pop')
+      .open('confirm')
+      .click('delete')
+      .close('confirm')
+      .open('lost')
+      .wait(300)
+      .close('lost')
+      .open('settings')
+      .toggle('dark')
+      .close('settings')
+      .open('saved')
+      .wait(400);
+    return demo;
+  },
+
+  /** MENUBAR, NAVIGATION_MENU, PREVIEW_CARD and a SCROLL_AREA that is dragged. */
+  navigation(seed = 31) {
+    const demo = createDemo({ width: 560, height: 420, seed });
+    demo.menubar({
+      id: 'bar',
+      x: 20,
+      y: 20,
+      menus: [
+        { label: 'File', items: ['New', 'Open'] },
+        { label: 'Edit', items: [{ label: 'Cut', icon: 'copy' }, 'Paste', '-', { label: 'Undo', disabled: true }] },
+      ],
+    });
+    demo.navigationMenu({
+      id: 'nav',
+      x: 300,
+      y: 20,
+      items: [{ label: 'Products', items: ['Editor', 'Player'] }, { label: 'Pricing' }],
+    });
+    demo.text({
+      id: 'owner',
+      x: 20,
+      y: 80,
+      characters: 'Owned by @ada',
+      style: { fills: [{ type: 'SOLID', color: '#2f6fed' }] },
+    });
+    demo.previewCard({
+      id: 'ada',
+      anchor: 'owner',
+      title: 'Ada Lovelace',
+      description: 'Analyst, metaphysician, and founder of scientific computing.',
+    });
+    demo.scrollArea({
+      id: 'list',
+      x: 20,
+      y: 120,
+      width: 260,
+      height: 160,
+      contentHeight: 330,
+      layoutMode: 'VERTICAL',
+      padding: 10,
+      itemSpacing: 8,
+    });
+    for (let i = 1; i <= 10; i++) demo.text({ id: `row-${i}`, parent: 'list', characters: `Document ${i}.pdf` });
+    demo.timeline
+      .choose('bar', 'Edit')
+      .choose('bar', 'Paste')
+      .choose('nav', 'Products')
+      .choose('nav', 'Player')
+      .hover('owner')
+      .drag('list', 170)
+      .click('row-9');
+    return demo;
+  },
 };

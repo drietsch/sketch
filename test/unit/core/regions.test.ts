@@ -232,10 +232,13 @@ describe('regions and actions', () => {
     const demo = make();
     demo.timeline.hover('w');
     const steps = byAuthored(demo, 0);
-    expect(steps.map((s) => s.step.type)).toEqual(['moveCursor', 'hover']);
+    // The delay, then a rest so what opened can be seen.
+    expect(steps.map((s) => s.step.type)).toEqual(['moveCursor', 'hover', 'hover']);
     expect(steps[1].end - steps[1].start).toBe(400);
+    expect(steps[2].end - steps[2].start).toBe(700);
     expect(demo.stateAt(steps[1].end - 1).open.get('w')).toBeUndefined();
     expect(steps[1].effects).toEqual([{ id: 'w', open: true }]);
+    expect(demo.stateAt(steps[1].end).open.get('w')).toBe(true);
     expect(demo.stateAt(demo.duration).open.get('w')).toBe(true);
   });
 

@@ -406,6 +406,161 @@ export interface TabsNode extends ContainerBase {
   state?: ComponentState;
 }
 
+// --- popups and overlays -------------------------------------------------
+
+export type Side = 'top' | 'bottom' | 'left' | 'right';
+
+/** A popup attached to another node: placed against it, opened from it. Its own x and y are ignored. */
+interface AnchoredBase extends NodeBase {
+  /** The node this popup is attached to. */
+  anchor: string;
+  side?: Side;
+  style?: TypeStyle;
+}
+
+export interface TooltipNode extends AnchoredBase {
+  type: 'TOOLTIP';
+  characters: string;
+  /** Hover time before it shows, in ms. */
+  delay?: number;
+}
+
+export interface PreviewCardNode extends AnchoredBase {
+  type: 'PREVIEW_CARD';
+  title?: string;
+  description?: string;
+  width?: number;
+  delay?: number;
+}
+
+export interface PopoverNode extends AnchoredBase, AutoLayoutProps {
+  type: 'POPOVER';
+  title?: string;
+  description?: string;
+  width?: number;
+  height?: number;
+}
+
+/** An entry of a menu: a label, a rich item, or '-' for a separator. */
+export type MenuItem = string | { label: string; icon?: string | IconDef; disabled?: boolean };
+
+export interface MenuNode extends NodeBase {
+  type: 'MENU';
+  /** The trigger button's label and icon. */
+  characters?: string;
+  icon?: string | IconDef;
+  items: MenuItem[];
+  /** The last chosen item. */
+  value?: string;
+  width?: number;
+  style?: TypeStyle;
+  state?: ComponentState;
+}
+
+export interface ContextMenuNode extends AnchoredBase {
+  type: 'CONTEXT_MENU';
+  items: MenuItem[];
+  value?: string;
+  width?: number;
+}
+
+export interface MenuGroup {
+  label: string;
+  items: MenuItem[];
+}
+
+export interface MenubarNode extends NodeBase {
+  type: 'MENUBAR';
+  menus: MenuGroup[];
+  /** The open menu's label. */
+  value?: string;
+  style?: TypeStyle;
+  state?: ComponentState;
+}
+
+export interface SelectNode extends ControlBase {
+  type: 'SELECT';
+  options: string[];
+  value?: string;
+  placeholder?: string;
+  width: number;
+}
+
+export interface ComboboxNode extends ControlBase {
+  type: 'COMBOBOX';
+  options: string[];
+  value?: string;
+  placeholder?: string;
+  width: number;
+}
+
+export interface AutocompleteNode extends ControlBase {
+  type: 'AUTOCOMPLETE';
+  options: string[];
+  value?: string;
+  placeholder?: string;
+  width: number;
+}
+
+/** A modal panel centred over a dimmed page. Children are its content, laid out below the description. */
+export interface DialogNode extends ContainerBase {
+  type: 'DIALOG';
+  title: string;
+  description?: string;
+}
+
+export interface AlertDialogNode extends ContainerBase {
+  type: 'ALERT_DIALOG';
+  title: string;
+  description?: string;
+}
+
+export interface DrawerNode extends ContainerBase {
+  type: 'DRAWER';
+  title?: string;
+  side?: Side;
+}
+
+export type ToastVariant = 'info' | 'success' | 'warning' | 'error';
+
+export interface ToastNode extends NodeBase {
+  type: 'TOAST';
+  title: string;
+  description?: string;
+  variant?: ToastVariant;
+  /** Position in the stack from the corner, 0 first. */
+  stack?: number;
+  width?: number;
+  style?: TypeStyle;
+}
+
+export interface NavigationItem {
+  label: string;
+  /** Entries of the dropdown this item opens. */
+  items?: MenuItem[];
+}
+
+export interface NavigationMenuNode extends NodeBase {
+  type: 'NAVIGATION_MENU';
+  items: NavigationItem[];
+  /** The open item's label. */
+  value?: string;
+  style?: TypeStyle;
+  state?: ComponentState;
+}
+
+/** A viewport over taller content: children are clipped and scrolled by `value`. */
+export interface ScrollAreaNode extends ContainerBase {
+  type: 'SCROLL_AREA';
+  width: number;
+  height: number;
+  /** Height of the content, which sets the scroll range. */
+  contentHeight: number;
+  /** Scroll offset in px. */
+  value?: number;
+  state?: ComponentState;
+}
+
 export type SceneNode =
   | RectangleNode
   | EllipseNode
@@ -436,7 +591,22 @@ export type SceneNode =
   | ToolbarNode
   | CollapsibleNode
   | AccordionNode
-  | TabsNode;
+  | TabsNode
+  | TooltipNode
+  | PreviewCardNode
+  | PopoverNode
+  | MenuNode
+  | ContextMenuNode
+  | MenubarNode
+  | SelectNode
+  | ComboboxNode
+  | AutocompleteNode
+  | DialogNode
+  | AlertDialogNode
+  | DrawerNode
+  | ToastNode
+  | NavigationMenuNode
+  | ScrollAreaNode;
 
 export type NodeType = SceneNode['type'];
 export type NodeOf<T extends NodeType> = Extract<SceneNode, { type: T }>;
