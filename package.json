@@ -83,6 +83,7 @@
     "@vitest/coverage-v8": "^4.1.11",
     "hachure-fill": "^0.5.2",
     "happy-dom": "^20.14.5",
+    "opentype.js": "^2.0.0",
     "oxlint": "^1.83.0",
     "path-data-parser": "^0.1.0",
     "points-on-curve": "^0.2.0",

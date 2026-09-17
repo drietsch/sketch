@@ -88,8 +88,12 @@ it live and returns a player with `play`, `pause`, `seek`.
   you want to see one after the other.
 - **A dialog's own buttons do not close it.** Write
   `.click('cancel').close('dlg')`; `close` clicks the dialog's close mark.
-- **Text is ASCII plus `…`, curly quotes and dashes.** Other characters draw
-  as a small box.
+- **Text is drawn in capitals.** The default font (Grape Nuts) folds every
+  string to upper case when drawing and measuring; the model keeps the case
+  you wrote, so `type('email', 'ada@example.com')` shows ADA@EXAMPLE.COM and
+  `nodeAt` reports `'ada@example.com'`. It covers ASCII, Latin-1 letters and
+  symbols, `…`, curly quotes and dashes; other characters draw as a small
+  box. For mixed case, pass `font: HERSHEY_FONT` to `createDemo`.
 - **Keep the whole scene inside the document.** Nothing is clipped except
   inside a `SCROLL_AREA`; anchored popups are pulled back onto the page.
 
@@ -284,5 +288,5 @@ Errors are thrown synchronously and name the node or the step.
 - Seeking to `t` equals playing to `t`; nothing depends on the order frames
   are asked for.
 - The SVG is self-contained: no external fonts, images or scripts. Text is
-  drawn as strokes.
+  drawn as paths from glyph data that ships with the package.
 - A mounted document patched by the player serialises to exactly `toSVG(t)`.

@@ -4,7 +4,7 @@ import type { Part } from '../components/types.js';
 import type { StrokeFont } from '../text/font.js';
 import { layoutText } from '../text/layout.js';
 import { deriveSeed } from '../core/ids.js';
-import { h } from './frame.js';
+import { fmt, h } from './frame.js';
 import type { VElement } from './frame.js';
 import { PRECISION } from './sketch-adapter.js';
 
@@ -27,7 +27,9 @@ export function renderTextPart(gen: RoughGenerator, font: StrokeFont, part: Text
   const scale = font.scale(fontSize);
   const strokeWidth = glyphStrokeWidth(fontSize);
   const capHeight = font.capHeight(fontSize);
-  let d = '';
+  // Sketched strokes (and tofu boxes) go in one stroked path; outline glyphs in one filled path.
+  let stroked = '';
+  let filled = '';
   for (const g of layout.glyphs) {
     const glyph = font.glyph(g.ch);
     const ox = part.x + g.x;
@@ -37,29 +39,67 @@ export function renderTextPart(gen: RoughGenerator, font: StrokeFont, part: Text
       // Tofu: a small box on the baseline, so a missing glyph is visible, not silent.
       const o = strokeOptions(part, deriveSeed(seed, g.index, code, 0), strokeWidth);
       const w = font.advance(g.ch, fontSize);
-      d += pathData(gen.rectangle(ox + w * 0.15, oy - capHeight, w * 0.7, capHeight, o), gen);
+      stroked += pathData(gen.rectangle(ox + w * 0.15, oy - capHeight, w * 0.7, capHeight, o), gen);
       continue;
     }
-    glyph[1].forEach((stroke, strokeIndex) => {
+    const shape = glyph[1];
+    if (typeof shape === 'string') {
+      filled += placeOutline(shape, scale, ox, oy);
+      continue;
+    }
+    shape.forEach((stroke, strokeIndex) => {
       if (stroke.length < 4) return;
       const points: EnginePoint[] = [];
       for (let i = 0; i < stroke.length; i += 2) {
         points.push([ox + stroke[i] * scale, oy + stroke[i + 1] * scale]);
       }
       const o = strokeOptions(part, deriveSeed(seed, g.index, code, strokeIndex), strokeWidth);
-      d += pathData(gen.linearPath(points, o), gen);
+      stroked += pathData(gen.linearPath(points, o), gen);
     });
   }
-  const attrs: VElement['attrs'] = {
-    d: d.trim(),
-    stroke: color,
-    'stroke-width': strokeWidth,
-    fill: 'none',
-    'stroke-linecap': 'round',
-    'stroke-linejoin': 'round',
-  };
-  if (part.style.opacity !== undefined) attrs.opacity = part.style.opacity;
-  return [h('path', attrs)];
+  const out: VElement[] = [];
+  if (filled) {
+    const attrs: VElement['attrs'] = { d: filled, fill: color };
+    if (part.style.opacity !== undefined) attrs.opacity = part.style.opacity;
+    out.push(h('path', attrs));
+  }
+  if (stroked || !filled) {
+    const attrs: VElement['attrs'] = {
+      d: stroked.trim(),
+      stroke: color,
+      'stroke-width': strokeWidth,
+      fill: 'none',
+      'stroke-linecap': 'round',
+      'stroke-linejoin': 'round',
+    };
+    if (part.style.opacity !== undefined) attrs.opacity = part.style.opacity;
+    out.push(h('path', attrs));
+  }
+  return out;
+}
+
+/**
+ * Places a glyph outline: the path data is in font units with absolute
+ * move-tos and relative curves, so every coordinate scales and only the
+ * move-tos translate.
+ */
+function placeOutline(d: string, scale: number, ox: number, oy: number): string {
+  let out = '';
+  let absolute = false;
+  let axis = 0;
+  for (const token of d.match(/[A-Za-z]|-?\d+(?:\.\d+)?/g) ?? []) {
+    if (/[A-Za-z]/.test(token)) {
+      absolute = token === 'M';
+      axis = 0;
+      out += token;
+      continue;
+    }
+    const v = Number(token) * scale + (absolute ? (axis % 2 === 0 ? ox : oy) : 0);
+    const s = fmt(v);
+    out += axis > 0 && !s.startsWith('-') ? ` ${s}` : s;
+    axis += 1;
+  }
+  return out;
 }
 
 function strokeOptions(part: TextPart, seed: number, strokeWidth: number): Options {

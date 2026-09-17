@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { loadDemo, parseDemoJSON } from '../../../src/index.js';
+import { HERSHEY_FONT, loadDemo, parseDemoJSON } from '../../../src/index.js';
 import { migrateV1 } from '../../../src/core/json.js';
 import { SCENES } from '../../support/scenes.js';
 
@@ -19,7 +19,9 @@ describe('version 1 migration', () => {
     ['primitives', 'primitives'],
   ])('%s renders byte-identically to the 0.3.0 fixture', (file, fixture) => {
     const migrated = loadDemo(v1(file));
-    const fresh = SCENES[fixture]();
+    // The fixtures were saved with the Hershey font, which loadDemo finds by name.
+    expect(migrated.font.name).toBe('hershey-sans');
+    const fresh = SCENES[fixture](undefined, HERSHEY_FONT);
     const duration = fresh.duration;
     expect(migrated.duration).toBe(duration);
     for (const t of duration > 0 ? [0, duration / 3, duration] : [0]) {

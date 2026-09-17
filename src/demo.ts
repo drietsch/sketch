@@ -72,7 +72,7 @@ import type { PlayerOptions } from './player/player.js';
 import { SVGNS } from './sketch/index.js';
 import type { NodeInteraction } from './render/build-frame.js';
 import type { Scene as SceneType } from './core/scene.js';
-import { DEFAULT_FONT } from './text/index.js';
+import { BUILTIN_FONTS, DEFAULT_FONT } from './text/index.js';
 import type { StrokeFont } from './text/font.js';
 import { IdCounter } from './core/ids.js';
 import { resolveTheme } from './core/theme.js';
@@ -143,7 +143,8 @@ export interface LoadOptions {
 /** Rebuilds a demo from `toJSON()` output. The result renders byte-identically to the original. */
 export function loadDemo(json: DemoJSON | string, options: LoadOptions = {}): Demo {
   const doc = parseDemoJSON(json);
-  const font = options.font ?? DEFAULT_FONT;
+  // A built-in font is found by its name; any other must be supplied.
+  const font = options.font ?? (doc.font !== undefined ? BUILTIN_FONTS.get(doc.font) : undefined) ?? DEFAULT_FONT;
   if (doc.font !== undefined && doc.font !== font.name) {
     throw new Error(
       `loadDemo: the document uses font "${doc.font}" but "${font.name}" was supplied; pass it via options.font`,

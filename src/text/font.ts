@@ -1,5 +1,7 @@
 /** A glyph as strokes: flat [x0, y0, x1, y1, ...] polylines in font units, baseline at y = 0, y down. */
 export type StrokeGlyph = [advance: number, strokes: number[][]];
+/** A glyph as a filled outline: SVG path data in font units, baseline at y = 0, y down. */
+export type OutlineGlyph = [advance: number, d: string];
 
 export interface StrokeFontData {
   name: string;
@@ -9,7 +11,16 @@ export interface StrokeFontData {
   /** Lowest point below the baseline any glyph reaches, in font units. */
   descent: number;
   capHeight: number;
-  glyphs: Record<string, StrokeGlyph>;
+  /**
+   * `stroke` (default): polylines, drawn as sketched strokes. `outline`:
+   * filled paths, drawn as they are (a handwriting font brings its own look).
+   */
+  kind?: 'stroke' | 'outline';
+  /** Every character is folded to upper case before lookup and measurement. */
+  uppercase?: boolean;
+  /** Line height as a multiple of the font size. Defaults to 1.4. */
+  lineHeight?: number;
+  glyphs: Record<string, StrokeGlyph | OutlineGlyph>;
 }
 
 /** Advance (in em) for characters the font has no glyph for; they draw as a small box. */
@@ -32,13 +43,25 @@ export class StrokeFont {
     return fontSize / this.data.unitsPerEm;
   }
 
-  glyph(ch: string): StrokeGlyph | undefined {
-    return this.data.glyphs[ch];
+  /** Whether glyphs are filled outlines rather than sketched strokes. */
+  get outline(): boolean {
+    return this.data.kind === 'outline';
+  }
+
+  /** The character a glyph is looked up under: the capital, for an upper-case font. */
+  fold(ch: string): string {
+    if (!this.data.uppercase) return ch;
+    const up = ch.toUpperCase();
+    return [...up].length === 1 ? up : ch;
+  }
+
+  glyph(ch: string): StrokeGlyph | OutlineGlyph | undefined {
+    return this.data.glyphs[this.fold(ch)];
   }
 
   /** Advance width of one character in px. */
   advance(ch: string, fontSize: number): number {
-    const glyph = this.data.glyphs[ch];
+    const glyph = this.data.glyphs[this.fold(ch)];
     return glyph ? glyph[0] * this.scale(fontSize) : TOFU_ADVANCE * fontSize;
   }
 
@@ -67,6 +90,6 @@ export class StrokeFont {
   }
 
   lineHeight(fontSize: number): number {
-    return LINE_HEIGHT * fontSize;
+    return (this.data.lineHeight ?? LINE_HEIGHT) * fontSize;
   }
 }
