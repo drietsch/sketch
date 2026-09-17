@@ -1,7 +1,7 @@
 .cache
 .DS_Store
 node_modules
-dist
+/dist/
 coverage
 *.tsbuildinfo
 z
