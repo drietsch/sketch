@@ -18,6 +18,8 @@ import type {
 import type { IconDef } from './icons/types.js';
 import { resolvePlacement, splitPlacement } from './core/place.js';
 import type { Placement } from './core/place.js';
+import { expandPadding, layoutModeOf } from './core/layout.js';
+import type { Padding } from './core/layout.js';
 import type { DistributiveOmit } from './core/types.js';
 import { getIcon, isBuiltinIcon } from './icons/registry.js';
 import { flatten, parseDemoJSON } from './core/json.js';
@@ -68,8 +70,22 @@ export type RelativeProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' | '
   y?: number;
 } & Placement;
 
-/** What every factory accepts: literal coordinates, or a placement relative to another node. */
-export type NodeProps<N extends SceneNode> = Props<N> | RelativeProps<N>;
+/**
+ * Node props for a child of an auto-layout container: the layout decides the
+ * position, so `x`/`y` are optional (and ignored unless ABSOLUTE).
+ */
+export type LayoutChildProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' | 'y'> & {
+  id?: string;
+  parent: string;
+  x?: number;
+  y?: number;
+};
+
+/** What every factory accepts: literal coordinates, a placement relative to another node, or a slot in a layout container. */
+export type NodeProps<N extends SceneNode> = Props<N> | RelativeProps<N> | LayoutChildProps<N>;
+
+/** Container props may also give `padding` as a shorthand for the four sides. */
+export type ContainerProps<N extends FrameNode | WindowNode> = NodeProps<N> & { padding?: Padding };
 
 export function createDemo(options: DemoOptions): Demo {
   return new Demo(options);
@@ -208,17 +224,19 @@ export class Demo {
     return this.add('INPUT', props);
   }
 
-  /** A container, optionally with a title bar. */
-  frame(props: NodeProps<FrameNode>): FrameNode {
+  /** A container, optionally with a title bar and auto-layout. */
+  frame(props: ContainerProps<FrameNode>): FrameNode {
     return this.add('FRAME', props);
   }
 
-  window(props: DistributiveOmit<NodeProps<WindowNode>, 'chrome'> & { chrome?: WindowNode['chrome'] }): WindowNode {
+  window(
+    props: DistributiveOmit<ContainerProps<WindowNode>, 'chrome'> & { chrome?: WindowNode['chrome'] },
+  ): WindowNode {
     return this.add('WINDOW', { chrome: 'window', ...props } as NodeProps<WindowNode>);
   }
 
   /** A window with browser chrome: navigation arrows and an address bar. */
-  browser(props: DistributiveOmit<NodeProps<WindowNode>, 'chrome'>): WindowNode {
+  browser(props: DistributiveOmit<ContainerProps<WindowNode>, 'chrome'>): WindowNode {
     return this.add('WINDOW', { ...props, chrome: 'browser' } as NodeProps<WindowNode>);
   }
 
@@ -336,12 +354,24 @@ export class Demo {
     return out;
   }
 
+  private patchedCache?: { compiled: CompiledTimeline; key: string; scene: SceneType };
+
+  /**
+   * The scene with the timeline's `set` patches applied. Cached per distinct
+   * patch state, so a player pays one clone (and one layout) per `set` step
+   * rather than per frame.
+   */
   private patchedScene(state: InteractionState): SceneType {
     if (state.patches.size === 0) return this.scene;
+    const compiled = this.compiled();
+    const key = JSON.stringify([...state.patches]);
+    const c = this.patchedCache;
+    if (c && c.compiled === compiled && c.key === key) return c.scene;
     const scene = this.scene.clone();
     for (const [id, patch] of state.patches) {
       if (scene.has(id)) scene.update(id, patch);
     }
+    this.patchedCache = { compiled, key, scene };
     return scene;
   }
 
@@ -379,11 +409,22 @@ export class Demo {
 
   private add<T extends NodeType>(type: T, props: NodeProps<NodeOf<T>>): NodeOf<T> {
     const id = props.id ?? this.ids.next(type, (candidate) => this.scene.has(candidate));
-    // Placement keys must never reach the stored node: they would leak into toJSON().
+    // Placement and padding shorthands must never reach the stored node: they would leak into toJSON().
     const { placement, rest } = splitPlacement(id, props as Record<string, unknown>);
+    expandPadding(id, rest);
     if (!placement) {
       if (typeof rest.x !== 'number' || typeof rest.y !== 'number') {
-        throw new Error(`Node "${id}" needs x and y, or a placement (below, above, rightOf, leftOf).`);
+        // A child of an auto-layout container is positioned by the layout: x/y default to 0.
+        const parent = typeof rest.parent === 'string' ? this.scene.get(rest.parent) : undefined;
+        const laidOut =
+          parent !== undefined && layoutModeOf(parent) !== 'NONE' && rest.layoutPositioning !== 'ABSOLUTE';
+        if (!laidOut) {
+          throw new Error(
+            `Node "${id}" needs x and y, a placement (below, above, rightOf, leftOf), or an auto-layout parent.`,
+          );
+        }
+        rest.x ??= 0;
+        rest.y ??= 0;
       }
       return this.scene.add({ ...rest, id, type } as unknown as NodeOf<T>);
     }

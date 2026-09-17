@@ -70,4 +70,6 @@ export interface ComponentDef<N extends SceneNode = SceneNode> {
   contentOffset?(node: N, ctx: LayoutContext): Point;
   focusable?: boolean;
   interactive?: boolean;
+  /** Reads width/height from the node it is given, so layout may set them (FILL). Unset: FILL is rejected. */
+  resizable?: boolean;
 }

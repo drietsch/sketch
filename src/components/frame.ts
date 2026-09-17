@@ -8,23 +8,20 @@ const PADDING_X = 12;
 
 /** A container with an optional title bar. Children are positioned from below the bar. */
 export const frame: ComponentDef<FrameNode> = {
+  resizable: true,
   interactive: true,
-  localBounds: (node) => ({ x: 0, y: 0, width: node.width, height: node.height }),
+  // Under HUG sizing the layout pass supplies the size; a bare HUG frame measures as 0 until then.
+  localBounds: (node) => ({ x: 0, y: 0, width: node.width ?? 0, height: node.height ?? 0 }),
   contentOffset: (node) => ({ x: 0, y: node.title ? FRAME_TITLE_HEIGHT : 0 }),
   expand: (node, ctx) => {
     const { theme, font } = ctx;
     const overrides: Parameters<typeof rectPart>[3]['overrides'] = {};
     if (!hasOwnFill(node)) overrides.fill = theme.surface;
     if (node.sketch?.fillStyle === undefined) overrides.fillStyle = 'solid';
+    const width = node.width ?? 0;
+    const height = node.height ?? 0;
     const parts: Part[] = [
-      rectPart('box', theme, node, {
-        x: 0,
-        y: 0,
-        width: node.width,
-        height: node.height,
-        cornerRadius: theme.radius,
-        overrides,
-      }),
+      rectPart('box', theme, node, { x: 0, y: 0, width, height, cornerRadius: theme.radius, overrides }),
     ];
     if (node.title) {
       const fontSize = fontSizeOf(node.style, theme);
@@ -41,7 +38,7 @@ export const frame: ComponentDef<FrameNode> = {
           kind: 'line',
           x1: 0,
           y1: FRAME_TITLE_HEIGHT,
-          x2: node.width,
+          x2: width,
           y2: FRAME_TITLE_HEIGHT,
           style: resolvePartStyle(theme, node, { fill: undefined }),
         },

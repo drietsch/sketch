@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>sketch: auto-layout</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 24px;
+        background: #f4f4f6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Auto-layout</h1>
+    <p>
+      A vertical frame that hugs its content, inputs that fill its width, and a horizontal row with space between its
+      buttons. No child has coordinates.
+    </p>
+    <div id="out"></div>
+    <script type="module">
+      import { createDemo } from '../dist/index.js';
+
+      const demo = createDemo({ width: 900, height: 520, seed: 21, background: null });
+      demo.browser({ id: 'browser', x: 40, y: 30, width: 820, height: 460, url: 'https://example.com/signup' });
+      demo.frame({
+        id: 'form',
+        parent: 'browser',
+        x: 190,
+        y: 40,
+        width: 440,
+        title: 'Create account',
+        layoutMode: 'VERTICAL',
+        itemSpacing: 12,
+        padding: 24,
+        layoutSizingVertical: 'HUG',
+      });
+      const muted = { fills: [{ type: 'SOLID', color: { r: 0.54, g: 0.56, b: 0.6 } }] };
+      demo.text({ parent: 'form', characters: 'Name', style: muted });
+      demo.input({
+        id: 'name',
+        parent: 'form',
+        width: 100,
+        layoutSizingHorizontal: 'FILL',
+        placeholder: 'Ada Lovelace',
+      });
+      demo.text({ parent: 'form', characters: 'Email', style: muted });
+      demo.input({
+        id: 'email',
+        parent: 'form',
+        width: 100,
+        layoutSizingHorizontal: 'FILL',
+        placeholder: 'ada@example.com',
+      });
+      demo.frame({
+        id: 'actions',
+        parent: 'form',
+        height: 36,
+        layoutMode: 'HORIZONTAL',
+        layoutSizingHorizontal: 'FILL',
+        primaryAxisAlignItems: 'SPACE_BETWEEN',
+        counterAxisAlignItems: 'CENTER',
+        fills: [],
+        strokes: [],
+      });
+      demo.button({ id: 'cancel', parent: 'actions', characters: 'Cancel' });
+      demo.button({ id: 'create', parent: 'actions', characters: 'Create account', variant: 'primary', icon: 'check' });
+
+      demo.timeline
+        .moveCursor('name')
+        .click()
+        .type('name', 'Ada Lovelace')
+        .moveCursor('email')
+        .click()
+        .type('email', 'ada@example.com')
+        .wait(200)
+        .set('form', { itemSpacing: 24 })
+        .wait(600)
+        .moveCursor('create')
+        .click()
+        .wait(600);
+
+      const player = demo.mount(document.getElementById('out'), { loop: true, autoplay: true });
+      window.__demo = {
+        demo,
+        player,
+        duration: player.duration,
+        nodeIds: demo.scene.visible().map((n) => n.id),
+        seek: (t) => {
+          player.pause();
+          player.seek(t);
+        },
+      };
+    </script>
+  </body>
+</html>

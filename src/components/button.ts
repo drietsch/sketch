@@ -17,6 +17,7 @@ function metrics(node: ButtonNode, measure: (text: string) => number) {
 }
 
 export const button: ComponentDef<ButtonNode> = {
+  resizable: true,
   focusable: true,
   interactive: true,
   localBounds: (node, ctx) => {

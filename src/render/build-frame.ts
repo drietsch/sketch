@@ -55,7 +55,7 @@ function nodeGroup(scene: Scene, node: SceneNode, ctx: FrameContext): { group: F
   if (live?.caretVisible !== undefined) rctx.caretVisible = live.caretVisible;
   const variant = node.sketchVariant ?? 0;
   const children: VElement[] = [];
-  for (const part of def.expand(node, rctx)) {
+  for (const part of def.expand(scene.resolved(node.id), rctx)) {
     const seed = deriveSeed(ctx.seed, 'sketch', node.id, part.key, variant);
     children.push(...ctx.adapter.render(node.id, part, seed));
   }
@@ -104,5 +104,7 @@ export function group(key: string, attrs: VElement['attrs'], children: VElement[
   const hash = fnv1a32(rest + inner).toString(36);
   const el: VElement = { tag: 'g', attrs: { 'data-key': key, 'data-h': hash, ...attrs } };
   if (children.length) el.children = children;
-  return { key, hash, el, html: `<g data-key="${key}" data-h="${hash}"${rest}>${inner}</g>` };
+  // Same form as serialize(): an empty group self-closes.
+  const open = `<g data-key="${key}" data-h="${hash}"${rest}`;
+  return { key, hash, el, html: inner ? `${open}>${inner}</g>` : `${open}/>` };
 }

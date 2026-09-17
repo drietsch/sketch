@@ -88,12 +88,43 @@ export interface ComponentState {
   checked?: boolean;
 }
 
+export type LayoutMode = 'NONE' | 'HORIZONTAL' | 'VERTICAL';
+export type PrimaryAxisAlignItems = 'MIN' | 'CENTER' | 'MAX' | 'SPACE_BETWEEN';
+export type CounterAxisAlignItems = 'MIN' | 'CENTER' | 'MAX';
+export type LayoutSizing = 'FIXED' | 'HUG' | 'FILL';
+export type LayoutPositioning = 'AUTO' | 'ABSOLUTE';
+
+/**
+ * Figma-style auto-layout of a container's content area. Every default is
+ * omitted from the stored node. Children of a container with a `layoutMode`
+ * are positioned by the layout unless they are `layoutPositioning: 'ABSOLUTE'`.
+ */
+export interface AutoLayoutProps {
+  /** NONE (default): children sit at their own x/y. */
+  layoutMode?: LayoutMode;
+  /** Gap between children along the primary axis. */
+  itemSpacing?: number;
+  paddingLeft?: number;
+  paddingRight?: number;
+  paddingTop?: number;
+  paddingBottom?: number;
+  /** Where children sit along the primary axis when there is slack. */
+  primaryAxisAlignItems?: PrimaryAxisAlignItems;
+  /** Where each child sits across the primary axis. */
+  counterAxisAlignItems?: CounterAxisAlignItems;
+}
+
 export interface NodeBase {
   id: string;
-  /** Position relative to the parent's content origin, or the document. */
+  /** Position relative to the parent's content origin, or the document. Ignored for AUTO children of a layout container. */
   x: number;
   y: number;
   parent?: string;
+  /** ABSOLUTE children of a layout container keep their x/y and are skipped by the layout. */
+  layoutPositioning?: LayoutPositioning;
+  /** FIXED (default) uses the stored size; HUG wraps content (containers); FILL takes the parent's available space. */
+  layoutSizingHorizontal?: LayoutSizing;
+  layoutSizingVertical?: LayoutSizing;
   /** Defaults to true. An invisible node and its children are not rendered, hit-tested or targetable. */
   visible?: boolean;
   /** Fill paints, bottom to top; the first visible one is drawn. Absent: the component's default; empty: no fill. */
@@ -175,17 +206,19 @@ export interface InputNode extends NodeBase {
   state?: ComponentState;
 }
 
-/** A container, optionally with a title bar. Children are positioned from below the bar. */
-export interface FrameNode extends NodeBase {
+/** A container, optionally with a title bar and auto-layout. Children are positioned from below the bar. */
+export interface FrameNode extends NodeBase, AutoLayoutProps {
   type: 'FRAME';
-  width: number;
-  height: number;
+  /** Required unless the horizontal sizing is HUG or FILL. */
+  width?: number;
+  /** Required unless the vertical sizing is HUG or FILL. */
+  height?: number;
   title?: string;
   /** Styling of the title. */
   style?: TypeStyle;
 }
 
-export interface WindowNode extends NodeBase {
+export interface WindowNode extends NodeBase, AutoLayoutProps {
   type: 'WINDOW';
   width: number;
   height: number;

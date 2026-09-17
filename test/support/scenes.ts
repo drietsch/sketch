@@ -132,6 +132,57 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
     return demo;
   },
 
+  /** A form laid out by auto-layout: a HUG frame, FILL inputs, a SPACE_BETWEEN button row. */
+  layoutForm(seed = 21) {
+    const demo = createDemo({ width: 520, height: 420, seed });
+    demo.frame({
+      id: 'form',
+      x: 40,
+      y: 40,
+      width: 440,
+      title: 'Create account',
+      layoutMode: 'VERTICAL',
+      itemSpacing: 12,
+      padding: 24,
+      layoutSizingVertical: 'HUG',
+    });
+    demo.text({
+      id: 'name-label',
+      parent: 'form',
+      characters: 'Name',
+      style: { fills: [{ type: 'SOLID', color: '#8a8f98' }] },
+    });
+    demo.input({ id: 'name', parent: 'form', width: 100, layoutSizingHorizontal: 'FILL', placeholder: 'Ada Lovelace' });
+    demo.text({
+      id: 'email-label',
+      parent: 'form',
+      characters: 'Email',
+      style: { fills: [{ type: 'SOLID', color: '#8a8f98' }] },
+    });
+    demo.input({
+      id: 'email',
+      parent: 'form',
+      width: 100,
+      layoutSizingHorizontal: 'FILL',
+      placeholder: 'ada@example.com',
+    });
+    demo.frame({
+      id: 'actions',
+      parent: 'form',
+      height: 36,
+      layoutMode: 'HORIZONTAL',
+      layoutSizingHorizontal: 'FILL',
+      primaryAxisAlignItems: 'SPACE_BETWEEN',
+      counterAxisAlignItems: 'CENTER',
+      fills: [],
+      strokes: [],
+    });
+    demo.button({ id: 'cancel', parent: 'actions', characters: 'Cancel' });
+    demo.button({ id: 'create', parent: 'actions', characters: 'Create', variant: 'primary', icon: 'check' });
+    demo.timeline.moveCursor('name').click().type('name', 'Ada').moveCursor('create').click();
+    return demo;
+  },
+
   primitives(seed = 42) {
     const demo = createDemo({ width: 640, height: 360, seed });
     const styles = ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots', 'dashed', 'zigzag-line'] as const;

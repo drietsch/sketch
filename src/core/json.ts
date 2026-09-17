@@ -3,6 +3,8 @@ import type { IconDef } from '../icons/types.js';
 import { hasComponent } from '../components/index.js';
 import { isValidId } from './ids.js';
 import { validatePaints } from './paint.js';
+import { validateLayoutProps } from './layout.js';
+import { componentFor } from '../components/index.js';
 
 /** A node in a document: a scene node without `parent`, with its children nested. */
 export type DocumentNode = DistributiveOmit<SceneNode, 'parent'> & { children?: DocumentNode[] };
@@ -48,10 +50,13 @@ function validateNode(node: unknown, at: string): void {
     throw new DemoJSONError(`${label} has unknown type ${JSON.stringify(node.type)}`);
   }
   for (const key of ['x', 'y'] as const) {
-    if (typeof node[key] !== 'number' || !Number.isFinite(node[key])) {
+    // Optional for children a layout positions; must be a number when present.
+    if (node[key] !== undefined && (typeof node[key] !== 'number' || !Number.isFinite(node[key]))) {
       throw new DemoJSONError(`${label}.${key} must be a finite number`);
     }
   }
+  const layoutProblem = validateLayoutProps(node, !!componentFor(node as unknown as SceneNode).resizable);
+  if (layoutProblem) throw new DemoJSONError(`${label}: ${layoutProblem}`);
   if ('parent' in node) throw new DemoJSONError(`${label} must nest under its parent instead of naming it`);
   for (const key of ['fills', 'strokes'] as const) {
     const problem = validatePaints(node[key], `${label}.${key}`);
@@ -117,6 +122,8 @@ export function* flatten(children: readonly DocumentNode[], parent?: string): Ge
   for (const doc of children) {
     const { children: nested, ...rest } = doc;
     const node = { ...rest } as SceneNode;
+    node.x ??= 0;
+    node.y ??= 0;
     if (parent !== undefined) node.parent = parent;
     yield node;
     if (nested) yield* flatten(nested, doc.id);

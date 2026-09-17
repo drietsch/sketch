@@ -1,5 +1,6 @@
 import type { Scene } from './scene.js';
 import type { SceneNode } from './types.js';
+import { layoutModeOf } from './layout.js';
 
 export type Align = 'start' | 'center' | 'end';
 export type PlaceDirection = 'below' | 'above' | 'rightOf' | 'leftOf';
@@ -138,6 +139,14 @@ export function resolvePlacement(scene: Scene, node: SceneNode, placement: Place
   const parent = opts.parentGiven ? node.parent : refNode.parent;
   if (parent !== undefined && !scene.has(parent)) {
     throw new Error(`Unknown parent "${parent}" for node "${id}"`);
+  }
+  if (parent !== undefined) {
+    const mode = layoutModeOf(scene.node(parent));
+    if (mode !== 'NONE' && node.layoutPositioning !== 'ABSOLUTE') {
+      throw new Error(
+        `Cannot place "${id}" ${direction} "${ref}": parent "${parent}" has layoutMode ${mode} and positions its children itself. Drop the placement, or set layoutPositioning: 'ABSOLUTE'.`,
+      );
+    }
   }
   const origin = parent === undefined ? { x: 0, y: 0 } : scene.contentOrigin(parent);
   const resolved: Resolved = {

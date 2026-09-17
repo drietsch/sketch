@@ -3,6 +3,8 @@ import type { DocumentNode } from './json.js';
 import { assertValidId } from './ids.js';
 import { componentFor, hasComponent } from '../components/index.js';
 import type { LayoutContext } from '../components/types.js';
+import { computeLayout, stripLayoutDefaults, validateLayoutProps } from './layout.js';
+import type { Layout, LayoutEntry } from './layout.js';
 
 const ROOT = '';
 
@@ -26,6 +28,7 @@ export class Scene {
   private readonly children = new Map<string, string[]>([[ROOT, []]]);
   private readonly versions = new Map<string, number>();
   private version_ = 0;
+  private layoutCache?: { version: number; layout: Layout };
 
   constructor(
     private readonly ctx: LayoutContext,
@@ -51,6 +54,9 @@ export class Scene {
     }
     const stored = { ...node };
     if (stored.parent === undefined) delete stored.parent;
+    const problem = validateLayoutProps(stored as unknown as Record<string, unknown>, !!componentFor(stored).resizable);
+    if (problem) throw new Error(`Node "${stored.id}": ${problem}`);
+    stripLayoutDefaults(stored as unknown as Record<string, unknown>);
     this.nodes.set(stored.id, stored);
     this.children.get(parent)!.push(stored.id);
     this.children.set(stored.id, []);
@@ -101,6 +107,9 @@ export class Scene {
       this.reparent(id, ROOT);
     }
     const stored = next as unknown as N;
+    const problem = validateLayoutProps(next, !!componentFor(stored).resizable);
+    if (problem) throw new Error(`Node "${id}": ${problem}`);
+    stripLayoutDefaults(next);
     this.nodes.set(id, stored);
     this.touch(id);
     return stored;
@@ -178,25 +187,42 @@ export class Scene {
     });
   }
 
+  /**
+   * Laid-out geometry of every node: absolute position and bounds, and the
+   * node view with any size the layout decided. Recomputed when `version`
+   * changes; otherwise free.
+   */
+  layout(): Layout {
+    const c = this.layoutCache;
+    if (c && c.version === this.version_) return c.layout;
+    const layout = computeLayout(this, this.ctx);
+    this.layoutCache = { version: this.version_, layout };
+    return layout;
+  }
+
+  private entry(id: string): LayoutEntry {
+    const e = this.layout().get(id);
+    if (!e) {
+      throw new Error(`Unknown node "${id}"`);
+    }
+    return e;
+  }
+
+  /** The node with its laid-out width/height; what the renderer draws. Identical to `node(id)` unless layout resized it. */
+  resolved<N extends SceneNode = SceneNode>(id: string): N {
+    return this.entry(id).node as N;
+  }
+
   /** Absolute position of the node's origin in document space. */
   position(id: string): Point {
-    const node = this.node(id);
-    let x = node.x;
-    let y = node.y;
-    let parentId = node.parent;
-    while (parentId !== undefined) {
-      const parent = this.node(parentId);
-      const offset = componentFor(parent).contentOffset?.(parent, this.ctx) ?? { x: 0, y: 0 };
-      x += parent.x + offset.x;
-      y += parent.y + offset.y;
-      parentId = parent.parent;
-    }
-    return { x, y };
+    const p = this.entry(id).position;
+    return { x: p.x, y: p.y };
   }
 
   /** Bounds in the node's own coordinate space. */
   localBounds(id: string): Bounds {
-    return this.measure(this.node(id));
+    const { position: p, bounds: b } = this.entry(id);
+    return { x: b.x - p.x, y: b.y - p.y, width: b.width, height: b.height };
   }
 
   /**
@@ -210,15 +236,12 @@ export class Scene {
 
   /** Absolute bounds in document space. */
   bounds(id: string): Bounds {
-    const local = this.localBounds(id);
-    const pos = this.position(id);
-    return { x: pos.x + local.x, y: pos.y + local.y, width: local.width, height: local.height };
+    return { ...this.entry(id).bounds };
   }
 
   /** Where children of this node are positioned from, in document space. */
   contentOrigin(id: string): Point {
-    const node = this.node(id);
-    const pos = this.position(id);
+    const { node, position: pos } = this.entry(id);
     const offset = componentFor(node).contentOffset?.(node, this.ctx) ?? { x: 0, y: 0 };
     return { x: pos.x + offset.x, y: pos.y + offset.y };
   }
