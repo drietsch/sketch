@@ -8,13 +8,13 @@
   "contributors": [
     "Preet Shihn <preetshihn@gmail.com> (author of roughjs, from which src/sketch is derived)"
   ],
-  "homepage": "https://github.com/drietsch/sketchdemo#readme",
+  "homepage": "https://github.com/drietsch/roughjs#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/drietsch/sketchdemo.git"
+    "url": "git+https://github.com/drietsch/roughjs.git"
   },
   "bugs": {
-    "url": "https://github.com/drietsch/sketchdemo/issues"
+    "url": "https://github.com/drietsch/roughjs/issues"
   },
   "keywords": [
     "sketch",
