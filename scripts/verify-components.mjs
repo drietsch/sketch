@@ -17,6 +17,7 @@ const registry = read('src/components/index.ts');
 const demo = read('src/demo.ts');
 const entry = read('src/index.ts');
 const readme = read('README.md');
+const api = read('docs/API.md');
 const scenes = read('test/support/scenes.ts');
 
 const mapSource = registry.slice(
@@ -45,10 +46,25 @@ for (const type of types) {
   check(`${type}: a factory adds it`, demo.includes(`this.add('${type}'`));
   check(`${type}: the node interface is exported`, new RegExp(`\\b${pascal(type)}Node\\b`).test(entry));
   check(`${type}: the README table lists it`, readme.includes(`| \`${type}\``));
+  check(`${type}: the API reference lists it`, api.includes(`| \`${type}\``));
   check(
     `${type}: a fixture uses it`,
     factories.some((f) => scenes.includes(`demo.${f}(`)),
     `expected demo.${factories.join('( or demo.')}(`,
+  );
+}
+
+// Every public method of Demo and Timeline is documented in the API reference.
+const methodsOf = (source, className) => {
+  const body = source.slice(source.indexOf(`export class ${className}`));
+  return [...body.matchAll(/^  (?:get )?([a-zA-Z]\w*)\(/gm)].map((m) => m[1]).filter((n) => n !== 'constructor');
+};
+const demoMethods = methodsOf(demo, 'Demo').filter((n) => !/^(compiled)$/.test(n));
+const timelineMethods = methodsOf(read('src/timeline/timeline.ts'), 'Timeline');
+for (const name of new Set([...demoMethods, ...timelineMethods])) {
+  check(
+    `API reference documents ${name}()`,
+    api.includes(`\`${name}(`) || api.includes(`\`${name}\``) || api.includes(`demo.${name}`),
   );
 }
 

@@ -36,6 +36,7 @@ jobs:
       - run: pnpm run verify:components
       # Build before typecheck: the dist test is typechecked against dist/.
       - run: pnpm run build
+      - run: pnpm run verify:docs
       - run: pnpm run typecheck
 
       - uses: actions/upload-artifact@v4
@@ -130,7 +131,9 @@ jobs:
             console.log(files.join('\n'));
             const forbidden = ['src/', 'test/', 'examples/', 'docs/', 'vendor/', 'scripts/', '.github/',
                                'tsconfig.json', '.oxlintrc.json', 'pnpm-lock.yaml'];
-            const leaked = files.filter(f => forbidden.some(p => f.startsWith(p)));
+            // The two agent-facing docs ship on purpose; the briefing and everything else under docs/ does not.
+            const allowed = new Set(['docs/API.md', 'docs/for-agents.md']);
+            const leaked = files.filter(f => !allowed.has(f) && forbidden.some(p => f.startsWith(p)));
             if (leaked.length) {
               console.error('::error::tarball contains: ' + leaked.join(', '));
               process.exit(1);

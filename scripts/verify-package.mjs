@@ -31,10 +31,19 @@ try {
   );
   const tarball = join(dir, packed[0].filename);
 
-  // Nothing beyond the build output and docs may ship.
+  // Nothing beyond the build output and the two agent-facing docs may ship.
   const forbidden = ['src/', 'test/', 'scripts/', 'examples/', 'docs/', 'vendor/', '.github/', 'tsconfig.json'];
-  const leaked = packed[0].files.map((f) => f.path).filter((f) => forbidden.some((p) => f.startsWith(p)));
+  const allowed = new Set(['docs/API.md', 'docs/for-agents.md']);
+  const leaked = packed[0].files
+    .map((f) => f.path)
+    .filter((f) => !allowed.has(f) && forbidden.some((p) => f.startsWith(p)));
   check('tarball contains no source, tests or config', leaked.length === 0, leaked.join(', '));
+  const shipped = packed[0].files.map((f) => f.path);
+  check(
+    'tarball ships the agent docs',
+    [...allowed, 'llms.txt'].every((f) => shipped.includes(f)),
+    [...allowed, 'llms.txt'].filter((f) => !shipped.includes(f)).join(', '),
+  );
 
   writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'consumer', type: 'module', private: true }));
   run('npm', ['install', '--no-audit', '--no-fund', tarball], dir);
