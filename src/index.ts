@@ -1,7 +1,9 @@
 // Public entry point.
 
-export { createDemo, Demo } from './demo.js';
-export type { DemoOptions, Props } from './demo.js';
+export { createDemo, loadDemo, Demo } from './demo.js';
+export type { DemoOptions, LoadOptions, Props } from './demo.js';
+export { DemoJSONError, parseDemoJSON } from './core/json.js';
+export type { DemoJSON } from './core/json.js';
 export { Scene } from './core/scene.js';
 export { DEFAULT_THEME } from './core/theme.js';
 export { deriveSeed } from './core/ids.js';

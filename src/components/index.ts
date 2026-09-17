@@ -1,6 +1,10 @@
 import type { NodeOf, NodeType, SceneNode } from '../core/types.js';
 import type { ComponentDef } from './types.js';
 import { ellipse, icon, line, path, rect, text } from './primitives.js';
+import { button } from './button.js';
+import { input } from './input.js';
+import { panel } from './panel.js';
+import { window } from './window.js';
 
 const COMPONENTS: { [T in NodeType]?: ComponentDef<NodeOf<T>> } = {
   rect,
@@ -9,6 +13,10 @@ const COMPONENTS: { [T in NodeType]?: ComponentDef<NodeOf<T>> } = {
   path,
   text,
   icon,
+  button,
+  input,
+  panel,
+  window,
 };
 
 export function hasComponent(type: string): type is NodeType {

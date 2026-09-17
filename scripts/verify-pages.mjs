@@ -74,7 +74,8 @@ for (const rel of pages) {
       const demo = window.__demo;
       if (demo) {
         const svg = svgs[0];
-        const groups = svg.querySelectorAll('g[data-key]').length;
+        // Reserved keys (__focus, __cursor) are chrome, not scene nodes.
+        const groups = [...svg.querySelectorAll('g[data-key]')].filter((g) => !g.dataset.key.startsWith('__')).length;
         if (groups !== demo.nodeIds.length) out.push(`expected ${demo.nodeIds.length} node groups, found ${groups}`);
         if (demo.duration > 0) {
           if (!svg.querySelector('g[data-key="__cursor"]')) out.push('no cursor group');

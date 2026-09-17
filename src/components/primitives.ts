@@ -3,7 +3,6 @@ import type { Bounds, EllipseNode, IconNode, LineNode, PathNode, RectNode, TextN
 import type { ComponentDef } from './types.js';
 import { resolvePartStyle } from './style.js';
 import { layoutText } from '../text/layout.js';
-import { resolveIcon } from '../icons/registry.js';
 
 export const DEFAULT_ICON_SIZE = 20;
 
@@ -121,7 +120,7 @@ export const icon: ComponentDef<IconNode> = {
       x: 0,
       y: 0,
       size: node.size ?? DEFAULT_ICON_SIZE,
-      icon: resolveIcon(node.icon),
+      icon: ctx.icons(node.icon),
       color: node.style?.color ?? node.style?.stroke ?? ctx.theme.stroke,
       style: resolvePartStyle(ctx.theme, node.style),
     },

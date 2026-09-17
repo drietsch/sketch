@@ -1,8 +1,11 @@
 import { Scene } from './core/scene.js';
 import type {
+  ButtonNode,
   EllipseNode,
   IconNode,
+  InputNode,
   LineNode,
+  PanelNode,
   PathNode,
   RectNode,
   SceneNode,
@@ -10,7 +13,12 @@ import type {
   Theme,
   NodeType,
   NodeOf,
+  WindowNode,
 } from './core/types.js';
+import type { IconDef } from './icons/types.js';
+import { getIcon, isBuiltinIcon } from './icons/registry.js';
+import { parseDemoJSON } from './core/json.js';
+import type { DemoJSON } from './core/json.js';
 import { DEFAULT_FONT } from './text/index.js';
 import type { StrokeFont } from './text/font.js';
 import { IdCounter } from './core/ids.js';
@@ -40,6 +48,39 @@ export function createDemo(options: DemoOptions): Demo {
   return new Demo(options);
 }
 
+export interface LoadOptions {
+  /** Supplies a custom stroke font when the document was saved with one. */
+  font?: StrokeFont;
+}
+
+/** Rebuilds a demo from `toJSON()` output. The result renders byte-identically to the original. */
+export function loadDemo(json: DemoJSON | string, options: LoadOptions = {}): Demo {
+  const doc = parseDemoJSON(json);
+  const font = options.font ?? DEFAULT_FONT;
+  if (doc.font !== undefined && doc.font !== font.name) {
+    throw new Error(
+      `loadDemo: the document uses font "${doc.font}" but "${font.name}" was supplied; pass it via options.font`,
+    );
+  }
+  const demo = new Demo({
+    width: doc.width,
+    height: doc.height,
+    seed: doc.seed,
+    theme: doc.theme,
+    background: doc.background ?? null,
+    font,
+  });
+  for (const [name, def] of Object.entries(doc.icons ?? {})) demo.registerIcon(name, def);
+  doc.nodes.forEach((node, i) => {
+    try {
+      demo.scene.add(node);
+    } catch (e) {
+      throw new Error(`loadDemo: nodes[${i}]: ${(e as Error).message}`, { cause: e });
+    }
+  });
+  return demo;
+}
+
 /**
  * A demo: a scene plus (later) a timeline, and everything needed to render
  * either as an SVG string or into a live document.
@@ -52,6 +93,8 @@ export class Demo {
   readonly background: string | undefined;
   readonly font: StrokeFont;
   readonly scene: Scene;
+  /** Icons registered on this demo only; they travel with toJSON(). */
+  readonly icons = new Map<string, IconDef>();
 
   private readonly ids = new IdCounter();
   private readonly adapter: SketchAdapter;
@@ -67,7 +110,25 @@ export class Demo {
     this.background = options.background === null ? undefined : (options.background ?? this.theme.background);
     this.font = options.font ?? DEFAULT_FONT;
     this.adapter = new SketchAdapter(this.font);
-    this.scene = new Scene({ theme: this.theme, font: this.font });
+    this.scene = new Scene({ theme: this.theme, font: this.font, icons: (icon) => this.resolveIcon(icon) });
+  }
+
+  /** Registers an icon for this demo only. Per-demo icons win over global and built-in ones. */
+  registerIcon(name: string, def: IconDef): void {
+    if (!name || !Array.isArray(def.nodes)) {
+      throw new Error(`registerIcon: expected a name and an icon definition with nodes; got "${name}"`);
+    }
+    this.icons.set(name, def);
+  }
+
+  /** Resolves an icon reference: per-demo registrations first, then global ones, then built-ins. */
+  resolveIcon(icon: string | IconDef): IconDef {
+    if (typeof icon !== 'string') return icon;
+    const def = this.icons.get(icon) ?? getIcon(icon);
+    if (!def) {
+      throw new Error(`Unknown icon "${icon}". Register it with registerIcon() or pass the definition directly.`);
+    }
+    return def;
   }
 
   rect(props: Props<RectNode>): RectNode {
@@ -94,6 +155,27 @@ export class Demo {
     return this.add('icon', props);
   }
 
+  button(props: Props<ButtonNode>): ButtonNode {
+    return this.add('button', props);
+  }
+
+  input(props: Props<InputNode>): InputNode {
+    return this.add('input', props);
+  }
+
+  panel(props: Props<PanelNode>): PanelNode {
+    return this.add('panel', props);
+  }
+
+  window(props: Omit<Props<WindowNode>, 'chrome'> & { chrome?: WindowNode['chrome'] }): WindowNode {
+    return this.add('window', { chrome: 'window', ...props });
+  }
+
+  /** A window with browser chrome: navigation arrows and an address bar. */
+  browser(props: Omit<Props<WindowNode>, 'chrome'>): WindowNode {
+    return this.add('window', { ...props, chrome: 'browser' });
+  }
+
   /** Removes a node (and its children) and forgets its cached geometry. */
   remove(id: string): void {
     const ids = [id, ...this.descendants(id)];
@@ -107,7 +189,13 @@ export class Demo {
     return buildFrame(
       this.scene,
       { width: this.width, height: this.height },
-      { seed: this.seed, theme: this.theme, font: this.font, adapter: this.adapter },
+      {
+        seed: this.seed,
+        theme: this.theme,
+        font: this.font,
+        icons: (icon) => this.resolveIcon(icon),
+        adapter: this.adapter,
+      },
       this.background,
     );
   }
@@ -115,6 +203,35 @@ export class Demo {
   /** The frame at time t as a complete SVG document string. */
   toSVG(t = 0): string {
     return frameToSVG(this.frame(t));
+  }
+
+  /**
+   * A plain, JSON-serialisable description of the whole demo. Icons referred
+   * to by name that are not built in are embedded so the document stands alone.
+   */
+  toJSON(): DemoJSON {
+    const nodes = this.scene.toJSON();
+    const icons: Record<string, IconDef> = {};
+    for (const [name, def] of this.icons) icons[name] = def;
+    for (const node of nodes) {
+      const ref = node.type === 'icon' || node.type === 'button' ? node.icon : undefined;
+      if (typeof ref === 'string' && !(ref in icons) && !isBuiltinIcon(ref)) {
+        const def = getIcon(ref);
+        if (def) icons[ref] = def;
+      }
+    }
+    const doc: DemoJSON = {
+      version: 1,
+      width: this.width,
+      height: this.height,
+      seed: this.seed,
+      theme: { ...this.theme },
+      background: this.background ?? null,
+      font: this.font.name,
+      nodes,
+    };
+    if (Object.keys(icons).length) doc.icons = icons;
+    return doc;
   }
 
   private add<T extends NodeType>(type: T, props: Props<NodeOf<T>>): NodeOf<T> {

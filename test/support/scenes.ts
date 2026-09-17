@@ -39,6 +39,53 @@ export const SCENES: Record<string, (seed?: number) => Demo> = {
     return demo;
   },
 
+  /** The briefing's login mockup, with every component state exercised. */
+  loginForm(seed = 42) {
+    const demo = createDemo({ width: 900, height: 600, seed, background: null });
+    demo.browser({ id: 'browser', x: 40, y: 30, width: 820, height: 540, url: 'https://example.com/login' });
+    demo.panel({ id: 'card', parent: 'browser', x: 210, y: 70, width: 400, height: 330, title: 'Welcome back' });
+    demo.text({ id: 'email-label', parent: 'card', x: 24, y: 20, text: 'Email', style: { color: '#8a8f98' } });
+    demo.input({ id: 'email', parent: 'card', x: 24, y: 44, width: 352, placeholder: 'you@example.com' });
+    demo.text({ id: 'password-label', parent: 'card', x: 24, y: 100, text: 'Password', style: { color: '#8a8f98' } });
+    demo.input({
+      id: 'password',
+      parent: 'card',
+      x: 24,
+      y: 124,
+      width: 352,
+      value: 'hunter2',
+      state: { focused: true },
+    });
+    demo.button({
+      id: 'login',
+      parent: 'card',
+      x: 24,
+      y: 190,
+      width: 352,
+      text: 'Sign in',
+      variant: 'primary',
+      icon: 'log-in',
+    });
+    demo.button({ id: 'forgot', parent: 'card', x: 24, y: 240, text: 'Forgot password?' });
+    demo.button({ id: 'hovered', parent: 'card', x: 190, y: 240, text: 'Hovered', state: { hovered: true } });
+    demo.button({ id: 'pressed', parent: 'card', x: 290, y: 240, text: 'Pressed', state: { pressed: true } });
+    demo.icon({ id: 'help', parent: 'browser', x: 780, y: 20, icon: 'info', size: 22, style: { color: '#8a8f98' } });
+    demo.button({ id: 'disabled', parent: 'browser', x: 40, y: 440, text: 'Disabled', state: { disabled: true } });
+    return demo;
+  },
+
+  /** A plain window with a titled panel and mixed content. */
+  window(seed = 5) {
+    const demo = createDemo({ width: 520, height: 360, seed });
+    demo.window({ id: 'win', x: 20, y: 20, width: 480, height: 320, title: 'Preferences' });
+    demo.panel({ id: 'general', parent: 'win', x: 16, y: 16, width: 448, height: 120, title: 'General' });
+    demo.text({ id: 'name-label', parent: 'general', x: 16, y: 14, text: 'Display name' });
+    demo.input({ id: 'name', parent: 'general', x: 160, y: 6, width: 270, value: 'Ada Lovelace' });
+    demo.button({ id: 'save', parent: 'win', x: 360, y: 240, text: 'Save', variant: 'primary', icon: 'check' });
+    demo.button({ id: 'cancel', parent: 'win', x: 270, y: 240, text: 'Cancel' });
+    return demo;
+  },
+
   primitives(seed = 42) {
     const demo = createDemo({ width: 640, height: 360, seed });
     const styles = ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots', 'dashed', 'zigzag-line'] as const;

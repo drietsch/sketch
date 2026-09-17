@@ -47,11 +47,17 @@ export type Part = { key: string; style: PartStyle } & (
 export interface LayoutContext {
   theme: Theme;
   font: StrokeFont;
+  /** Resolves an icon reference (per-demo registrations first, then global, then built-ins). Throws for unknown names. */
+  icons: (icon: string | IconDef) => IconDef;
 }
 
 export interface RenderContext extends LayoutContext {
   /** Effective state: authored state merged with the interaction state at time t. */
   state: ComponentState;
+  /** Live value of an input at time t, when the timeline has typed into it. */
+  value?: string;
+  /** Whether a focused input's caret is in its visible blink phase. Defaults to visible. */
+  caretVisible?: boolean;
 }
 
 export interface ComponentDef<N extends SceneNode = SceneNode> {
