@@ -2,17 +2,17 @@ import { Scene } from './core/scene.js';
 import type {
   ButtonNode,
   EllipseNode,
+  FrameNode,
   IconNode,
   InputNode,
   LineNode,
-  PanelNode,
-  PathNode,
-  RectNode,
+  RectangleNode,
   SceneNode,
   TextNode,
   Theme,
   NodeType,
   NodeOf,
+  VectorNode,
   WindowNode,
 } from './core/types.js';
 import type { IconDef } from './icons/types.js';
@@ -20,7 +20,7 @@ import { resolvePlacement, splitPlacement } from './core/place.js';
 import type { Placement } from './core/place.js';
 import type { DistributiveOmit } from './core/types.js';
 import { getIcon, isBuiltinIcon } from './icons/registry.js';
-import { parseDemoJSON } from './core/json.js';
+import { flatten, parseDemoJSON } from './core/json.js';
 import type { DemoJSON } from './core/json.js';
 import { Timeline } from './timeline/timeline.js';
 import { compile } from './timeline/compile.js';
@@ -98,13 +98,13 @@ export function loadDemo(json: DemoJSON | string, options: LoadOptions = {}): De
     font,
   });
   for (const [name, def] of Object.entries(doc.icons ?? {})) demo.registerIcon(name, def);
-  doc.nodes.forEach((node, i) => {
+  for (const node of flatten(doc.children)) {
     try {
       demo.scene.add(node);
     } catch (e) {
-      throw new Error(`loadDemo: nodes[${i}]: ${(e as Error).message}`, { cause: e });
+      throw new Error(`loadDemo: node "${node.id}": ${(e as Error).message}`, { cause: e });
     }
-  });
+  }
   if (doc.timeline || doc.cursor) {
     const timeline: { version: 1; steps: Step[]; cursor?: { x: number; y: number } } = {
       version: 1,
@@ -175,49 +175,51 @@ export class Demo {
     return def;
   }
 
-  rect(props: NodeProps<RectNode>): RectNode {
-    return this.add('rect', props);
+  rectangle(props: NodeProps<RectangleNode>): RectangleNode {
+    return this.add('RECTANGLE', props);
   }
 
   ellipse(props: NodeProps<EllipseNode>): EllipseNode {
-    return this.add('ellipse', props);
+    return this.add('ELLIPSE', props);
   }
 
   line(props: NodeProps<LineNode>): LineNode {
-    return this.add('line', props);
+    return this.add('LINE', props);
   }
 
-  path(props: NodeProps<PathNode>): PathNode {
-    return this.add('path', props);
+  /** A shape from SVG path data, in local coordinates. */
+  vector(props: NodeProps<VectorNode>): VectorNode {
+    return this.add('VECTOR', props);
   }
 
   text(props: NodeProps<TextNode>): TextNode {
-    return this.add('text', props);
+    return this.add('TEXT', props);
   }
 
   icon(props: NodeProps<IconNode>): IconNode {
-    return this.add('icon', props);
+    return this.add('ICON', props);
   }
 
   button(props: NodeProps<ButtonNode>): ButtonNode {
-    return this.add('button', props);
+    return this.add('BUTTON', props);
   }
 
   input(props: NodeProps<InputNode>): InputNode {
-    return this.add('input', props);
+    return this.add('INPUT', props);
   }
 
-  panel(props: NodeProps<PanelNode>): PanelNode {
-    return this.add('panel', props);
+  /** A container, optionally with a title bar. */
+  frame(props: NodeProps<FrameNode>): FrameNode {
+    return this.add('FRAME', props);
   }
 
   window(props: DistributiveOmit<NodeProps<WindowNode>, 'chrome'> & { chrome?: WindowNode['chrome'] }): WindowNode {
-    return this.add('window', { chrome: 'window', ...props } as NodeProps<WindowNode>);
+    return this.add('WINDOW', { chrome: 'window', ...props } as NodeProps<WindowNode>);
   }
 
   /** A window with browser chrome: navigation arrows and an address bar. */
   browser(props: DistributiveOmit<NodeProps<WindowNode>, 'chrome'>): WindowNode {
-    return this.add('window', { ...props, chrome: 'browser' } as NodeProps<WindowNode>);
+    return this.add('WINDOW', { ...props, chrome: 'browser' } as NodeProps<WindowNode>);
   }
 
   /** Total length of the timeline in ms; 0 for a static scene. */
@@ -245,7 +247,7 @@ export class Demo {
   }
 
   /** The frame at time t (ms) as a virtual SVG tree. Pure: the same inputs always give the same frame. */
-  frame(t = 0): Frame {
+  frameAt(t = 0): Frame {
     const base = { theme: this.theme, font: this.font, icons: (icon: string | IconDef) => this.resolveIcon(icon) };
     const size = { width: this.width, height: this.height };
     if (this.timeline.steps.length === 0) {
@@ -286,7 +288,7 @@ export class Demo {
 
   /** The frame at time t as a complete SVG document string. */
   toSVG(t = 0): string {
-    return frameToSVG(this.frame(t));
+    return frameToSVG(this.frameAt(t));
   }
 
   /**
@@ -305,7 +307,7 @@ export class Demo {
 
   /** Renders the frame at t into an existing <svg>, replacing only what changed. */
   renderInto(svg: SVGSVGElement, t = 0): void {
-    patchDOM(svg, this.frame(t));
+    patchDOM(svg, this.frameAt(t));
   }
 
   /** Every frame of the timeline at a fixed rate, for export. The last frame is always the end. */
@@ -330,7 +332,7 @@ export class Demo {
     if (!patch && value === undefined) return node;
     const out = Object.assign({}, node) as N & { value?: string };
     if (patch) Object.assign(out, patch);
-    if (value !== undefined && node.type === 'input') out.value = value;
+    if (value !== undefined && node.type === 'INPUT') out.value = value;
     return out;
   }
 
@@ -348,25 +350,25 @@ export class Demo {
    * to by name that are not built in are embedded so the document stands alone.
    */
   toJSON(): DemoJSON {
-    const nodes = this.scene.toJSON();
+    const children = this.scene.toJSON();
     const icons: Record<string, IconDef> = {};
     for (const [name, def] of this.icons) icons[name] = def;
-    for (const node of nodes) {
-      const ref = node.type === 'icon' || node.type === 'button' ? node.icon : undefined;
+    for (const node of this.scene.all()) {
+      const ref = node.type === 'ICON' || node.type === 'BUTTON' ? node.icon : undefined;
       if (typeof ref === 'string' && !(ref in icons) && !isBuiltinIcon(ref)) {
         const def = getIcon(ref);
         if (def) icons[ref] = def;
       }
     }
     const doc: DemoJSON = {
-      version: 1,
+      version: 2,
       width: this.width,
       height: this.height,
       seed: this.seed,
       theme: { ...this.theme },
       background: this.background ?? null,
       font: this.font.name,
-      nodes,
+      children,
     };
     if (Object.keys(icons).length) doc.icons = icons;
     const timeline = this.timeline.toJSON();
@@ -395,7 +397,7 @@ export class Demo {
     };
     if (placed.parent !== undefined) node.parent = placed.parent;
     else delete node.parent;
-    if (node.type === 'line') {
+    if (node.type === 'LINE') {
       // A line's geometry is its (x2 - x, y2 - y) vector; a placed line keeps
       // that vector, so x2/y2 are read as offsets from the resolved origin.
       node.x2 = (node.x2 ?? 0) + placed.x;

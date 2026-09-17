@@ -3,12 +3,12 @@ import { Scene } from '../../../src/core/scene.js';
 import { DEFAULT_THEME } from '../../../src/core/theme.js';
 import { DEFAULT_FONT } from '../../../src/text/index.js';
 import { resolveIcon } from '../../../src/icons/index.js';
-import type { RectNode } from '../../../src/core/types.js';
+import type { RectangleNode } from '../../../src/core/types.js';
 
 const make = () => new Scene({ theme: { ...DEFAULT_THEME }, font: DEFAULT_FONT, icons: resolveIcon });
-const rect = (id: string, extra: Partial<RectNode> = {}): RectNode => ({
+const rect = (id: string, extra: Partial<RectangleNode> = {}): RectangleNode => ({
   id,
-  type: 'rect',
+  type: 'RECTANGLE',
   x: 10,
   y: 20,
   width: 100,
@@ -32,26 +32,26 @@ describe('Scene', () => {
     expect(() => s.add(rect('a'))).toThrow(/Duplicate node id "a"/);
     expect(() => s.add(rect('bad id'))).toThrow(/Invalid node id/);
     expect(() => s.add(rect('b', { parent: 'nope' }))).toThrow(/Unknown parent "nope"/);
-    expect(() => s.add({ ...rect('c'), type: 'blob' } as unknown as RectNode)).toThrow(/Unknown node type "blob"/);
+    expect(() => s.add({ ...rect('c'), type: 'blob' } as unknown as RectangleNode)).toThrow(/Unknown node type "blob"/);
   });
 
-  test('update merges shallowly, style one level deep, and bumps versions', () => {
+  test('update merges shallowly, sketch/style/state one level deep, and bumps versions', () => {
     const s = make();
-    s.add(rect('a', { style: { fill: 'red', stroke: 'blue' } }));
+    s.add(rect('a', { sketch: { roughness: 2, bowing: 3 } }));
     const v0 = s.version;
     const n0 = s.nodeVersion('a')!;
-    const next = s.update<RectNode>('a', { x: 99, style: { fill: 'green' } });
+    const next = s.update<RectangleNode>('a', { x: 99, sketch: { roughness: 1 } });
     expect(next.x).toBe(99);
-    expect(next.style).toEqual({ fill: 'green', stroke: 'blue' });
-    expect(s.get<RectNode>('a')!.width).toBe(100);
+    expect(next.sketch).toEqual({ roughness: 1, bowing: 3 });
+    expect(s.get<RectangleNode>('a')!.width).toBe(100);
     expect(s.version).toBeGreaterThan(v0);
     expect(s.nodeVersion('a')).toBe(n0 + 1);
   });
 
   test('update with undefined removes a field', () => {
     const s = make();
-    s.add(rect('a', { radius: 4 }));
-    s.update<RectNode>('a', { radius: undefined });
+    s.add(rect('a', { cornerRadius: 4 }));
+    s.update<RectangleNode>('a', { cornerRadius: undefined });
     expect('radius' in s.get('a')!).toBe(false);
   });
 
@@ -66,9 +66,9 @@ describe('Scene', () => {
 
   test('line and path bounds include negative extents', () => {
     const s = make();
-    s.add({ id: 'l', type: 'line', x: 50, y: 50, x2: 10, y2: 80 });
+    s.add({ id: 'l', type: 'LINE', x: 50, y: 50, x2: 10, y2: 80 });
     expect(s.bounds('l')).toEqual({ x: 10, y: 50, width: 40, height: 30 });
-    s.add({ id: 'p', type: 'path', x: 100, y: 100, d: 'M-10 0 L30 0 L30 20 Z' });
+    s.add({ id: 'p', type: 'VECTOR', x: 100, y: 100, d: 'M-10 0 L30 0 L30 20 Z' });
     expect(s.bounds('p')).toEqual({ x: 90, y: 100, width: 40, height: 20 });
   });
 
@@ -87,7 +87,7 @@ describe('Scene', () => {
 
   test('visible() skips hidden subtrees', () => {
     const s = make();
-    s.add(rect('a', { hidden: true }));
+    s.add(rect('a', { visible: false }));
     s.add(rect('a1', { parent: 'a' }));
     s.add(rect('b'));
     expect(s.visible().map((n) => n.id)).toEqual(['b']);
@@ -122,19 +122,24 @@ describe('Scene', () => {
     s.add(rect('bottom', { x: 0, y: 0, width: 200, height: 200, interactive: true }));
     s.add(rect('top', { x: 50, y: 50, width: 50, height: 50, interactive: true }));
     s.add(rect('plain', { x: 50, y: 50, width: 50, height: 50 }));
-    s.add(rect('ghost', { x: 50, y: 50, width: 50, height: 50, interactive: true, hidden: true }));
+    s.add(rect('ghost', { x: 50, y: 50, width: 50, height: 50, interactive: true, visible: false }));
     expect(s.hitTest({ x: 60, y: 60 })).toBe('top');
     expect(s.hitTest({ x: 10, y: 10 })).toBe('bottom');
     expect(s.hitTest({ x: 500, y: 500 })).toBeUndefined();
   });
 
-  test('toJSON yields plain copies in paint order', () => {
+  test('toJSON nests children under their parent, back to front, without parent keys', () => {
     const s = make();
     s.add(rect('a'));
     s.add(rect('b', { parent: 'a' }));
+    s.add(rect('c', { parent: 'a' }));
+    s.add(rect('d'));
+    s.bringToFront('b');
     const json = s.toJSON();
-    expect(json.map((n) => n.id)).toEqual(['a', 'b']);
+    expect(json.map((n) => n.id)).toEqual(['a', 'd']);
+    expect(json[0].children!.map((n) => n.id)).toEqual(['c', 'b']);
+    expect(json[1].children).toBeUndefined();
     expect(json[0]).not.toBe(s.get('a'));
-    expect(json[1].parent).toBe('a');
+    expect('parent' in json[0].children![0]).toBe(false);
   });
 });

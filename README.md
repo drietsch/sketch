@@ -19,7 +19,7 @@ import { createDemo } from '@drietsch/sketch';
 const demo = createDemo({ width: 900, height: 600, seed: 42 });
 
 demo.input({ id: 'email', x: 250, y: 200, width: 350, placeholder: 'Email' });
-demo.button({ id: 'login', x: 470, y: 300, text: 'Sign in' });
+demo.button({ id: 'login', x: 470, y: 300, characters: 'Sign in' });
 
 demo.timeline.moveCursor('email').click().type('email', 'hello@example.com').moveCursor('login').click();
 
@@ -38,6 +38,14 @@ from a bundler or a `<script type="module">`.
 
 ## Concepts
 
+**Vocabulary.** Nodes, properties and the document follow Figma's naming
+wherever Figma has a name for the concept (`FRAME`, `RECTANGLE`, `TEXT`,
+`characters`, `fills`, `strokes`, `strokeWeight`, `cornerRadius`,
+`textAlignHorizontal`, nested `children`), so anyone, or any agent, who has
+seen Figma's node model can read and write a sketch document without
+learning a second one. What Figma does not have, the hand-drawn look and the
+interaction timeline, lives under its own keys (`sketch`, `timeline`).
+
 **Scene.** What exists: a flat store of nodes addressed by id, each with a
 type, a position and optional `parent`. Children are positioned relative to
 their parent's content area, so moving a window moves everything in it.
@@ -46,9 +54,9 @@ Nodes are created through the demo's factories and edited through the scene:
 `undefined`), `update(id, patch)`, `bounds(id)`, `remove(id)`,
 `bringToFront(id)` and `hitTest(point)` are the whole editing surface.
 
-**Components.** Semantic nodes that expand into sketched parts: `button`,
-`input`, `panel`, `window` and `browser`, next to the primitives `rect`,
-`ellipse`, `line`, `path`, `text` and `icon`. Inputs and buttons are simulated
+**Components.** Semantic nodes that expand into sketched parts: `BUTTON`,
+`INPUT`, `FRAME` and `WINDOW` (plain or browser chrome), next to the
+primitives `RECTANGLE`, `ELLIPSE`, `LINE`, `VECTOR`, `TEXT` and `ICON`. Inputs and buttons are simulated
 graphical controls, not native HTML, so focus rings, carets, hover and
 pressed looks are all drawn and all exportable.
 
@@ -59,7 +67,7 @@ Durations are computed when the timeline is compiled against the scene:
 cursor moves follow Fitts's law along seeded curved paths, clicks hold for a
 human moment, typing has a human cadence. Pass `duration` to override.
 
-**Rendering.** `demo.frame(t)` is a pure function of the document and the
+**Rendering.** `demo.frameAt(t)` is a pure function of the document and the
 time. `toSVG(t)` serialises it; `mount(el)` renders it into a live `<svg>`
 and returns a `Player` with `play`, `pause`, `seek`, `rate`, `loop` and
 events. Between two frames only the groups that changed are rebuilt.
@@ -75,42 +83,76 @@ time gives the same frame whether you jump there or play through.
 
 ### Document
 
-|                                                                    |                                                                                           |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| `createDemo({ width, height, seed?, theme?, background?, font? })` | A new demo. Omit `seed` for a random one and read it back from `demo.seed`.               |
-| `loadDemo(json, { font? })`                                        | Rebuilds a demo from `toJSON()` output; renders identically.                              |
-| `demo.toJSON()`                                                    | A plain document: settings, theme, nodes in paint order, embedded custom icons, timeline. |
-| `demo.frame(t)` / `demo.toSVG(t)`                                  | The frame at `t` ms as a virtual tree or an SVG string.                                   |
-| `demo.frames(fps)`                                                 | Every frame of the timeline, for export.                                                  |
-| `demo.mount(el, { autoplay?, loop?, rate?, clock? })`              | Renders into `el` (a container or an `<svg>`) and returns a `Player`.                     |
-| `demo.nodeAt(id, t)`                                               | A node with the timeline's patches and live value applied at `t`.                         |
-| `demo.duration`                                                    | Length of the timeline in ms.                                                             |
-| `demo.registerIcon(name, def)`                                     | An icon for this demo only; travels with `toJSON()`.                                      |
+|                                                                    |                                                                                                                                       |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `createDemo({ width, height, seed?, theme?, background?, font? })` | A new demo. Omit `seed` for a random one and read it back from `demo.seed`.                                                           |
+| `loadDemo(json, { font? })`                                        | Rebuilds a demo from `toJSON()` output; renders identically.                                                                          |
+| `demo.toJSON()`                                                    | A version 2 document: settings, theme, nested `children` back to front, custom icons, timeline. Version 1 documents load and migrate. |
+| `demo.frameAt(t)` / `demo.toSVG(t)`                                | The frame at `t` ms as a virtual tree or an SVG string.                                                                               |
+| `demo.frames(fps)`                                                 | Every frame of the timeline, for export.                                                                                              |
+| `demo.mount(el, { autoplay?, loop?, rate?, clock? })`              | Renders into `el` (a container or an `<svg>`) and returns a `Player`.                                                                 |
+| `demo.nodeAt(id, t)`                                               | A node with the timeline's patches and live value applied at `t`.                                                                     |
+| `demo.duration`                                                    | Length of the timeline in ms.                                                                                                         |
+| `demo.registerIcon(name, def)`                                     | An icon for this demo only; travels with `toJSON()`.                                                                                  |
 
 ### Nodes
 
 Every factory takes the node's props with an optional `id` (auto-generated as
-`type-n` otherwise) and returns the stored node. Common props: `x`, `y`,
-`parent`, `style`, `hidden`, `interactive`, `sketchVariant`.
+`rectangle-1`, `frame-2`, … otherwise) and returns the stored node. Node
+`type`s are Figma's: `RECTANGLE`, `ELLIPSE`, `LINE`, `VECTOR`, `TEXT`, `FRAME`,
+and sketch's own `ICON`, `BUTTON`, `INPUT`, `WINDOW`.
 
-| Factory                        | Props                                                                             |
-| ------------------------------ | --------------------------------------------------------------------------------- |
-| `demo.rect`                    | `width`, `height`, `radius?`                                                      |
-| `demo.ellipse`                 | `width`, `height`                                                                 |
-| `demo.line`                    | `x2`, `y2`                                                                        |
-| `demo.path`                    | `d` (SVG path data in local coordinates)                                          |
-| `demo.text`                    | `text`, `fontSize?`, `align?` (`start`, `middle`, `end`); `\n` breaks lines       |
-| `demo.icon`                    | `icon` (a built-in name or an icon definition), `size?`                           |
-| `demo.button`                  | `text`, `icon?`, `width?`, `height?`, `variant?` (`default`, `primary`), `state?` |
-| `demo.input`                   | `width`, `height?`, `value?`, `placeholder?`, `state?`                            |
-| `demo.panel`                   | `width`, `height`, `title?`                                                       |
-| `demo.window` / `demo.browser` | `width`, `height`, `title?`, `url?`                                               |
+| Factory                        | Type        | Props                                                                        |
+| ------------------------------ | ----------- | ---------------------------------------------------------------------------- |
+| `demo.rectangle`               | `RECTANGLE` | `width`, `height`, `cornerRadius?`                                           |
+| `demo.ellipse`                 | `ELLIPSE`   | `width`, `height`                                                            |
+| `demo.line`                    | `LINE`      | `x2`, `y2`                                                                   |
+| `demo.vector`                  | `VECTOR`    | `d` (SVG path data in local coordinates)                                     |
+| `demo.text`                    | `TEXT`      | `characters`, `style?` (a `TypeStyle`); `\n` breaks lines                    |
+| `demo.icon`                    | `ICON`      | `icon` (a built-in name or an icon definition), `size?`                      |
+| `demo.button`                  | `BUTTON`    | `characters`, `icon?`, `width?`, `height?`, `variant?` (`primary`), `state?` |
+| `demo.input`                   | `INPUT`     | `width`, `height?`, `value?`, `placeholder?`, `state?`                       |
+| `demo.frame`                   | `FRAME`     | `width`, `height`, `title?` (children start below the title bar)             |
+| `demo.window` / `demo.browser` | `WINDOW`    | `width`, `height`, `title?`, `url?`                                          |
 
-`style` accepts `stroke`, `strokeWidth`, `fill`, `fillStyle` (`hachure`,
-`solid`, `zigzag`, `cross-hatch`, `dots`, `dashed`, `zigzag-line`),
-`roughness`, `bowing`, `hachureGap`, `hachureAngle`, `fillWeight`, `dash`,
-`opacity`, `color` and `fontSize`. `state` accepts `focused`, `pressed`,
-`hovered` and `disabled`.
+Common props on every node: `x`, `y`, `parent`, `visible`, `opacity`,
+`interactive`, `sketchVariant`, and the Figma-shaped visual properties:
+
+- `fills: Paint[]` and `strokes: Paint[]`, bottom to top; the first visible
+  one is drawn. Only `{ type: 'SOLID', color, opacity?, visible? }` is
+  supported. `color` is a Figma `{ r, g, b, a }` in 0..1 or, for convenience,
+  any CSS colour string. Absent means the component's default; an empty array
+  means none.
+- `strokeWeight`, `strokeDashes`, `cornerRadius`.
+- `sketch: { roughness?, bowing?, fillStyle?, hachureGap?, hachureAngle?, fillWeight? }`,
+  the hand-drawn look. `fillStyle` is `hachure` (default), `solid`, `zigzag`,
+  `cross-hatch`, `dots`, `dashed` or `zigzag-line`.
+
+Text-bearing nodes (`TEXT`, `BUTTON`, `INPUT`, `FRAME`, `WINDOW`) take a
+`style: TypeStyle` with `fontSize`, `textAlignHorizontal` (`LEFT`, `CENTER`,
+`RIGHT`) and `fills` for the glyph colour. `state` accepts `focused`,
+`pressed`, `hovered` and `disabled`.
+
+```ts
+demo.rectangle({
+  x: 20,
+  y: 20,
+  width: 120,
+  height: 60,
+  cornerRadius: 8,
+  fills: [{ type: 'SOLID', color: { r: 0.48, g: 0.64, b: 0.97 } }],
+  strokes: [{ type: 'SOLID', color: '#1f2430' }],
+  strokeWeight: 2,
+  strokeDashes: [6, 4],
+  sketch: { fillStyle: 'cross-hatch', roughness: 1.5 },
+});
+demo.text({
+  x: 20,
+  y: 100,
+  characters: 'Hello',
+  style: { fontSize: 18, fills: [{ type: 'SOLID', color: '#2f6fed' }] },
+});
+```
 
 ### Relative placement
 
@@ -119,10 +161,10 @@ already exists. The position is resolved once, when the node is added, and
 stored as plain coordinates; later edits do not reflow neighbours.
 
 ```ts
-demo.text({ id: 'label', parent: 'card', x: 24, y: 20, text: 'Email' });
+demo.text({ id: 'label', parent: 'card', x: 24, y: 20, characters: 'Email' });
 demo.input({ id: 'email', below: 'label', gap: 10, width: 320 });
-demo.button({ id: 'go', below: 'email', gap: 20, text: 'Sign in' });
-demo.button({ id: 'cancel', rightOf: 'go', gap: 12, text: 'Cancel' });
+demo.button({ id: 'go', below: 'email', gap: 20, characters: 'Sign in' });
+demo.button({ id: 'cancel', rightOf: 'go', gap: 12, characters: 'Cancel' });
 ```
 
 - One of `below`, `above`, `rightOf` or `leftOf`, naming the reference node.
@@ -147,7 +189,7 @@ demo.timeline
   .click() // clicks where the cursor is; click('login') moves there first
   .type('email', 'hello') // focuses the input if needed; '\b' deletes
   .wait(300)
-  .set('done', { hidden: false }) // patch a node from this moment on
+  .set('done', { visible: true }) // patch a node from this moment on
   .at(4000)
   .blur(); // start the next step at an absolute time
 ```

@@ -3,7 +3,7 @@ import { SketchAdapter, toOptions } from '../../../src/render/sketch-adapter.js'
 import type { Part, PartStyle } from '../../../src/components/types.js';
 import { DEFAULT_FONT } from '../../../src/text/index.js';
 
-const style: PartStyle = { stroke: '#000', strokeWidth: 1, fillStyle: 'hachure', roughness: 1, bowing: 1 };
+const style: PartStyle = { stroke: '#000', strokeWeight: 1, fillStyle: 'hachure', roughness: 1, bowing: 1 };
 const rect = (extra: Partial<PartStyle> = {}): Part => ({
   key: 'self',
   kind: 'rect',
@@ -60,7 +60,7 @@ describe('SketchAdapter', () => {
 
   test('dash and opacity land on the outline', () => {
     const a = new SketchAdapter(DEFAULT_FONT);
-    const [outline] = a.render('n', rect({ dash: [4, 2], opacity: 0.5 }), 7);
+    const [outline] = a.render('n', rect({ strokeDashes: [4, 2], opacity: 0.5 }), 7);
     expect(outline.attrs['stroke-dasharray']).toBe('4 2');
     expect(outline.attrs.opacity).toBe(0.5);
   });

@@ -35,7 +35,7 @@ export interface PlayerOptions {
 }
 
 /**
- * Plays a demo into an <svg> element. A thin loop over `demo.frame(t)` and
+ * Plays a demo into an <svg> element. A thin loop over `demo.frameAt(t)` and
  * the DOM patcher: it owns the current time and nothing else, so seeking is
  * exact and every frame it shows is the frame `toSVG(t)` would produce.
  */
@@ -123,7 +123,7 @@ export class Player {
 
   /** Re-renders the current time; call after editing the scene or timeline while paused. */
   render(): void {
-    patchDOM(this.svg, this.demo.frame(this.current));
+    patchDOM(this.svg, this.demo.frameAt(this.current));
     this.renderedAt = this.current;
   }
 

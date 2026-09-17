@@ -1,4 +1,5 @@
 import type { Bounds, NodePatch, Point, SceneNode } from './types.js';
+import type { DocumentNode } from './json.js';
 import { assertValidId } from './ids.js';
 import { componentFor, hasComponent } from '../components/index.js';
 import type { LayoutContext } from '../components/types.js';
@@ -75,8 +76,8 @@ export class Scene {
   }
 
   /**
-   * Shallow-merges a patch into the node. `style` and `state` are merged one
-   * level deep so callers can set a single colour or flag. Reparenting is
+   * Shallow-merges a patch into the node. `style`, `sketch` and `state` are
+   * merged one level deep so callers can set a single field or flag. Reparenting is
    * supported by patching `parent`.
    */
   update<N extends SceneNode = SceneNode>(id: string, patch: NodePatch<N>): N {
@@ -86,7 +87,7 @@ export class Scene {
     const p = patch as Record<string, unknown>;
     for (const key of Object.keys(p)) {
       const value = p[key];
-      if ((key === 'style' || key === 'state') && value && typeof value === 'object') {
+      if ((key === 'style' || key === 'state' || key === 'sketch') && value && typeof value === 'object') {
         next[key] = { ...(current[key] as object | undefined), ...(value as object) };
       } else if (value === undefined) {
         delete next[key];
@@ -156,7 +157,7 @@ export class Scene {
     const walk = (parent: string) => {
       for (const id of this.children.get(parent)!) {
         const node = this.nodes.get(id)!;
-        if (node.hidden) continue;
+        if (node.visible === false) continue;
         out.push(node);
         walk(id);
       }
@@ -228,7 +229,7 @@ export class Scene {
   }
 
   isFocusable(node: SceneNode): boolean {
-    return !!componentFor(node).focusable && !node.hidden;
+    return !!componentFor(node).focusable && node.visible !== false;
   }
 
   /** The topmost visible, interactive node containing the point, if any. */
@@ -257,9 +258,18 @@ export class Scene {
     return copy;
   }
 
-  /** Plain copies of every node in paint order. */
-  toJSON(): SceneNode[] {
-    return this.all().map((n) => Object.assign({}, n));
+  /** The document tree: top-level nodes back to front, each with its `children` nested, and no `parent` keys. */
+  toJSON(): DocumentNode[] {
+    const build = (parent: string): DocumentNode[] =>
+      this.children.get(parent)!.map((id) => {
+        const { parent: _omit, ...rest } = this.nodes.get(id)!;
+        void _omit;
+        const doc = rest as DocumentNode;
+        const kids = build(id);
+        if (kids.length) doc.children = kids;
+        return doc;
+      });
+    return build(ROOT);
   }
 
   private reparent(id: string, parent: string): void {

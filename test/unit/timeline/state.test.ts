@@ -6,8 +6,8 @@ function login() {
   const demo = createDemo({ width: 900, height: 600, seed: 42 });
   demo.input({ id: 'email', x: 250, y: 200, width: 350, placeholder: 'Email' });
   demo.input({ id: 'password', x: 250, y: 260, width: 350 });
-  demo.button({ id: 'login', x: 470, y: 300, text: 'Sign in' });
-  demo.panel({ id: 'side', x: 0, y: 0, width: 200, height: 600 });
+  demo.button({ id: 'login', x: 470, y: 300, characters: 'Sign in' });
+  demo.frame({ id: 'side', x: 0, y: 0, width: 200, height: 600 });
   return demo;
 }
 
@@ -78,7 +78,7 @@ describe('stateAt', () => {
     const c = demo.compiled();
     expect(stateAt(c, 0).patches.get('login')).toEqual({ x: 1 });
     expect(stateAt(c, 10).patches.get('login')).toEqual({ x: 1, y: 2 });
-    expect(demo.nodeAt('login', 10)).toMatchObject({ x: 1, y: 2, text: 'Sign in' });
+    expect(demo.nodeAt('login', 10)).toMatchObject({ x: 1, y: 2, characters: 'Sign in' });
     expect(demo.nodeAt('login', -1)).toMatchObject({ x: 470, y: 300 });
   });
 
@@ -122,8 +122,8 @@ describe('frames', () => {
     expect(end).toContain('data-key="__cursor"');
     expect(end).toContain('data-key="__focus"');
     expect(end).toContain('data-for="email"');
-    const mid = demo.frame(demo.duration - 1).groups.find((g) => g.key === 'email')!.html;
-    expect(mid).not.toBe(demo.frame(demo.duration).groups.find((g) => g.key === 'email')!.html);
+    const mid = demo.frameAt(demo.duration - 1).groups.find((g) => g.key === 'email')!.html;
+    expect(mid).not.toBe(demo.frameAt(demo.duration).groups.find((g) => g.key === 'email')!.html);
   });
 
   test('frames() covers the whole timeline and ends exactly at the end', () => {
@@ -137,10 +137,10 @@ describe('frames', () => {
   test('a moved node keeps its geometry across a set patch and back', () => {
     const demo = login();
     demo.timeline.wait(100).set('login', { x: 100 }).wait(100);
-    const before = demo.frame(0).groups.find((g) => g.key === 'login')!.html;
-    const moved = demo.frame(150).groups.find((g) => g.key === 'login')!.html;
+    const before = demo.frameAt(0).groups.find((g) => g.key === 'login')!.html;
+    const moved = demo.frameAt(150).groups.find((g) => g.key === 'login')!.html;
     expect(strip(moved)).toBe(strip(before));
     expect(moved).toContain('translate(100 300)');
-    expect(demo.frame(0).groups.find((g) => g.key === 'login')!.html).toBe(before);
+    expect(demo.frameAt(0).groups.find((g) => g.key === 'login')!.html).toBe(before);
   });
 });

@@ -1,6 +1,7 @@
 import type { InputNode } from '../core/types.js';
 import type { ComponentDef, Part } from './types.js';
 import { centredTextTop, rectPart, textPart } from './common.js';
+import { fontSizeOf, hasOwnFill, textColor } from './style.js';
 import { h } from '../render/frame.js';
 import type { StrokeFont } from '../text/font.js';
 
@@ -28,48 +29,39 @@ export const input: ComponentDef<InputNode> = {
   expand: (node, ctx) => {
     const { theme, font, state } = ctx;
     const height = node.height ?? INPUT_HEIGHT;
-    const fontSize = node.style?.fontSize ?? theme.fontSize;
+    const fontSize = fontSizeOf(node.style, theme);
     const innerWidth = Math.max(0, node.width - INPUT_PADDING_X * 2);
     const value = ctx.value ?? node.value ?? '';
+    const overrides: Parameters<typeof rectPart>[3]['overrides'] = {};
+    if (!hasOwnFill(node)) overrides.fill = theme.surface;
+    if (node.sketch?.fillStyle === undefined) overrides.fillStyle = 'solid';
+    // Focus turns the outline to the accent colour unless the node sets its own strokes.
+    if (state.focused && node.strokes === undefined) overrides.stroke = theme.accent;
     const parts: Part[] = [
-      rectPart('box', theme, {
-        x: 0,
-        y: 0,
-        width: node.width,
-        height,
-        radius: theme.radius,
-        style: node.style,
-        overrides: {
-          fill: node.style?.fill ?? theme.surface,
-          fillStyle: node.style?.fillStyle ?? 'solid',
-          stroke: node.style?.stroke ?? (state.focused ? theme.accent : theme.stroke),
-        },
-      }),
+      rectPart('box', theme, node, { x: 0, y: 0, width: node.width, height, cornerRadius: theme.radius, overrides }),
     ];
     const textTop = centredTextTop(font, fontSize, height);
     let caretX = INPUT_PADDING_X;
     if (value) {
       const shown = visibleValue(font, value, fontSize, innerWidth);
       parts.push(
-        textPart('value', theme, font, {
+        textPart('value', theme, node, {
           x: INPUT_PADDING_X,
           y: textTop,
           text: shown,
           fontSize,
-          color: node.style?.color ?? theme.text,
-          style: node.style,
+          color: textColor(node.style, theme.text),
         }),
       );
       caretX += font.measure(shown, fontSize);
     } else if (node.placeholder) {
       parts.push(
-        textPart('placeholder', theme, font, {
+        textPart('placeholder', theme, node, {
           x: INPUT_PADDING_X,
           y: textTop,
           text: visibleValue(font, node.placeholder, fontSize, innerWidth),
           fontSize,
           color: theme.muted,
-          style: node.style,
         }),
       );
     }

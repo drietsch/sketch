@@ -76,11 +76,11 @@ function focusRing(scene: Scene, node: SceneNode, ctx: FrameContext): FrameGroup
     (gen, o) => gen.roundedRectangle(0, 0, b.width + pad * 2, b.height + pad * 2, ctx.theme.radius + pad, o),
     {
       stroke: ctx.theme.accent,
-      strokeWidth: 1,
+      strokeWeight: 1,
       fillStyle: 'hachure',
       roughness: 0.8,
       bowing: 0.5,
-      dash: [5, 4],
+      strokeDashes: [5, 4],
       disableMultiStroke: true,
     },
     deriveSeed(ctx.seed, 'focus', node.id, Math.round(b.width), Math.round(b.height)),

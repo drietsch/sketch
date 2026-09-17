@@ -1,22 +1,22 @@
 import type { NodeOf, NodeType, SceneNode } from '../core/types.js';
 import type { ComponentDef } from './types.js';
-import { ellipse, icon, line, path, rect, text } from './primitives.js';
+import { ellipse, icon, line, rectangle, text, vector } from './primitives.js';
 import { button } from './button.js';
 import { input } from './input.js';
-import { panel } from './panel.js';
+import { frame } from './frame.js';
 import { window } from './window.js';
 
 const COMPONENTS: { [T in NodeType]?: ComponentDef<NodeOf<T>> } = {
-  rect,
-  ellipse,
-  line,
-  path,
-  text,
-  icon,
-  button,
-  input,
-  panel,
-  window,
+  RECTANGLE: rectangle,
+  ELLIPSE: ellipse,
+  LINE: line,
+  VECTOR: vector,
+  TEXT: text,
+  ICON: icon,
+  BUTTON: button,
+  INPUT: input,
+  FRAME: frame,
+  WINDOW: window,
 };
 
 export function hasComponent(type: string): type is NodeType {

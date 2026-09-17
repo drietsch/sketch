@@ -51,9 +51,9 @@ describe('ids', () => {
 
   test('counter skips taken ids and counts per type', () => {
     const c = new IdCounter();
-    const taken = new Set(['rect-2']);
-    expect(c.next('rect', (id) => taken.has(id))).toBe('rect-1');
-    expect(c.next('rect', (id) => taken.has(id))).toBe('rect-3');
-    expect(c.next('line', (id) => taken.has(id))).toBe('line-1');
+    const taken = new Set(['rectangle-2']);
+    expect(c.next('RECTANGLE', (id) => taken.has(id))).toBe('rectangle-1');
+    expect(c.next('RECTANGLE', (id) => taken.has(id))).toBe('rectangle-3');
+    expect(c.next('LINE', (id) => taken.has(id))).toBe('line-1');
   });
 });

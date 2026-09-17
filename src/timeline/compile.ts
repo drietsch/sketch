@@ -60,7 +60,7 @@ export function compile(timeline: Timeline, scene: Scene, seed: number, size: Si
       if (typeof target !== 'string') return { point: { x: target.x, y: target.y }, width: 16 };
       const node = working.get(target);
       if (!node) throw new CompileError(index, `unknown target "${target}"`);
-      if (node.hidden) throw new CompileError(index, `target "${target}" is hidden`);
+      if (node.visible === false) throw new CompileError(index, `target "${target}" is not visible`);
       const b = working.bounds(target);
       const r = stream('target');
       // Somewhere in the central half of the target, never the exact centre.
@@ -86,7 +86,7 @@ export function compile(timeline: Timeline, scene: Scene, seed: number, size: Si
     const requireInput = (target: string) => {
       const node = working.get(target);
       if (!node) throw new CompileError(index, `unknown target "${target}"`);
-      if (node.type !== 'input') throw new CompileError(index, `target "${target}" is a ${node.type}, not an input`);
+      if (node.type !== 'INPUT') throw new CompileError(index, `target "${target}" is a ${node.type}, not an INPUT`);
       return node;
     };
 

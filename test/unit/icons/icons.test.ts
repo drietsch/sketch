@@ -78,7 +78,7 @@ describe('to-path', () => {
 
 describe('renderIconPart', () => {
   const gen = new RoughGenerator({ seed: 1 });
-  const style = { stroke: '#000', strokeWidth: 1, fillStyle: 'hachure' as const, roughness: 1, bowing: 1 };
+  const style = { stroke: '#000', strokeWeight: 1, fillStyle: 'hachure' as const, roughness: 1, bowing: 1 };
   const part = (icon: Part extends { kind: 'icon' } ? never : Extract<Part, { kind: 'icon' }>['icon']): Part => ({
     key: 'self',
     kind: 'icon',

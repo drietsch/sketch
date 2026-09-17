@@ -7,7 +7,7 @@ export const DEFAULT_THEME: Readonly<Theme> = Object.freeze({
   muted: '#8a8f98',
   surface: '#ffffff',
   background: '#ffffff',
-  strokeWidth: 1.2,
+  strokeWeight: 1.2,
   roughness: 1,
   bowing: 1,
   radius: 6,

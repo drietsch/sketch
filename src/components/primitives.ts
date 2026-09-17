@@ -1,12 +1,12 @@
 import { pointsOnPath } from 'points-on-path';
-import type { Bounds, EllipseNode, IconNode, LineNode, PathNode, RectNode, TextNode } from '../core/types.js';
+import type { Bounds, EllipseNode, IconNode, LineNode, RectangleNode, TextNode, VectorNode } from '../core/types.js';
 import type { ComponentDef } from './types.js';
-import { resolvePartStyle } from './style.js';
+import { fontSizeOf, resolvePartStyle, textColor } from './style.js';
 import { layoutText } from '../text/layout.js';
 
 export const DEFAULT_ICON_SIZE = 20;
 
-export const rect: ComponentDef<RectNode> = {
+export const rectangle: ComponentDef<RectangleNode> = {
   localBounds: (node) => ({ x: 0, y: 0, width: node.width, height: node.height }),
   expand: (node, ctx) => [
     {
@@ -16,8 +16,8 @@ export const rect: ComponentDef<RectNode> = {
       y: 0,
       width: node.width,
       height: node.height,
-      radius: node.radius,
-      style: resolvePartStyle(ctx.theme, node.style),
+      cornerRadius: node.cornerRadius,
+      style: resolvePartStyle(ctx.theme, node),
     },
   ],
 };
@@ -32,7 +32,7 @@ export const ellipse: ComponentDef<EllipseNode> = {
       y: 0,
       width: node.width,
       height: node.height,
-      style: resolvePartStyle(ctx.theme, node.style),
+      style: resolvePartStyle(ctx.theme, node),
     },
   ],
 };
@@ -51,7 +51,7 @@ export const line: ComponentDef<LineNode> = {
       y1: 0,
       x2: node.x2 - node.x,
       y2: node.y2 - node.y,
-      style: resolvePartStyle(ctx.theme, node.style),
+      style: resolvePartStyle(ctx.theme, node),
     },
   ],
 };
@@ -83,25 +83,25 @@ export function pathBounds(d: string): Bounds {
   return bounds;
 }
 
-export const path: ComponentDef<PathNode> = {
+export const vector: ComponentDef<VectorNode> = {
   localBounds: (node) => pathBounds(node.d),
-  expand: (node, ctx) => [{ key: 'self', kind: 'path', d: node.d, style: resolvePartStyle(ctx.theme, node.style) }],
+  expand: (node, ctx) => [{ key: 'self', kind: 'path', d: node.d, style: resolvePartStyle(ctx.theme, node) }],
 };
 
 export const text: ComponentDef<TextNode> = {
   localBounds: (node, ctx) =>
-    layoutText(ctx.font, node.text, node.fontSize ?? node.style?.fontSize ?? ctx.theme.fontSize, node.align).bounds,
+    layoutText(ctx.font, node.characters, fontSizeOf(node.style, ctx.theme), node.style?.textAlignHorizontal).bounds,
   expand: (node, ctx) => [
     {
       key: 'self',
       kind: 'text',
       x: 0,
       y: 0,
-      text: node.text,
-      fontSize: node.fontSize ?? node.style?.fontSize ?? ctx.theme.fontSize,
-      align: node.align ?? 'start',
-      color: node.style?.color ?? ctx.theme.text,
-      style: resolvePartStyle(ctx.theme, node.style, { roughness: node.style?.roughness ?? ctx.theme.textRoughness }),
+      text: node.characters,
+      fontSize: fontSizeOf(node.style, ctx.theme),
+      align: node.style?.textAlignHorizontal ?? 'LEFT',
+      color: textColor(node.style, ctx.theme.text),
+      style: resolvePartStyle(ctx.theme, node, { roughness: node.sketch?.roughness ?? ctx.theme.textRoughness }),
     },
   ],
 };
@@ -113,16 +113,20 @@ export const icon: ComponentDef<IconNode> = {
     width: node.size ?? DEFAULT_ICON_SIZE,
     height: node.size ?? DEFAULT_ICON_SIZE,
   }),
-  expand: (node, ctx) => [
-    {
-      key: 'self',
-      kind: 'icon',
-      x: 0,
-      y: 0,
-      size: node.size ?? DEFAULT_ICON_SIZE,
-      icon: ctx.icons(node.icon),
-      color: node.style?.color ?? node.style?.stroke ?? ctx.theme.stroke,
-      style: resolvePartStyle(ctx.theme, node.style),
-    },
-  ],
+  expand: (node, ctx) => {
+    // An icon is a stroked drawing: its colour is its stroke paint.
+    const style = resolvePartStyle(ctx.theme, node);
+    return [
+      {
+        key: 'self',
+        kind: 'icon',
+        x: 0,
+        y: 0,
+        size: node.size ?? DEFAULT_ICON_SIZE,
+        icon: ctx.icons(node.icon),
+        color: style.stroke === 'none' ? ctx.theme.stroke : style.stroke,
+        style,
+      },
+    ];
+  },
 };

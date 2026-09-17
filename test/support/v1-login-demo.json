@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "width": 900,
+  "height": 600,
+  "seed": 42,
+  "theme": {
+    "stroke": "#1f2430",
+    "text": "#1f2430",
+    "accent": "#2f6fed",
+    "muted": "#8a8f98",
+    "surface": "#ffffff",
+    "background": "#ffffff",
+    "strokeWidth": 1.2,
+    "roughness": 1,
+    "bowing": 1,
+    "radius": 6,
+    "fontSize": 14,
+    "textRoughness": 0.6
+  },
+  "background": "#ffffff",
+  "font": "hershey-sans",
+  "nodes": [
+    {
+      "id": "email",
+      "x": 250,
+      "y": 200,
+      "width": 350,
+      "placeholder": "Email",
+      "type": "input"
+    },
+    {
+      "id": "login",
+      "x": 470,
+      "y": 300,
+      "text": "Sign in",
+      "type": "button"
+    },
+    {
+      "id": "done",
+      "x": 470,
+      "y": 360,
+      "text": "Signed in!",
+      "hidden": true,
+      "type": "text"
+    }
+  ],
+  "timeline": [
+    {
+      "type": "moveCursor",
+      "target": "email"
+    },
+    {
+      "type": "click"
+    },
+    {
+      "type": "type",
+      "target": "email",
+      "text": "hello@example.com"
+    },
+    {
+      "type": "moveCursor",
+      "target": "login"
+    },
+    {
+      "type": "click"
+    },
+    {
+      "type": "set",
+      "target": "done",
+      "patch": {
+        "hidden": false
+      }
+    },
+    {
+      "type": "wait",
+      "duration": 400
+    }
+  ]
+}
