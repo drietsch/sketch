@@ -25,7 +25,7 @@
     "eslint/no-underscore-dangle": "off",
     "eslint/no-shadow": "error"
   },
-  "ignorePatterns": ["dist/", "coverage/", "node_modules/", "visual-tests/"],
+  "ignorePatterns": ["dist/", "coverage/", "node_modules/", "examples/", "src/text/fonts/", "src/icons/builtin.ts"],
   "overrides": [
     {
       "files": ["test/**/*.ts"],

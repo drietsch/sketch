@@ -1,31 +1,30 @@
 /**
- * Smoke-checks every page under visual-tests/ in a real browser.
- *
- * These 50 pages are the project's only manual verification, and they were
- * broken long before this fork: each imported `bin/rough.js`, whose extensionless
- * relative imports 404 in a native module loader. They now load the built bundle
- * and use the v5 API.
+ * Smoke-checks every page under examples/ in a real browser.
  *
  * This is NOT visual regression -- it captures no baselines and compares no
  * pixels. It answers a narrower question: does every page load, execute without
- * a console or page error, and actually put something on the canvas or into the
- * SVG? That is enough to catch a broken build, a bad export, or an API change
- * that silently stops rendering.
+ * a console or page error, and actually put something into the SVG? And for
+ * pages that expose their demo on `window.__demo`, does every scene node get a
+ * group, is the cursor drawn when there is a timeline, and does seeking change
+ * the DOM while seeking back restores it byte-for-byte? That is enough to catch
+ * a broken build, a bad export, a silent render failure or a leak of
+ * non-determinism into the renderer.
  *
  * Requires `pnpm build` first. Run with: pnpm run verify:pages
  */
 import { chromium } from '@playwright/test';
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
-import { extname, join, normalize } from 'node:path';
-import { execSync } from 'node:child_process';
+import { readFile, readdir } from 'node:fs/promises';
+import { extname, join, normalize, relative } from 'node:path';
 
 const ROOT = process.cwd();
 const TYPES = {
   '.html': 'text/html',
   '.js': 'text/javascript',
+  '.css': 'text/css',
   '.json': 'application/json',
   '.map': 'application/json',
+  '.svg': 'image/svg+xml',
 };
 
 const server = createServer(async (req, res) => {
@@ -41,15 +40,23 @@ const server = createServer(async (req, res) => {
 await new Promise((r) => server.listen(0, r));
 const port = server.address().port;
 
-const pages = execSync('find visual-tests -name "*.html"').toString().trim().split('\n').toSorted();
+const pages = (await readdir(join(ROOT, 'examples'), { recursive: true }))
+  .filter((f) => f.endsWith('.html'))
+  .map((f) => relative(ROOT, join(ROOT, 'examples', f)))
+  .toSorted();
 
-// Interactive playgrounds that deliberately render nothing until driven.
-const INTERACTIVE = new Set(['visual-tests/canvas/path5.html']);
+if (pages.length === 0) {
+  console.log('no pages found under examples/');
+  process.exit(1);
+}
+
 const browser = await chromium.launch();
 const ctx = await browser.newContext();
 
 let ok = 0;
 const failures = [];
+// Pages load sequentially on purpose: parallel tabs would distort render timing
+// and interleave console output.
 for (const rel of pages) {
   const page = await ctx.newPage();
   const errors = [];
@@ -59,27 +66,31 @@ for (const rel of pages) {
   });
   try {
     await page.goto(`http://localhost:${port}/${rel}`, { waitUntil: 'networkidle', timeout: 20000 });
-    // Did anything actually get drawn?
-    const drew = await page.evaluate(() => {
-      // Some pages render into a custom element's shadow root, so a
-      // document-level query is not enough.
-      const findAll = (sel) => {
-        const out = [];
-        const walk = (root) => {
-          out.push(...root.querySelectorAll(sel));
-          for (const el of root.querySelectorAll('*')) if (el.shadowRoot) walk(el.shadowRoot);
-        };
-        walk(document);
-        return out;
-      };
-      for (const c of findAll('canvas')) {
-        const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
-        for (let i = 3; i < d.length; i += 4) if (d[i] !== 0) return true;
+    const problems = await page.evaluate(() => {
+      const out = [];
+      const svgs = [...document.querySelectorAll('svg')];
+      if (!svgs.some((s) => s.querySelectorAll('path').length > 0)) out.push('rendered nothing');
+
+      const demo = window.__demo;
+      if (demo) {
+        const svg = svgs[0];
+        const groups = svg.querySelectorAll('g[data-key]').length;
+        if (groups !== demo.nodeIds.length) out.push(`expected ${demo.nodeIds.length} node groups, found ${groups}`);
+        if (demo.duration > 0) {
+          if (!svg.querySelector('g[data-key="__cursor"]')) out.push('no cursor group');
+          const a = svg.innerHTML;
+          demo.seek(demo.duration / 2);
+          const b = svg.innerHTML;
+          demo.seek(0);
+          const c = svg.innerHTML;
+          if (a === b) out.push('seeking did not change the DOM');
+          if (a !== c) out.push('seeking back did not restore the DOM');
+        }
       }
-      return findAll('svg').some((s) => s.querySelectorAll('path').length > 0);
+      return out;
     });
     if (errors.length) failures.push(`${rel}: ${errors[0]}`);
-    else if (!drew && !INTERACTIVE.has(rel)) failures.push(`${rel}: rendered nothing`);
+    else if (problems.length) failures.push(`${rel}: ${problems.join('; ')}`);
     else ok++;
   } catch (e) {
     failures.push(`${rel}: ${String(e).split('\n')[0]}`);

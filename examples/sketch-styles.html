@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>sketchdemo: sketch styles</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Sketch styles</h1>
+    <p>Placeholder page until the scene API lands: rectangles in every fill style, drawn by the engine.</p>
+    <div id="out"></div>
+    <script type="module">
+      import { RoughGenerator, SVGNS } from '../dist/index.js';
+      const styles = ['hachure', 'solid', 'zigzag', 'cross-hatch', 'dots', 'dashed', 'zigzag-line'];
+      const g = new RoughGenerator({ seed: 42, fixedDecimalPlaceDigits: 2 });
+      const svg = document.createElementNS(SVGNS, 'svg');
+      svg.setAttribute('width', '900');
+      svg.setAttribute('height', '160');
+      styles.forEach((fillStyle, i) => {
+        const d = g.rectangle(20 + i * 125, 20, 100, 100, { fill: '#7aa2f7', fillStyle });
+        for (const p of g.toPaths(d)) {
+          const el = document.createElementNS(SVGNS, 'path');
+          el.setAttribute('d', p.d);
+          el.setAttribute('stroke', p.stroke);
+          el.setAttribute('stroke-width', String(p.strokeWidth));
+          el.setAttribute('fill', p.fill ?? 'none');
+          svg.appendChild(el);
+        }
+      });
+      document.getElementById('out').appendChild(svg);
+    </script>
+  </body>
+</html>

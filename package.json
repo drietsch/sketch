@@ -1,30 +1,33 @@
 {
-  "name": "@drietsch/roughjs",
-  "version": "5.0.0",
-  "description": "Create graphics using HTML Canvas or SVG with a hand-drawn, sketchy appearance. Maintained ESM-only fork of roughjs.",
+  "name": "@drietsch/sketchdemo",
+  "version": "0.1.0",
+  "description": "API-first library for sketching hand-drawn GUI mockups and animating how they are used. Deterministic SVG output.",
   "type": "module",
   "license": "MIT",
   "author": "Dietmar Rietsch <dietmar.rietsch@pimcore.com>",
   "contributors": [
-    "Preet Shihn <preetshihn@gmail.com> (original author of roughjs)"
+    "Preet Shihn <preetshihn@gmail.com> (author of roughjs, from which src/sketch is derived)"
   ],
-  "homepage": "https://github.com/drietsch/roughjs#readme",
+  "homepage": "https://github.com/drietsch/sketchdemo#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/drietsch/roughjs.git"
+    "url": "git+https://github.com/drietsch/sketchdemo.git"
   },
   "bugs": {
-    "url": "https://github.com/drietsch/roughjs/issues"
+    "url": "https://github.com/drietsch/sketchdemo/issues"
   },
   "keywords": [
-    "canvas",
-    "svg",
-    "graphics",
-    "sketchy",
-    "hand drawn",
+    "sketch",
     "hand-drawn",
-    "esm",
-    "roughjs"
+    "gui",
+    "mockup",
+    "wireframe",
+    "svg",
+    "animation",
+    "timeline",
+    "cursor",
+    "deterministic",
+    "demo"
   ],
   "sideEffects": false,
   "types": "./dist/index.d.ts",
@@ -71,6 +74,7 @@
     "@arethetypeswrong/cli": "^0.18.5",
     "@changesets/cli": "^3.0.3",
     "@playwright/test": "^1.63.0",
+    "@sketchyicons/data": "^0.5.0",
     "@vitest/coverage-v8": "^4.1.11",
     "hachure-fill": "^0.5.2",
     "happy-dom": "^20.14.5",

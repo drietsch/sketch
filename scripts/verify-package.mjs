@@ -16,7 +16,7 @@ import { join } from 'node:path';
 
 const run = (cmd, args, cwd) => execFileSync(cmd, args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
-const dir = mkdtempSync(join(tmpdir(), 'roughjs-consumer-'));
+const dir = mkdtempSync(join(tmpdir(), 'sketchdemo-consumer-'));
 let failed = false;
 const check = (label, ok, detail = '') => {
   console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${label}${detail ? '  ' + detail : ''}`);
@@ -32,7 +32,7 @@ try {
   const tarball = join(dir, packed[0].filename);
 
   // Nothing beyond the build output and docs may ship.
-  const forbidden = ['src/', 'test/', 'scripts/', 'visual-tests/', '.github/', 'tsconfig.json'];
+  const forbidden = ['src/', 'test/', 'scripts/', 'examples/', 'docs/', 'vendor/', '.github/', 'tsconfig.json'];
   const leaked = packed[0].files.map((f) => f.path).filter((f) => forbidden.some((p) => f.startsWith(p)));
   check('tarball contains no source, tests or config', leaked.length === 0, leaked.join(', '));
 
@@ -41,10 +41,10 @@ try {
 
   writeFileSync(
     join(dir, 'esm.mjs'),
-    `import { RoughGenerator, RoughCanvas, RoughSVG, newSeed, Random, SVGNS } from '@drietsch/roughjs';
+    `import { RoughGenerator, Random, SVGNS } from '@drietsch/sketchdemo';
      const g = new RoughGenerator({ seed: 42 });
      const d = g.rectangle(10, 10, 80, 60, { fill: 'red', fillStyle: 'dots' });
-     const ok = [RoughGenerator, RoughCanvas, RoughSVG, newSeed, Random, SVGNS].every(Boolean)
+     const ok = [RoughGenerator, Random, SVGNS].every(Boolean)
        && d.sets.length > 0 && g.toPaths(d).length > 0 && d.options.seed === 42;
      if (!ok) { console.error('esm surface broken'); process.exit(1); }
      console.log('ESM_OK');`,
@@ -56,7 +56,7 @@ try {
   // README says so; this keeps that claim honest.
   writeFileSync(
     join(dir, 'cjs.cjs'),
-    `const m = require('@drietsch/roughjs');
+    `const m = require('@drietsch/sketchdemo');
      const g = new m.RoughGenerator({ seed: 1 });
      if (!g.rectangle(0, 0, 10, 10).sets.length) { console.error('cjs broken'); process.exit(1); }
      console.log('CJS_OK:' + Object.keys(m).sort().join(','));`,
@@ -64,15 +64,15 @@ try {
   const cjs = run('node', ['cjs.cjs'], dir);
   check('require() works on this Node', cjs.includes('CJS_OK'));
 
-  const types = readFileSync(join(dir, 'node_modules/@drietsch/roughjs/dist/index.d.ts'), 'utf8');
+  const types = readFileSync(join(dir, 'node_modules/@drietsch/sketchdemo/dist/index.d.ts'), 'utf8');
   check('type declarations ship', types.includes('RoughGenerator') && types.includes('FillStyle'));
 
-  const bundle = readFileSync(join(dir, 'node_modules/@drietsch/roughjs/dist/index.js'), 'utf8');
+  const bundle = readFileSync(join(dir, 'node_modules/@drietsch/sketchdemo/dist/index.js'), 'utf8');
   const bare = [...bundle.matchAll(/^import .* from ["']([^.][^"']*)["']/gm)].map((m) => m[1]);
   check('bundle has no unresolved bare imports', bare.length === 0, bare.join(', '));
   check(
     'package declares no runtime dependencies',
-    !JSON.parse(readFileSync(join(dir, 'node_modules/@drietsch/roughjs/package.json'), 'utf8')).dependencies,
+    !JSON.parse(readFileSync(join(dir, 'node_modules/@drietsch/sketchdemo/package.json'), 'utf8')).dependencies,
   );
 } finally {
   rmSync(dir, { recursive: true, force: true });

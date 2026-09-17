@@ -1,8 +1,9 @@
 # Third-party notices
 
-`@drietsch/roughjs` is distributed as a single bundled ES module with no runtime
-dependencies. The following MIT-licensed packages are compiled into `dist/`, and
-their copyright notices are reproduced here as the MIT license requires.
+`@drietsch/sketchdemo` is distributed as a single bundled ES module with no
+runtime dependencies. The following MIT-licensed packages are compiled into
+`dist/`, and their copyright notices are reproduced here as the MIT license
+requires.
 
 The published bundle is not minified and comments are preserved, so the code
 below is also identifiable in `dist/index.js`.
@@ -11,7 +12,8 @@ below is also identifiable in `dist/index.js`.
 
 ## roughjs
 
-This package is a fork of [roughjs](https://github.com/rough-stuff/rough).
+The sketch-geometry engine in `src/sketch/` is derived from
+[roughjs](https://github.com/rough-stuff/rough).
 
 ```
 MIT License
