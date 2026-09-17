@@ -1,0 +1,18 @@
+# @drietsch/sketch
+
+> An API-first JavaScript/TypeScript library that builds hand-drawn GUI mockups (Figma vocabulary, Base UI's component catalogue) and animates how someone uses them (a cursor that moves, clicks, types, checks, chooses, drags, opens) on a seekable, deterministic timeline. Output is SVG: a string for any time, every frame for a video, or a live element with a player.
+
+ESM only, Node 24+, zero runtime dependencies. `npm install @drietsch/sketch`.
+
+## Docs
+
+- [For agents](docs/for-agents.md): workflow, rules, recipes, error messages. Read this first.
+- [API reference](docs/API.md): every export, node type, prop, timeline step and error.
+- [README](README.md): overview with examples.
+- [Changelog](CHANGELOG.md)
+
+## Essentials
+
+- `createDemo({ width, height, seed })` makes a demo; `demo.<factory>(props)` adds nodes (`button`, `input`, `frame`, `checkbox`, `select`, `dialog`, ... 45 types); `demo.timeline.<step>()` scripts use; `demo.toSVG(t)`, `demo.frames(fps)`, `demo.mount(el)` render.
+- Same document + seed + time = same bytes. `demo.toJSON()` / `loadDemo(json)` round-trip.
+- Errors are thrown synchronously and name the node or the timeline step.

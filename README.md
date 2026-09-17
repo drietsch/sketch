@@ -14,6 +14,10 @@ byte-identical output.
 > Everything that can be drawn, edited, animated or interacted with has a
 > public API representation. A future visual editor uses the same API.
 
+Documentation: [for agents](docs/for-agents.md) (workflow, rules, recipes,
+errors) and the [API reference](docs/API.md) (every export, node type, prop,
+step and error). Both ship in the package, with an `llms.txt` index.
+
 ```ts
 import { createDemo } from '@drietsch/sketch';
 
@@ -251,6 +255,7 @@ already exists. The position is resolved once, when the node is added, and
 stored as plain coordinates; later edits do not reflow neighbours.
 
 ```ts
+demo.frame({ id: 'card', x: 40, y: 40, width: 400, height: 300, title: 'Sign in' });
 demo.text({ id: 'label', parent: 'card', x: 24, y: 20, characters: 'Email' });
 demo.input({ id: 'email', below: 'label', gap: 10, width: 320 });
 demo.button({ id: 'go', below: 'email', gap: 20, characters: 'Sign in' });
@@ -323,6 +328,8 @@ is `ABSOLUTE`.
 ### Timeline
 
 ```ts
+demo.input({ id: 'email', x: 40, y: 40, width: 300 });
+demo.text({ id: 'done', x: 40, y: 100, characters: 'Sent!', visible: false });
 demo.timeline
   .moveCursor('email') // or a point { x, y }; options { duration?, key? }
   .click() // clicks where the cursor is; click('login') moves there first
@@ -344,6 +351,8 @@ compiles into the cursor moves and clicks that a person would make, on the
 exact region of the control (an option, a tab header, the increment button,
 the slider thumb), and records the state change so `stateAt(t)` stays a pure
 replay:
+
+<!-- no-run -->
 
 ```ts
 demo.timeline
@@ -406,8 +415,9 @@ The pages in [`examples/`](examples/) load the built bundle. Run
 
 ```sh
 pnpm install
-pnpm run check              # lint, format, catalogue, typecheck, tests, build, dist tests
-pnpm run verify:components  # every registered type has a factory, an export, a README row and a fixture
+pnpm run check              # lint, format, catalogue, build, docs, typecheck, tests, dist tests
+pnpm run verify:components  # every registered type has a factory, an export, README and API rows and a fixture
+pnpm run verify:docs        # every code block in the docs runs against the built package
 pnpm run verify:pages       # render every examples/ page in headless Chromium
 pnpm run verify:package     # pack, install into a temp project, smoke-test
 ```
