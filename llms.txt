@@ -13,7 +13,7 @@ ESM only, Node 24+, zero runtime dependencies. `npm install @drietsch/sketch`.
 
 ## Essentials
 
-- `createDemo({ width, height, seed })` makes a demo; `demo.<factory>(props)` adds nodes (`button`, `input`, `frame`, `checkbox`, `select`, `dialog`, ... 45 types); `demo.timeline.<step>()` scripts use; `demo.toSVG(t)`, `demo.frames(fps)`, `demo.mount(el)` render.
+- `createDemo({ width, height, seed })` makes a demo; `demo.<factory>(props)` adds nodes (`button`, `input`, `frame`, `checkbox`, `select`, `dialog`, ... 50 types, including the annotation marks `highlight`, `encircle`, `underline`, `arrow`, `callout`); `demo.timeline.<step>()` scripts use; `demo.toSVG(t)`, `demo.frames(fps)`, `demo.mount(el)` render.
 - Text is drawn in capitals from vendored glyph outlines (Grape Nuts); `font: HERSHEY_FONT` gives mixed-case sketched strokes.
 - Same document + seed + time = same bytes. `demo.toJSON()` / `loadDemo(json)` round-trip.
 - Errors are thrown synchronously and name the node or the timeline step.
