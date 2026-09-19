@@ -62,6 +62,24 @@ describe('toJSON / loadDemo', () => {
     expect(back.rectangle({ x: 0, y: 0, width: 1, height: 1 }).id).toBe('rectangle-2');
   });
 
+  test('reactions survive a round-trip and still fire', () => {
+    const demo = createDemo({ width: 300, height: 200, seed: 5 });
+    demo.button({
+      id: 'go',
+      x: 20,
+      y: 20,
+      characters: 'Go',
+      reactions: [{ trigger: 'ON_CLICK', action: { target: 'dlg', open: true } }],
+    });
+    demo.dialog({ id: 'dlg', title: 'Hello', width: 200, height: 100, open: false });
+    demo.timeline.click('go');
+    const json = demo.toJSON();
+    expect(json.children[0].reactions).toEqual([{ trigger: 'ON_CLICK', action: { target: 'dlg', open: true } }]);
+    const back = loadDemo(json);
+    expect(back.stateAt(back.duration).open.get('dlg')).toBe(true);
+    expect(back.toJSON()).toEqual(json);
+  });
+
   test('rejects malformed documents with a precise message', () => {
     const good = SCENES.minimal().toJSON();
     expect(() => parseDemoJSON('{')).toThrow(DemoJSONError);
@@ -104,6 +122,20 @@ describe('toJSON / loadDemo', () => {
         children: [{ id: 'a', type: 'TEXT', x: 0, y: 0, characters: 'x', style: { textAlignHorizontal: 'middle' } }],
       } as never),
     ).toThrow(/textAlignHorizontal must be one of LEFT, CENTER, RIGHT/);
+    expect(() =>
+      parseDemoJSON({
+        ...good,
+        children: [{ id: 'a', type: 'BUTTON', x: 0, y: 0, characters: 'x', reactions: [{ trigger: 'ON_TAP' }] }],
+      } as never),
+    ).toThrow(/reactions\[0\].trigger must be one of "ON_CLICK"/);
+    expect(() =>
+      parseDemoJSON({
+        ...good,
+        children: [
+          { id: 'a', type: 'BUTTON', x: 0, y: 0, characters: 'x', reactions: [{ trigger: 'ON_CLICK', action: {} }] },
+        ],
+      } as never),
+    ).toThrow(/reactions\[0\].action changes nothing/);
     expect(() => parseDemoJSON({ ...good, icons: { bad: {} } } as never)).toThrow(/icon "bad" must have nodes/);
     expect(() => loadDemo({ ...good, font: 'other' })).toThrow(/uses font "other"/);
     expect(() =>

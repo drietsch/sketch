@@ -11,8 +11,12 @@ import type {
   Size,
   TextAlignHorizontal,
   Theme,
+  WidgetAction,
 } from '../core/types.js';
 import type { StrokeFont } from '../text/font.js';
+
+/** A node's own `reactions` carry these too, so the type lives in core; re-exported where components use it. */
+export type { WidgetAction };
 
 /** Fully resolved sketch style for one part. */
 export interface PartStyle {
@@ -77,16 +81,6 @@ export interface RenderContext extends LayoutContext {
   caretVisible?: boolean;
   /** Absolute laid-out bounds of any node, for anchoring popups. */
   bounds: (id: string) => Bounds;
-}
-
-/** What a click changes. `target` defaults to the node whose region was hit. */
-export interface WidgetAction {
-  target?: string;
-  checked?: boolean;
-  open?: boolean;
-  value?: ControlValue;
-  /** Move focus to the target (true) or clear it (false); unset leaves the default focus rule. */
-  focus?: boolean;
 }
 
 /** A clickable area inside a node, in node-local coordinates. */
@@ -179,4 +173,19 @@ export interface ComponentDef<N extends NodeBase & { type: string } = SceneNode>
    * `choose` makes them first, in order.
    */
   pathTo?(node: N, value: ControlValue): ControlValue[] | undefined;
+  /**
+   * A node whose box is decided by other nodes' boxes, not by its own props:
+   * an annotation follows what it marks. `targets` names the nodes it needs,
+   * and the layout places this one after them, outside any auto-layout flow;
+   * `box` then says which absolute box to occupy, given their laid-out boxes
+   * (undefined for a node that is missing).
+   */
+  fit?: {
+    targets(node: N): string[];
+    box(node: N, box: (id: string) => Bounds | undefined, ctx: LayoutContext): Bounds;
+    /** Whether `box` can place this node on its own, so it needs no x/y (an arrow between two points can). */
+    placed(node: N): boolean;
+  };
+  /** Ids the node names and cannot do without; the scene rejects it when one does not exist. */
+  references?(node: N): string[];
 }

@@ -10,6 +10,28 @@ function login() {
   return demo;
 }
 
+/** A toolbar button that opens a confirm dialog, whose Cancel button closes it again. */
+function confirmDialog() {
+  const demo = createDemo({ width: 420, height: 300, seed: 7 });
+  demo.button({
+    id: 'trash',
+    x: 20,
+    y: 20,
+    characters: 'Delete',
+    reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: true } }],
+  });
+  demo.dialog({ id: 'confirm', title: 'Delete?', width: 240, height: 120, open: false });
+  demo.button({
+    id: 'cancel',
+    parent: 'confirm',
+    x: 20,
+    y: 60,
+    characters: 'Cancel',
+    reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: false } }],
+  });
+  return demo;
+}
+
 describe('compile', () => {
   test('steps are sequential with non-decreasing starts and the total is the last end', () => {
     const demo = login();
@@ -128,5 +150,128 @@ describe('compile', () => {
     const c = login();
     c.timeline.wait(10).moveCursor('email');
     expect(c.compiled().steps[1].cursor!.c1).not.toEqual(a.compiled().steps[0].cursor!.c1);
+  });
+});
+
+describe('reactions', () => {
+  test('a click fires the node’s reactions, so opening and closing take one step each', () => {
+    const demo = confirmDialog();
+    demo.timeline.click('trash').wait(300).click('cancel');
+    const c = demo.compiled();
+    const open = (t: number) => demo.stateAt(t).open.get('confirm');
+    const opens = c.steps.find((s) => s.effects?.some((e) => e.id === 'confirm' && e.open === true));
+    const closes = c.steps.find((s) => s.effects?.some((e) => e.id === 'confirm' && e.open === false));
+    expect(opens!.step.type).toBe('click');
+    expect(closes!.step.type).toBe('click');
+    expect(open(opens!.end)).toBe(true);
+    expect(open(c.duration)).toBe(false);
+  });
+
+  test('a reaction runs on top of the component’s own effect', () => {
+    const demo = createDemo({ width: 300, height: 200, seed: 3 });
+    demo.checkbox({
+      id: 'cb',
+      x: 20,
+      y: 20,
+      characters: 'Advanced',
+      reactions: [{ trigger: 'ON_CLICK', action: { target: 'panel', open: true } }],
+    });
+    demo.popover({ id: 'panel', anchor: 'cb', open: false });
+    demo.timeline.click('cb');
+    const state = demo.stateAt(demo.duration);
+    expect(state.checked.get('cb')).toBe(true);
+    expect(state.open.get('panel')).toBe(true);
+  });
+
+  test('the author’s reaction wins over the effect it contradicts', () => {
+    const demo = createDemo({ width: 300, height: 200, seed: 3 });
+    demo.checkbox({
+      id: 'cb',
+      x: 20,
+      y: 20,
+      characters: 'Stay on',
+      checked: true,
+      reactions: [{ trigger: 'ON_CLICK', action: { checked: true } }],
+    });
+    demo.timeline.click('cb').click('cb');
+    expect(demo.stateAt(demo.duration).checked.get('cb')).toBe(true);
+  });
+
+  test('a semantic step that clicks fires the reaction too', () => {
+    const demo = createDemo({ width: 300, height: 200, seed: 3 });
+    demo.checkbox({
+      id: 'cb',
+      x: 20,
+      y: 20,
+      characters: 'Advanced',
+      reactions: [{ trigger: 'ON_CLICK', action: { target: 'note', value: 'on' } }],
+    });
+    demo.input({ id: 'note', x: 20, y: 60, width: 120 });
+    demo.timeline.check('cb');
+    const state = demo.stateAt(demo.duration);
+    expect(state.checked.get('cb')).toBe(true);
+    expect(state.values.get('note')).toBe('on');
+  });
+
+  test('an action without a target applies to the node carrying it', () => {
+    const demo = createDemo({ width: 300, height: 200, seed: 3 });
+    demo.button({
+      id: 'mark',
+      x: 20,
+      y: 20,
+      characters: 'Mark',
+      reactions: [{ trigger: 'ON_CLICK', action: { checked: true } }],
+    });
+    demo.timeline.click('mark');
+    expect(demo.stateAt(demo.duration).checked.get('mark')).toBe(true);
+  });
+
+  test('a reaction may name a node added after it', () => {
+    const demo = createDemo({ width: 300, height: 200, seed: 3 });
+    demo.button({
+      id: 'go',
+      x: 20,
+      y: 20,
+      characters: 'Go',
+      reactions: [{ trigger: 'ON_CLICK', action: { target: 'later', open: true } }],
+    });
+    demo.dialog({ id: 'later', title: 'Later', width: 200, height: 100, open: false });
+    demo.timeline.click('go');
+    expect(demo.stateAt(demo.duration).open.get('later')).toBe(true);
+  });
+
+  test('a reaction naming a node that never exists fails the step that fires it', () => {
+    const demo = createDemo({ width: 300, height: 200, seed: 3 });
+    demo.button({
+      id: 'go',
+      x: 20,
+      y: 20,
+      characters: 'Go',
+      reactions: [{ trigger: 'ON_CLICK', action: { target: 'nope', open: true } }],
+    });
+    demo.timeline.click('go');
+    expect(() => demo.compiled()).toThrow(CompileError);
+    expect(() => demo.compiled()).toThrow(/reaction on "go" targets unknown node "nope"/);
+  });
+
+  test('a malformed reaction is rejected when the node is added', () => {
+    const demo = createDemo({ width: 300, height: 200, seed: 3 });
+    const button = (id: string, reactions: unknown) =>
+      demo.button({ id, x: 20, y: 20, characters: 'Go', reactions } as never);
+    expect(() => button('a', {})).toThrow(/reactions must be an array/);
+    expect(() => button('b', [{ trigger: 'ON_TAP', action: { open: true } }])).toThrow(
+      /reactions\[0\]\.trigger must be one of "ON_CLICK"/,
+    );
+    expect(() => button('c', [{ trigger: 'ON_CLICK' }])).toThrow(/reactions\[0\]\.action must be an action object/);
+    expect(() => button('d', [{ trigger: 'ON_CLICK', action: {} }])).toThrow(/reactions\[0\]\.action changes nothing/);
+    expect(() => button('e', [{ trigger: 'ON_CLICK', action: { target: 'no spaces', open: true } }])).toThrow(
+      /is not a valid id/,
+    );
+    expect(() => button('f', [{ trigger: 'ON_CLICK', action: { open: 'yes' } }])).toThrow(
+      /reactions\[0\]\.action\.open must be a boolean/,
+    );
+    expect(() => button('g', [{ trigger: 'ON_CLICK', action: { value: {} } }])).toThrow(
+      /reactions\[0\]\.action\.value must be a string, a finite number, or an array of strings/,
+    );
   });
 });

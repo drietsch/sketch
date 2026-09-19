@@ -59,6 +59,8 @@ export type {
   NodeType,
   Paint,
   Point,
+  Reaction,
+  ReactionTrigger,
   RectangleNode,
   SceneNode,
   Size,
@@ -69,6 +71,7 @@ export type {
   Theme,
   TypeStyle,
   VectorNode,
+  WidgetAction,
   WindowNode,
   Orientation,
   ControlValue,
@@ -113,5 +116,15 @@ export type {
   ToastNode,
   NavigationMenuNode,
   ScrollAreaNode,
+  AnnotationBase,
+  HighlightNode,
+  EncircleNode,
+  UnderlineNode,
+  UnderlineVariant,
+  ArrowNode,
+  ArrowEnd,
+  ArrowSide,
+  CalloutNode,
+  CalloutShape,
 } from './core/types.js';
-export type { Region, WidgetAction, Capabilities, Anchoring } from './components/types.js';
+export type { Region, Capabilities, Anchoring } from './components/types.js';

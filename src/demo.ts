@@ -50,6 +50,11 @@ import type {
   ToastNode,
   NavigationMenuNode,
   ScrollAreaNode,
+  HighlightNode,
+  EncircleNode,
+  UnderlineNode,
+  ArrowNode,
+  CalloutNode,
 } from './core/types.js';
 import type { IconDef } from './icons/types.js';
 import { resolvePlacement, splitPlacement } from './core/place.js';
@@ -118,7 +123,7 @@ export type LayoutChildProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' 
   y?: number;
 };
 
-/** Node props for a popup: it is placed by its anchor or the page, so `x`/`y` are optional. */
+/** Node props for a node placed by something else: a popup on its anchor, a mark on what it annotates. So `x`/`y` are optional. */
 export type AnchoredProps<N extends SceneNode> = Omit<N, 'type' | 'id' | 'x' | 'y'> & {
   id?: string;
   x?: number;
@@ -479,6 +484,33 @@ export class Demo {
     return this.add('SCROLL_AREA', props);
   }
 
+  // --- annotation marks. With a `target` they take its box, so they need no x/y.
+
+  /** A translucent marker band over `target`, or over a box of its own. */
+  highlight(props: AnchoredProps<HighlightNode>): HighlightNode {
+    return this.add('HIGHLIGHT', props as NodeProps<HighlightNode>);
+  }
+
+  /** A hand-drawn ring around `target`. */
+  encircle(props: AnchoredProps<EncircleNode>): EncircleNode {
+    return this.add('ENCIRCLE', props as NodeProps<EncircleNode>);
+  }
+
+  /** A line under `target`, or struck through it. */
+  underline(props: AnchoredProps<UnderlineNode>): UnderlineNode {
+    return this.add('UNDERLINE', props as NodeProps<UnderlineNode>);
+  }
+
+  /** An arrow from one node or point to another. */
+  arrow(props: AnchoredProps<ArrowNode>): ArrowNode {
+    return this.add('ARROW', props as NodeProps<ArrowNode>);
+  }
+
+  /** A bubble carrying a note, on a side of `target`, with a tail back to it. */
+  callout(props: AnchoredProps<CalloutNode>): CalloutNode {
+    return this.add('CALLOUT', props as NodeProps<CalloutNode>);
+  }
+
   /** Total length of the timeline in ms; 0 for a static scene. */
   get duration(): number {
     return this.compiled().duration;
@@ -690,8 +722,11 @@ export class Demo {
         // auto-layout parent positions the child; any other container puts it
         // at its content origin.
         const parent = typeof rest.parent === 'string' ? this.scene.get(rest.parent) : undefined;
-        const anchored = componentFor({ type } as SceneNode).anchor?.({ ...rest, id, type } as SceneNode) !== undefined;
-        if (!anchored && (parent === undefined || !componentFor(parent).container)) {
+        const def = componentFor({ type } as SceneNode);
+        const probe = { ...rest, id, type } as SceneNode;
+        // A popup sits on its anchor and a mark on what it annotates; neither needs x/y.
+        const placed = def.anchor?.(probe) !== undefined || (def.fit?.placed(probe) ?? false);
+        if (!placed && (parent === undefined || !componentFor(parent).container)) {
           throw new Error(
             `Node "${id}" needs x and y, a placement (below, above, rightOf, leftOf), or a container parent.`,
           );

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>sketch: annotations</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 24px;
+        background: #f4f4f6;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Annotations</h1>
+    <p>
+      Highlighters, rings, underlines, arrows and callout bubbles drawn over a finished screen — the marks someone
+      reviewing it would make. Each one follows the node it annotates, and none of them takes a click.
+    </p>
+    <div id="out"></div>
+    <script type="module">
+      import { createDemo } from '../dist/index.js';
+
+      const demo = createDemo({ width: 960, height: 660, seed: 19, background: null });
+      demo.browser({ id: 'win', x: 20, y: 20, width: 920, height: 620, url: 'https://example.com/checkout' });
+
+      // The screen being reviewed.
+      demo.text({ id: 'heading', parent: 'win', x: 40, y: 36, characters: 'Checkout', style: { fontSize: 28 } });
+      demo.text({ id: 'was', parent: 'win', x: 40, y: 100, characters: 'EUR 49', style: { fontSize: 22 } });
+      demo.text({ id: 'now', parent: 'win', x: 170, y: 100, characters: 'EUR 29', style: { fontSize: 22 } });
+      demo.text({
+        id: 'terms',
+        parent: 'win',
+        x: 40,
+        y: 150,
+        characters: 'Non-refundable after 14 days',
+        style: { fontSize: 16 },
+      });
+
+      demo.input({ id: 'email', parent: 'win', x: 40, y: 210, width: 300, placeholder: 'Email' });
+      demo.input({ id: 'card', parent: 'win', x: 40, y: 270, width: 300, placeholder: 'Card number' });
+      demo.checkbox({ id: 'save', parent: 'win', x: 40, y: 330, characters: 'Save this card' });
+      demo.button({ id: 'pay', parent: 'win', x: 40, y: 390, characters: 'Pay now', variant: 'primary' });
+      demo.button({ id: 'back', parent: 'win', x: 190, y: 390, characters: 'Back' });
+
+      // The review, in marks. Each names what it is about, so it follows it.
+      demo.highlight({ id: 'h-now', target: 'now', spread: 4 });
+      demo.underline({ id: 'u-was', target: 'was', variant: 'scribble', placement: 'through' });
+      demo.underline({ id: 'u-terms', target: 'terms', variant: 'wavy' });
+      demo.underline({ id: 'u-email', target: 'email', variant: 'double' });
+      demo.encircle({ id: 'e-pay', target: 'pay', spread: 10 });
+      demo.encircle({ id: 'e-save', target: 'save', spread: 6, shape: 'rect', passes: 1 });
+
+      demo.callout({
+        id: 'c-pay',
+        target: 'pay',
+        side: 'bottom',
+        characters: 'One tap and it is done — no confirm step',
+      });
+      demo.callout({
+        id: 'c-terms',
+        target: 'terms',
+        side: 'right',
+        shape: 'burst',
+        characters: 'Legal wants this bigger',
+      });
+      demo.callout({
+        id: 'c-card',
+        target: 'card',
+        side: 'right',
+        shape: 'cloud',
+        characters: 'Do we need the card before the email?',
+      });
+
+      demo.arrow({ id: 'a-price', from: 'was', to: 'now', curve: 'curved', bend: 0.45 });
+      demo.arrow({ id: 'a-order', from: 'card', to: 'email', curve: 's', fromSide: 'left', toSide: 'left' });
+      demo.arrow({ id: 'a-back', from: 'c-pay', to: 'back', curve: 'elbow' });
+
+      // The marks sit over a live interface: the timeline still drives it, and
+      // clicks pass straight through everything drawn on top.
+      demo.timeline.type('email', 'ada@example.com').check('save').click('pay');
+
+      const player = demo.mount(document.getElementById('out'), { loop: true, autoplay: true });
+      window.__demo = {
+        demo,
+        player,
+        duration: player.duration,
+        nodeIds: demo.scene.visible().map((n) => n.id),
+        seek: (t) => {
+          player.pause();
+          player.seek(t);
+        },
+      };
+    </script>
+  </body>
+</html>

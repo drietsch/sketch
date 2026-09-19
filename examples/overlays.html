@@ -143,8 +143,17 @@
         items: ['Open', 'Rename', '-', { label: 'Move to trash', icon: 'x' }],
       });
 
-      // Modals and notices.
-      demo.button({ id: 'trash', parent: 'win', x: 440, y: 200, characters: 'Delete file', icon: 'x' });
+      // Modals and notices. The buttons carry their own behaviour through
+      // reactions, so the timeline only has to say what is clicked.
+      demo.button({
+        id: 'trash',
+        parent: 'win',
+        x: 440,
+        y: 200,
+        characters: 'Delete file',
+        icon: 'x',
+        reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: true } }],
+      });
       demo.dialog({
         id: 'confirm',
         title: 'Delete "Document 3.pdf"?',
@@ -160,8 +169,19 @@
         fills: [],
         strokes: [],
       });
-      demo.button({ id: 'cancel', parent: 'confirm-actions', characters: 'Cancel' });
-      demo.button({ id: 'delete', parent: 'confirm-actions', characters: 'Delete', variant: 'primary' });
+      demo.button({
+        id: 'cancel',
+        parent: 'confirm-actions',
+        characters: 'Cancel',
+        reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: false } }],
+      });
+      demo.button({
+        id: 'delete',
+        parent: 'confirm-actions',
+        characters: 'Delete',
+        variant: 'primary',
+        reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: false } }],
+      });
       demo.button({ id: 'prefs', rightOf: 'trash', gap: 12, characters: 'Settings', icon: 'settings' });
       demo.drawer({ id: 'settings', title: 'Settings' });
       demo.switch({ id: 'dark', parent: 'settings', characters: 'Dark mode' });
@@ -194,9 +214,7 @@
         .choose('ctx', 'Rename')
         .choose('more', 'PNG')
         .click('trash')
-        .open('confirm')
         .click('delete')
-        .close('confirm')
         .click('prefs')
         .open('settings')
         .toggle('dark')

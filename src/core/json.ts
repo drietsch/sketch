@@ -4,6 +4,7 @@ import { hasComponent } from '../components/index.js';
 import { isValidId } from './ids.js';
 import { validatePaints } from './paint.js';
 import { validateLayoutProps } from './layout.js';
+import { validateReactions } from './reactions.js';
 import { componentFor } from '../components/index.js';
 
 /** A node in a document: a scene node without `parent`, with its children nested. */
@@ -65,6 +66,8 @@ function validateNode(node: unknown, at: string): void {
     const problem = validatePaints(node[key], `${label}.${key}`);
     if (problem) throw new DemoJSONError(problem);
   }
+  const reactions = validateReactions(node.reactions, `${label}.reactions`);
+  if (reactions) throw new DemoJSONError(reactions);
   if (node.style !== undefined) {
     if (!isRecord(node.style)) throw new DemoJSONError(`${label}.style must be a TypeStyle object`);
     const problem = validatePaints(node.style.fills, `${label}.style.fills`);

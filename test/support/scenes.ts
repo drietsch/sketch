@@ -518,4 +518,33 @@ export const SCENES: Record<string, (seed?: number, font?: StrokeFont) => Demo> 
       .click('row-9');
     return demo;
   },
+
+  /** Every annotation mark over an interface, so a golden pins how each one is drawn. */
+  annotations(seed = 37, font?: StrokeFont) {
+    const demo = createDemo({ width: 640, height: 460, seed, font });
+    demo.text({ id: 'title', x: 40, y: 30, characters: 'Checkout', style: { fontSize: 24 } });
+    demo.highlight({ id: 'title-mark', target: 'title', spread: 4 });
+
+    demo.text({ id: 'was', x: 40, y: 90, characters: 'EUR 49', style: { fontSize: 20 } });
+    demo.underline({ id: 'struck', target: 'was', variant: 'scribble', placement: 'through' });
+    demo.text({ id: 'now', x: 160, y: 90, characters: 'EUR 29', style: { fontSize: 20 } });
+    demo.underline({ id: 'wavy', target: 'now', variant: 'wavy' });
+    demo.text({ id: 'terms', x: 320, y: 90, characters: 'Terms apply', style: { fontSize: 20 } });
+    demo.underline({ id: 'loops', target: 'terms', variant: 'loop' });
+
+    demo.input({ id: 'email', x: 40, y: 150, width: 240, placeholder: 'Email' });
+    demo.underline({ id: 'double', target: 'email', variant: 'double' });
+    demo.button({ id: 'pay', x: 40, y: 250, characters: 'Pay now', variant: 'primary' });
+    demo.encircle({ id: 'ring', target: 'pay', spread: 10 });
+    demo.button({ id: 'later', x: 200, y: 250, characters: 'Later' });
+    demo.encircle({ id: 'boxed', target: 'later', spread: 8, shape: 'rect', passes: 1 });
+
+    demo.callout({ id: 'tip', target: 'pay', side: 'bottom', characters: 'One tap and you are done' });
+    demo.callout({ id: 'burst', target: 'later', side: 'right', shape: 'burst', characters: 'Or not' });
+    demo.callout({ id: 'cloud', target: 'email', side: 'right', shape: 'cloud', characters: 'Work address?' });
+    demo.arrow({ id: 'to-email', from: 'title', to: 'email', curve: 'curved' });
+    demo.arrow({ id: 'to-pay', from: 'terms', to: 'pay', curve: 's', head: 'both' });
+    demo.arrow({ id: 'elbow', from: { x: 430, y: 370 }, to: 'later', curve: 'elbow', toSide: 'bottom' });
+    return demo;
+  },
 };

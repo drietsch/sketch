@@ -86,8 +86,11 @@ it live and returns a player with `play`, `pause`, `seek`.
 - **Instant steps share a timestamp.** `close('dlg').open('dlg')` with nothing
   between them leaves it open at that instant. Put a `wait` between steps
   you want to see one after the other.
-- **A dialog's own buttons do not close it.** Write
-  `.click('cancel').close('dlg')`; `close` clicks the dialog's close mark.
+- **A component's own buttons do nothing by themselves.** A dialog's Cancel
+  button is just a button. Give it a reaction —
+  `reactions: [{ trigger: 'ON_CLICK', action: { target: 'dlg', open: false } }]` —
+  and `click('cancel')` closes the dialog. Without one, drive it from the
+  timeline instead: `.click('cancel').close('dlg')`.
 - **Text is drawn in capitals.** The default font (Grape Nuts) folds every
   string to upper case when drawing and measuring; the model keeps the case
   you wrote, so `type('email', 'ada@example.com')` shows ADA@EXAMPLE.COM and
@@ -174,12 +177,46 @@ demo.toolbar({
   fills: [],
   strokes: [],
 });
-demo.button({ id: 'cancel', parent: 'confirm-actions', characters: 'Cancel' });
-demo.button({ id: 'delete', parent: 'confirm-actions', characters: 'Delete', variant: 'primary' });
+demo.button({
+  id: 'cancel',
+  parent: 'confirm-actions',
+  characters: 'Cancel',
+  reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: false } }],
+});
+demo.button({
+  id: 'delete',
+  parent: 'confirm-actions',
+  characters: 'Delete',
+  variant: 'primary',
+  reactions: [
+    { trigger: 'ON_CLICK', action: { target: 'confirm', open: false } },
+    { trigger: 'ON_CLICK', action: { target: 'done', open: true } },
+  ],
+});
 demo.toast({ id: 'done', title: 'Deleted', variant: 'success', open: false });
 
-demo.timeline.click('trash').open('confirm').click('delete').close('confirm').open('done').wait(800);
+// The buttons carry the behaviour, so the timeline only says what is clicked.
+demo.timeline.click('trash').open('confirm').click('delete').wait(800);
 ```
+
+### Marking up a screen
+
+```ts
+demo.text({ id: 'price', x: 40, y: 40, characters: 'EUR 49', style: { fontSize: 22 } });
+demo.underline({ id: 'struck', target: 'price', variant: 'scribble', placement: 'through' });
+demo.text({ id: 'deal', x: 180, y: 40, characters: 'EUR 29', style: { fontSize: 22 } });
+demo.highlight({ id: 'band', target: 'deal', spread: 4 });
+
+demo.button({ id: 'pay', x: 40, y: 120, characters: 'Pay now', variant: 'primary' });
+demo.encircle({ id: 'ring', target: 'pay', spread: 10 });
+demo.callout({ id: 'tip', target: 'pay', side: 'right', characters: 'One tap and you are done' });
+demo.arrow({ id: 'link', from: 'deal', to: 'pay', curve: 'curved' });
+```
+
+A mark follows its `target`, so it stays right when the interface moves; give
+it `spread` to clear what it marks. Marks are not hit-tested, so one over a
+button never eats the click. An arrow's endpoints are node ids or points, and
+it stops at a node's edge rather than its centre.
 
 ### Tabs, accordion, collapsible
 

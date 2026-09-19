@@ -116,6 +116,32 @@ export interface AutoLayoutProps {
   counterAxisAlignItems?: CounterAxisAlignItems;
 }
 
+/**
+ * What a click changes. `target` defaults to the node whose region was hit,
+ * or, for an authored reaction, to the node the reaction sits on.
+ */
+export interface WidgetAction {
+  target?: string;
+  checked?: boolean;
+  open?: boolean;
+  value?: ControlValue;
+  /** Move focus to the target (true) or clear it (false); unset leaves the default focus rule. */
+  focus?: boolean;
+}
+
+/** What makes a reaction fire. Figma's trigger vocabulary; only clicks are understood so far. */
+export type ReactionTrigger = 'ON_CLICK';
+
+/**
+ * An authored response to an interaction, as Figma names it. Where Figma
+ * navigates between frames, a sketch reaction sets model state on a node, so
+ * the action is the same `WidgetAction` a component's own click returns.
+ */
+export interface Reaction {
+  trigger: ReactionTrigger;
+  action: WidgetAction;
+}
+
 export interface NodeBase {
   id: string;
   /** Position relative to the parent's content origin, or the document. Ignored for AUTO children of a layout container. */
@@ -152,6 +178,13 @@ export interface NodeBase {
   open?: boolean;
   value?: ControlValue;
   pressed?: boolean;
+  /**
+   * What clicking this node does, on top of whatever the component itself
+   * does: a dialog's Cancel button closes the dialog, a link-like button
+   * opens a popover. Every matching reaction fires, in order, after the
+   * component's own effect, so a reaction can override it.
+   */
+  reactions?: Reaction[];
 }
 
 export interface RectangleNode extends NodeBase {
@@ -561,6 +594,101 @@ export interface ScrollAreaNode extends ContainerBase {
   state?: ComponentState;
 }
 
+/**
+ * Marks drawn over a finished interface, the way someone reviewing it would:
+ * a highlighter band, a ring around a control, an underline, an arrow. All of
+ * them take their box from `target` when it is set, so a mark follows what it
+ * annotates; without one they sit at their own `x`/`y` and size. Marks are
+ * never hit-tested, so a click passes through to the interface beneath.
+ */
+export interface AnnotationBase extends NodeBase {
+  /** The node this mark is drawn over. Its laid-out box wins over `x`, `y`, `width` and `height`. */
+  target?: string;
+  /** Grows the target's box before the mark is drawn, so a ring clears what it circles (negative shrinks it). */
+  spread?: number;
+  width?: number;
+  height?: number;
+}
+
+/** A marker band swept across the box, translucent so the interface reads through it. */
+export interface HighlightNode extends AnnotationBase {
+  type: 'HIGHLIGHT';
+  /** `marker` (default): one thick sweep. `block`: the whole box filled. */
+  variant?: 'marker' | 'block';
+}
+
+/** A ring drawn around the box, the way someone circles what matters. */
+export interface EncircleNode extends AnnotationBase {
+  type: 'ENCIRCLE';
+  shape?: 'oval' | 'rect';
+  /** How many times the pen goes round; 2 (the default) reads as hand-drawn, 3 as emphatic. */
+  passes?: number;
+}
+
+export type UnderlineVariant = 'straight' | 'double' | 'wavy' | 'zigzag' | 'scribble' | 'loop';
+
+/** A line under the box, or struck through it. */
+export interface UnderlineNode extends AnnotationBase {
+  type: 'UNDERLINE';
+  variant?: UnderlineVariant;
+  /** `under` (default) sits below the box; `through` crosses its middle, which is a strikethrough. */
+  placement?: 'under' | 'through';
+}
+
+/** An endpoint of an arrow: a node, whose edge the arrow meets, or a point in document coordinates. */
+export type ArrowEnd = string | Point;
+
+/** Which edge of a node an arrow leaves or meets. `auto` takes the shortest way between the two boxes. */
+export type ArrowSide = 'auto' | 'top' | 'right' | 'bottom' | 'left';
+
+export interface ArrowNode extends NodeBase {
+  type: 'ARROW';
+  from: ArrowEnd;
+  to: ArrowEnd;
+  /** The shaft's shape. `curved` and `s` bow by `bend`; `elbow` turns a right angle. */
+  curve?: 'straight' | 'curved' | 's' | 'elbow';
+  /** How far a curved shaft bows, as a fraction of its length. Default 0.2. */
+  bend?: number;
+  /** Which ends carry a head. Default `end`. */
+  head?: 'end' | 'start' | 'both' | 'none';
+  /** Length of the head's strokes. Default 14. */
+  headSize?: number;
+  /** Clears this much space between the shaft and a node endpoint. Default 6. */
+  gap?: number;
+  /** The edge of `from` the shaft leaves. Default `auto`. Ignored when `from` is a point. */
+  fromSide?: ArrowSide;
+  /** The edge of `to` the shaft meets. Default `auto`. Ignored when `to` is a point. */
+  toSide?: ArrowSide;
+  /** Set by the layout from the endpoints; authoring them has no effect. */
+  width?: number;
+  height?: number;
+}
+
+export type CalloutShape = 'bubble' | 'burst' | 'cloud';
+
+/**
+ * A bubble carrying a note. With a `target` it sits on the given side of that
+ * node and grows a tail back to it, so moving either one keeps the tail
+ * pointing at the right thing.
+ */
+export interface CalloutNode extends NodeBase {
+  type: 'CALLOUT';
+  characters: string;
+  /** The node the bubble is about. Without one it sits at its own `x`/`y` and grows no tail. */
+  target?: string;
+  /** Which way the bubble sits from the target. Default `top`. */
+  side?: 'top' | 'bottom' | 'left' | 'right';
+  /** Where it slides along that side. Default `center`. */
+  align?: 'start' | 'center' | 'end';
+  /** Space between the bubble and the target, which the tail crosses. Default 22. */
+  gap?: number;
+  shape?: CalloutShape;
+  /** Text wraps to this width. Default 170. */
+  width?: number;
+  height?: number;
+  style?: TypeStyle;
+}
+
 export type SceneNode =
   | RectangleNode
   | EllipseNode
@@ -606,7 +734,12 @@ export type SceneNode =
   | DrawerNode
   | ToastNode
   | NavigationMenuNode
-  | ScrollAreaNode;
+  | ScrollAreaNode
+  | HighlightNode
+  | EncircleNode
+  | UnderlineNode
+  | ArrowNode
+  | CalloutNode;
 
 export type NodeType = SceneNode['type'];
 export type NodeOf<T extends NodeType> = Extract<SceneNode, { type: T }>;

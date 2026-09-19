@@ -137,6 +137,7 @@ a number, `[vertical, horizontal]` or `[top, right, bottom, left]`.
 | `layoutSizingHorizontal`              | `'FIXED' \| 'HUG' \| 'FILL'` | `HUG` wraps content (containers only); `FILL` takes the parent's free space (resizable nodes only).                  |
 | `layoutSizingVertical`                | same                         |                                                                                                                      |
 | `checked`, `open`, `value`, `pressed` | model state                  | Authored state under Base UI's names. The timeline overrides it live and never writes back.                          |
+| `reactions`                           | `Reaction[]`                 | What clicking this node does, beyond what the component already does. See Reactions below.                           |
 
 `Paint` is `{ type: 'SOLID', color, opacity?, visible? }`; `color` is a
 Figma `{ r, g, b, a? }` in 0..1 or any CSS colour string. Only solid paints
@@ -149,6 +150,41 @@ Text-bearing nodes take `style: TypeStyle` with `fontSize`,
 `textAlignHorizontal` (`LEFT` | `CENTER` | `RIGHT`) and `fills` for the glyph
 colour. Interactive components take `state: ComponentState` with `focused`,
 `pressed`, `hovered`, `disabled` for the authored (static) look.
+
+### Reactions
+
+A component already knows what clicking it does: a checkbox toggles, a menu
+item is chosen, a dialog's close mark shuts it. `reactions` is where the
+author says what else a click does — the part that belongs to this mockup
+rather than to the component.
+
+```ts
+demo.button({
+  id: 'cancel',
+  x: 20,
+  y: 20,
+  characters: 'Cancel',
+  reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: false } }],
+});
+demo.dialog({ id: 'confirm', title: 'Delete?', width: 240, height: 120, open: true });
+demo.timeline.click('cancel');
+```
+
+`Reaction` is `{ trigger, action }`. `trigger` is Figma's vocabulary; only
+`'ON_CLICK'` is understood so far. `action` is a `WidgetAction`: `target`
+(the node it changes, defaulting to the node the reaction sits on) plus any
+of `checked`, `open`, `value` and `focus`. An action that sets none of those
+is rejected.
+
+- Every reaction on the node the click hits fires, in the order written.
+- They run **after** the component's own effect, so a reaction that sets the
+  same field wins.
+- They fire for any click that lands on the node, including the clicks a
+  semantic step makes on the way (`check`, `choose`, `open`, …), but not for
+  steps that set state directly (`set`, `setValue`) or for a hand-written
+  `press`/`release` pair.
+- A reaction may name a node added after it. A target that never exists
+  fails the step that would have fired it.
 
 ### Auto-layout props (`AutoLayoutProps`)
 
@@ -256,6 +292,52 @@ the page. All keep `open` as model state and draw above every ordinary node.
 
 `MenuItem` is a label string, `{ label, icon?, disabled?, items? }` (`items`
 is a submenu, on `MENU` and `CONTEXT_MENU` only) or `'-'` for a separator.
+
+### Annotation marks
+
+Marks drawn over a finished interface, the way someone reviewing it would.
+They are held in a hand rather than drawn by a tool, so they wobble more than
+the controls beneath them, and none of them is hit-tested: a click goes
+straight through to the interface.
+
+Each mark follows a `target`, taking its box from that node's, so it stays put
+when the interface moves or resizes. `spread` grows that box first, which is
+how a ring clears what it circles. Without a target a mark sits at its own
+`x`/`y` and needs a `width` (and a `height`, except for `UNDERLINE`).
+
+| Factory          | Type        | Props                                                                                                                                                                           |
+| ---------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `demo.highlight` | `HIGHLIGHT` | `target?`, `spread?`, `variant?` (`marker` \| `block`); `fills` set the ink, marker yellow at 0.45 by default                                                                   |
+| `demo.encircle`  | `ENCIRCLE`  | `target?`, `spread?`, `shape?` (`oval` \| `rect`), `passes?` 2 (1–4, each a fresh turn of the pen)                                                                              |
+| `demo.underline` | `UNDERLINE` | `target?`, `variant?` (`straight` \| `double` \| `wavy` \| `zigzag` \| `scribble` \| `loop`), `placement?` (`under` \| `through`)                                               |
+| `demo.arrow`     | `ARROW`     | `from`, `to`, `curve?` (`straight` \| `curved` \| `s` \| `elbow`), `bend?` 0.2, `head?` (`end` \| `start` \| `both` \| `none`), `headSize?` 14, `gap?` 6, `fromSide?`/`toSide?` |
+| `demo.callout`   | `CALLOUT`   | `characters`, `target?`, `side?` top, `align?` center, `gap?` 22, `shape?` (`bubble` \| `burst` \| `cloud`), `width?` 170                                                       |
+
+Marks ink themselves in the theme's accent; give them `strokes` for a
+different pen. They are drawn at roughly twice the theme's roughness, which
+the node's own `sketch.roughness` still overrides.
+
+**Arrows** take an endpoint as a node id or a `{ x, y }` point. Aimed at a
+node, the shaft stops `gap` short of that node's edge rather than its centre,
+and `fromSide`/`toSide` (`auto` by default, else `top`/`right`/`bottom`/`left`)
+pin which edge it leaves and meets; `auto` takes the shortest way between the
+two boxes. The head sits at `to` unless `head` says otherwise, and follows the
+shaft's direction where it arrives, so a curved or elbowed arrow points the
+way it is actually travelling.
+
+**Callouts** are placed like popups: `side` picks which way the bubble sits
+from its target and `align` slides it along that edge. The tail is drawn from
+the bubble's own edge to the target's, so it re-aims itself whenever either
+one moves. A `cloud` trails two puffs instead of a tail.
+
+```ts
+demo.button({ id: 'pay', x: 40, y: 40, characters: 'Pay now', variant: 'primary' });
+demo.encircle({ id: 'ring', target: 'pay', spread: 10 });
+demo.callout({ id: 'tip', target: 'pay', side: 'top', characters: 'One tap and you are done' });
+demo.text({ id: 'small', x: 260, y: 48, characters: 'Terms apply' });
+demo.underline({ id: 'mark', target: 'small', variant: 'wavy' });
+demo.arrow({ id: 'link', from: 'small', to: 'pay', curve: 'curved' });
+```
 
 ## Timeline
 
@@ -459,6 +541,7 @@ compiled, which happens on the first render, `duration`, `stateAt`,
 | `target "x" cannot reach 9`                                | A number field's stepper cannot get there within `min`/`max`.                           |
 | `target "x" is not focusable`                              | `focus()` on a non-focusable node.                                                      |
 | `region "close" of "x" is covered and cannot be clicked`   | Something draws over the whole region.                                                  |
+| `reaction on "x" targets unknown node "y"`                 | A reaction on the node the click hit names a node that is not in the scene.             |
 | `at=10 is earlier than the end of the previous step (500)` | Steps must not overlap.                                                                 |
 
 Scene errors are plain `Error`s with the node named, for example
@@ -486,5 +569,6 @@ Types: `DemoOptions`, `LoadOptions`, `DemoJSON`, `Props`, `RelativeProps`,
 `LayoutPositioning`, `PrimaryAxisAlignItems`, `CounterAxisAlignItems`,
 `NodeBase`, `SceneNode`, `NodeType`, `NodeOf`, `NodePatch`, `MenuItem`,
 `MenuGroup`, `NavigationItem`, `AccordionItem`, `ToastVariant`, `Region`,
-`WidgetAction`, `Capabilities`, `Anchoring`, and one `XxxNode` interface per
-node type (`RectangleNode` … `ScrollAreaNode`).
+`WidgetAction`, `Reaction`, `ReactionTrigger`, `Capabilities`, `Anchoring`,
+`AnnotationBase`, `UnderlineVariant`, `ArrowEnd`, `ArrowSide`, `CalloutShape`,
+and one `XxxNode` interface per node type (`RectangleNode` … `CalloutNode`).

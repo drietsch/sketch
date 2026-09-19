@@ -248,6 +248,39 @@ demo.text({
 });
 ```
 
+### Annotation marks
+
+Marks drawn over a finished interface, the way someone reviewing it would: a
+highlighter band, a ring around a control, an underline, an arrow, a bubble
+with a note. They are held in a hand rather than drawn by a tool, so they
+wobble more than the controls beneath them, and none of them is hit-tested, so
+a click goes straight through to the interface.
+
+```ts
+demo.button({ id: 'pay', x: 40, y: 60, characters: 'Pay now', variant: 'primary' });
+demo.encircle({ id: 'ring', target: 'pay', spread: 10 });
+demo.callout({ id: 'tip', target: 'pay', side: 'top', characters: 'One tap and you are done' });
+
+demo.text({ id: 'price', x: 260, y: 66, characters: 'EUR 49' });
+demo.highlight({ id: 'band', target: 'price', spread: 4 });
+demo.underline({ id: 'mark', target: 'price', variant: 'wavy' });
+demo.arrow({ id: 'link', from: 'price', to: 'pay', curve: 'curved' });
+```
+
+| Factory          | Type        | What it draws                                                                             |
+| ---------------- | ----------- | ----------------------------------------------------------------------------------------- |
+| `demo.highlight` | `HIGHLIGHT` | A translucent marker band: one thick sweep, or the whole box (`variant: 'block'`)         |
+| `demo.encircle`  | `ENCIRCLE`  | A ring around the box, an `oval` or a `rect`, drawn in `passes` turns of the pen          |
+| `demo.underline` | `UNDERLINE` | `straight`, `double`, `wavy`, `zigzag`, `scribble` or `loop`, under the box or through it |
+| `demo.arrow`     | `ARROW`     | A shaft between two nodes or points, `straight`, `curved`, `s` or `elbow`, with heads     |
+| `demo.callout`   | `CALLOUT`   | A `bubble`, `burst` or `cloud` carrying a note, with a tail back to its target            |
+
+A mark with a `target` takes that node's box, so it follows what it annotates;
+`spread` grows the box first. Without a target it sits at its own `x`/`y` and
+size. Marks ink themselves in the theme's accent, or in `strokes` when given.
+See [docs/API.md](docs/API.md) for every prop, including how an arrow chooses
+which edges to leave and meet.
+
 ### Relative placement
 
 Instead of `x` and `y`, a node can say where it sits relative to one that
@@ -381,6 +414,31 @@ holds it. A click outside an open menu, select or popover dismisses it; a dialog
 closes from its backdrop or its close mark (`close(dialog)` clicks that), an
 alert dialog only from `close()`. A row scrolled out of a scroll area's
 viewport cannot be a target until `drag(area, offset)` brings it into view.
+
+#### Reactions
+
+A component knows its own behaviour, but not what this particular mockup
+means by it: a dialog's Cancel button is just a button. `reactions` is where
+the node says what else a click on it does, in Figma's prototyping term.
+
+```ts
+demo.button({
+  id: 'cancel',
+  x: 40,
+  y: 40,
+  characters: 'Cancel',
+  reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: false } }],
+});
+demo.dialog({ id: 'confirm', title: 'Delete this file?', width: 320, open: true });
+demo.timeline.click('cancel'); // closes the dialog
+```
+
+The action is the same `WidgetAction` a component's own click returns:
+`target` (the node it changes, defaulting to the one carrying the reaction)
+plus any of `checked`, `open`, `value` and `focus`. Reactions fire after the
+component's own effect, so they win where the two disagree, and they fire for
+any click that lands on the node, including the ones a semantic step makes on
+the way.
 
 ### Text and icons
 

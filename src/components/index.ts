@@ -22,6 +22,7 @@ import { contextMenu, menu, menubar, navigationMenu } from './menu.js';
 import { autocomplete, combobox, select } from './select.js';
 import { alertDialog, dialog, drawer, toast } from './dialog.js';
 import { scrollArea } from './scroll-area.js';
+import { arrow, callout, encircle, highlight, underline } from './annotations.js';
 
 const COMPONENTS: { [T in NodeType]?: ComponentDef<NodeOf<T>> } = {
   RECTANGLE: rectangle,
@@ -69,6 +70,11 @@ const COMPONENTS: { [T in NodeType]?: ComponentDef<NodeOf<T>> } = {
   TOAST: toast,
   NAVIGATION_MENU: navigationMenu,
   SCROLL_AREA: scrollArea,
+  HIGHLIGHT: highlight,
+  ENCIRCLE: encircle,
+  UNDERLINE: underline,
+  ARROW: arrow,
+  CALLOUT: callout,
 };
 
 export function hasComponent(type: string): type is NodeType {

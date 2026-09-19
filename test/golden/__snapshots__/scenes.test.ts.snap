@@ -1,5 +1,14 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`annotations > digest > t=0 1`] = `
+{
+  "bytes": 118546,
+  "groups": 20,
+  "paths": 47,
+  "sha256": "dc3251188991516c",
+}
+`;
+
 exports[`controls > digest > t=0 1`] = `
 {
   "bytes": 183244,

@@ -30,9 +30,19 @@ export function anchoringOf(node: SceneNode): Anchoring | undefined {
   return componentFor(node).anchor?.(node);
 }
 
-/** Whether a child is positioned by its parent's layout (as opposed to sitting at its own x/y, or on its anchor). */
+/** Whether a node's box comes from other nodes' boxes (an annotation following what it marks). */
+export function isFitted(node: SceneNode): boolean {
+  return componentFor(node).fit !== undefined;
+}
+
+/** Whether a child is positioned by its parent's layout (as opposed to sitting at its own x/y, on its anchor, or on what it marks). */
 export function isAutoChild(node: SceneNode): boolean {
-  return node.layoutPositioning !== 'ABSOLUTE' && node.visible !== false && anchoringOf(node) === undefined;
+  return (
+    node.layoutPositioning !== 'ABSOLUTE' &&
+    node.visible !== false &&
+    anchoringOf(node) === undefined &&
+    !isFitted(node)
+  );
 }
 
 /** The top-left of a box of `size` placed by `a` against the anchor box (a node's bounds, or the document). */
@@ -105,7 +115,8 @@ interface Measured extends Size {
 export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
   const measured = new Map<string, Measured>();
   const entries = new Map<string, LayoutEntry>();
-  // Popups are placed against their anchors once those have geometry.
+  // Popups are placed against their anchors, and marks over what they annotate,
+  // once those have geometry.
   const anchored: string[] = [];
 
   const measure = (id: string): Measured => {
@@ -164,7 +175,7 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
     const mode = layoutModeOf(node);
     const auto = new Set(mode === 'NONE' ? [] : children.filter((k) => shown.has(k) && isAutoChild(k)));
     for (const k of children) {
-      if (anchoringOf(k)) anchored.push(k.id);
+      if (anchoringOf(k) || isFitted(k)) anchored.push(k.id);
       else if (!auto.has(k)) arrange(k.id, { x: content.x + k.x, y: content.y + k.y }, measure(k.id));
     }
     if (auto.size === 0) return;
@@ -207,15 +218,27 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
 
   for (const id of scene.childrenOf()) {
     const n = scene.node(id);
-    if (anchoringOf(n)) anchored.push(id);
+    if (anchoringOf(n) || isFitted(n)) anchored.push(id);
     else arrange(id, { x: n.x, y: n.y }, measure(id));
   }
   // A popup anchored to another popup waits for it; an unknown anchor falls back to the node's own x, y.
+  const deferred = anchored;
   let pending = anchored;
   while (pending.length) {
     const later: string[] = [];
     for (const id of pending) {
       const node = scene.node(id);
+      const fit = componentFor(node).fit;
+      if (fit) {
+        // Wait for anything it follows that is itself still waiting.
+        if (fit.targets(node).some((t) => !entries.has(t) && scene.has(t) && deferred.includes(t))) {
+          later.push(id);
+          continue;
+        }
+        const box = fit.box(node, (t) => entries.get(t)?.bounds, ctx);
+        arrange(id, { x: box.x, y: box.y }, { width: box.width, height: box.height });
+        continue;
+      }
       const a = anchoringOf(node)!;
       const m = measure(id);
       if (a.id !== undefined && !entries.has(a.id) && scene.has(a.id) && anchored.includes(a.id)) {
@@ -240,7 +263,10 @@ export function computeLayout(scene: Scene, ctx: LayoutContext): Layout {
     if (later.length === pending.length) {
       for (const id of later) {
         const node = scene.node(id);
-        arrange(id, { x: node.x, y: node.y }, measure(id));
+        const fit = componentFor(node).fit;
+        const box = fit?.box(node, (t) => entries.get(t)?.bounds, ctx);
+        if (box) arrange(id, { x: box.x, y: box.y }, { width: box.width, height: box.height });
+        else arrange(id, { x: node.x, y: node.y }, measure(id));
       }
       break;
     }

@@ -1,5 +1,5 @@
 import type { Scene } from '../core/scene.js';
-import type { ControlValue, Point, SceneNode, Size } from '../core/types.js';
+import type { ControlValue, Point, Reaction, ReactionTrigger, SceneNode, Size } from '../core/types.js';
 import { deriveSeed } from '../core/ids.js';
 import { Random } from '../sketch/index.js';
 import { componentFor } from '../components/index.js';
@@ -233,6 +233,22 @@ export function compile(
       return Object.keys(effect).length > 1 ? [effect] : [];
     };
 
+    /**
+     * The node's authored reactions for a trigger. A reaction naming a node
+     * that does not exist is an authoring mistake, not a no-op, so it is
+     * reported against the step that would have fired it.
+     */
+    const reactionsOf = (node: SceneNode, trigger: ReactionTrigger): Reaction[] => {
+      const list = node.reactions?.filter((r) => r.trigger === trigger) ?? [];
+      for (const r of list) {
+        const target = r.action.target ?? node.id;
+        if (!working.has(target)) {
+          throw new CompileError(authored, `reaction on "${node.id}" targets unknown node "${target}"`);
+        }
+      }
+      return list;
+    };
+
     /** A click at the current cursor: hit-test, the hit's action, the focus rule. */
     const click = (holdKind = 'click'): CompiledStep => {
       const hold = Math.round(HOLD_MIN + stream(holdKind).next() * HOLD_JITTER);
@@ -271,6 +287,8 @@ export function compile(
         if (componentFor(popup).trigger === 'click' && anchor !== undefined && onOrIn(anchor))
           effects.push(...applyAction({ target: popup.id, open: !liveOpen(popup) }, popup.id));
       }
+      // Authored reactions fire last: they are the author's word on what the click does.
+      if (node) for (const r of reactionsOf(node, 'ON_CLICK')) effects.push(...applyAction(r.action, node.id));
       const c: NonNullable<CompiledStep['click']> = { pressAt: 0, releaseAt: hold };
       if (hit) c.hit = hit.id;
       if (state.focused !== undefined) c.focus = state.focused;

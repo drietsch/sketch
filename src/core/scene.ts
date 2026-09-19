@@ -10,6 +10,7 @@ export interface Hit {
   region?: Region;
 }
 import { computeLayout, stripLayoutDefaults, validateLayoutProps } from './layout.js';
+import { validateReactions } from './reactions.js';
 import type { Layout, LayoutEntry } from './layout.js';
 
 const ROOT = '';
@@ -206,6 +207,12 @@ export class Scene {
     const anchor = def.anchor?.(node)?.id;
     if (anchor === node.id) return 'a node cannot anchor to itself';
     if (anchor !== undefined && !this.nodes.has(anchor)) return `anchor "${anchor}" does not exist`;
+    const reactions = validateReactions(node.reactions, 'reactions');
+    if (reactions) return reactions;
+    for (const id of def.references?.(node) ?? []) {
+      if (id === node.id) return 'a node cannot refer to itself';
+      if (!this.nodes.has(id)) return `"${id}" does not exist`;
+    }
     return (
       validateLayoutProps(
         node as unknown as Record<string, unknown>,
