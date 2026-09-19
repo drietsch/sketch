@@ -20,109 +20,109 @@ exports[`controls > digest > t=0 1`] = `
 
 exports[`dialogs > digest > t=0 1`] = `
 {
-  "bytes": 54187,
+  "bytes": 96953,
   "groups": 19,
-  "paths": 30,
-  "sha256": "8e20b2d93a31abc3",
+  "paths": 31,
+  "sha256": "57cf25e6af672fca",
 }
 `;
 
 exports[`dialogs > digest > t=2001 1`] = `
 {
-  "bytes": 74101,
+  "bytes": 116867,
   "groups": 19,
-  "paths": 36,
-  "sha256": "9d9051770f46b18d",
+  "paths": 37,
+  "sha256": "1a76a48eff38561c",
 }
 `;
 
 exports[`dialogs > digest > t=4001 1`] = `
 {
-  "bytes": 120294,
+  "bytes": 163060,
   "groups": 22,
-  "paths": 45,
-  "sha256": "4a0c711b80439140",
+  "paths": 46,
+  "sha256": "98573c4a2639db71",
 }
 `;
 
 exports[`dialogs > digest > t=8002 1`] = `
 {
-  "bytes": 89804,
+  "bytes": 149071,
   "groups": 21,
-  "paths": 39,
-  "sha256": "a85aaba46a6a06e4",
+  "paths": 41,
+  "sha256": "18c2075a0cfd8681",
 }
 `;
 
 exports[`formLayout > digest > t=0 1`] = `
 {
-  "bytes": 107193,
+  "bytes": 128157,
   "groups": 17,
-  "paths": 41,
-  "sha256": "aef26c902323fca4",
+  "paths": 45,
+  "sha256": "4ce62f983e575ff1",
 }
 `;
 
 exports[`formLayout > digest > t=1175 1`] = `
 {
-  "bytes": 98418,
+  "bytes": 119382,
   "groups": 18,
-  "paths": 42,
-  "sha256": "0a93a3cff2ef49b8",
+  "paths": 46,
+  "sha256": "722c167248788d7d",
 }
 `;
 
 exports[`formLayout > digest > t=2350 1`] = `
 {
-  "bytes": 99097,
+  "bytes": 120061,
   "groups": 18,
-  "paths": 42,
-  "sha256": "7498a55cd7d7242f",
+  "paths": 46,
+  "sha256": "b8eae30699e12de6",
 }
 `;
 
 exports[`formLayout > digest > t=4700 1`] = `
 {
-  "bytes": 99401,
+  "bytes": 120365,
   "groups": 18,
-  "paths": 42,
-  "sha256": "2e299484ec8dfc39",
+  "paths": 46,
+  "sha256": "6265bb931c87617b",
 }
 `;
 
 exports[`layoutForm > digest > t=0 1`] = `
 {
-  "bytes": 82381,
+  "bytes": 123685,
   "groups": 11,
-  "paths": 21,
-  "sha256": "1a3e9101a9826fb8",
+  "paths": 27,
+  "sha256": "e7604f44e85fc2a6",
 }
 `;
 
 exports[`layoutForm > digest > t=386 1`] = `
 {
-  "bytes": 82388,
+  "bytes": 123692,
   "groups": 11,
-  "paths": 21,
-  "sha256": "c56685e43c726337",
+  "paths": 27,
+  "sha256": "15e3e83c549880b1",
 }
 `;
 
 exports[`layoutForm > digest > t=771 1`] = `
 {
-  "bytes": 70851,
+  "bytes": 112155,
   "groups": 12,
-  "paths": 22,
-  "sha256": "8046c67a98398e42",
+  "paths": 28,
+  "sha256": "bd0e96364e0c0ddc",
 }
 `;
 
 exports[`layoutForm > digest > t=1542 1`] = `
 {
-  "bytes": 74988,
+  "bytes": 116292,
   "groups": 12,
-  "paths": 23,
-  "sha256": "f462d8f01b02db38",
+  "paths": 29,
+  "sha256": "6017ef4d0f66281a",
 }
 `;
 
@@ -170,10 +170,10 @@ exports[`loginDemo > digest > t=3259 1`] = `
 
 exports[`loginForm > digest > t=0 1`] = `
 {
-  "bytes": 151932,
+  "bytes": 192188,
   "groups": 17,
-  "paths": 50,
-  "sha256": "bd681b8dfe0770a5",
+  "paths": 61,
+  "sha256": "108bca692f38f684",
 }
 `;
 
@@ -271,37 +271,37 @@ exports[`primitives > digest > t=0 1`] = `
 
 exports[`tabsAccordion > digest > t=0 1`] = `
 {
-  "bytes": 122979,
+  "bytes": 124024,
   "groups": 18,
-  "paths": 42,
-  "sha256": "6767b17bb5e0612e",
+  "paths": 44,
+  "sha256": "89838b172e047022",
 }
 `;
 
 exports[`tabsAccordion > digest > t=855 1`] = `
 {
-  "bytes": 117312,
+  "bytes": 118357,
   "groups": 20,
-  "paths": 47,
-  "sha256": "c993fec141a67048",
+  "paths": 49,
+  "sha256": "57954f7cbc2f9b94",
 }
 `;
 
 exports[`tabsAccordion > digest > t=1710 1`] = `
 {
-  "bytes": 104189,
+  "bytes": 105234,
   "groups": 20,
-  "paths": 46,
-  "sha256": "a7d42774927992c7",
+  "paths": 48,
+  "sha256": "036c3ff5af8c125d",
 }
 `;
 
 exports[`tabsAccordion > digest > t=3420 1`] = `
 {
-  "bytes": 104225,
+  "bytes": 105270,
   "groups": 20,
-  "paths": 46,
-  "sha256": "6c86c2d490dfd974",
+  "paths": 48,
+  "sha256": "d45d9dccb82f8acc",
 }
 `;
 
@@ -316,9 +316,9 @@ exports[`textAndIcons > digest > t=0 1`] = `
 
 exports[`window > digest > t=0 1`] = `
 {
-  "bytes": 73512,
+  "bytes": 135813,
   "groups": 7,
-  "paths": 25,
-  "sha256": "a00e7fdc9fa6e17d",
+  "paths": 37,
+  "sha256": "43f3bb8ed22d0651",
 }
 `;

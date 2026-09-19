@@ -379,7 +379,17 @@ describe('dialogs, drawer and toasts', () => {
     const b = demo.scene.bounds('confirm');
     expect(b.x + b.width / 2).toBeCloseTo(400, 6);
     expect(b.y + b.height / 2).toBeCloseTo(300, 6);
-    expect(keys(expand(demo, 'confirm'))).toEqual(['backdrop', 'shadow', 'panel', 'title', 'description', 'close']);
+    expect(keys(expand(demo, 'confirm'))).toEqual([
+      'backdrop',
+      'shadow',
+      'panel',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+      'title',
+      'description',
+      'close',
+    ]);
     const rs = regions(demo, 'confirm');
     expect(rs.map((r) => r.key)).toEqual(['backdrop', 'body', 'close']);
     expect(rs[0].bounds).toEqual({ x: -b.x, y: -b.y, width: 800, height: 600 });
@@ -410,7 +420,15 @@ describe('dialogs, drawer and toasts', () => {
     demo.alertDialog({ id: 'alert', title: 'Sure?', open: true });
     demo.button({ id: 'ok', parent: 'alert', characters: 'OK' });
     expect(regions(demo, 'alert')[0].action).toBeUndefined();
-    expect(keys(expand(demo, 'alert'))).toEqual(['backdrop', 'shadow', 'panel', 'title']);
+    expect(keys(expand(demo, 'alert'))).toEqual([
+      'backdrop',
+      'shadow',
+      'panel',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+      'title',
+    ]);
     demo.timeline.close('alert');
     expect(types(demo, 0)).toEqual(['close']);
     expect(demo.nodeAt('alert', demo.duration).open).toBe(false);

@@ -1,7 +1,8 @@
 import type { FieldNode, FieldsetNode, FormNode, ToolbarNode } from '../core/types.js';
 import type { ComponentDef, Part } from './types.js';
 import { FIELD_GAP } from './controls.js';
-import { rectPart, textPart } from './common.js';
+import { rectPart, textPart, TITLE_WEIGHT } from './common.js';
+import { handFrameParts } from './hand-frame.js';
 import { fontSizeOf, hasOwnFill, textColor } from './style.js';
 
 const noteSize = (fontSize: number) => Math.max(10, fontSize - 2);
@@ -69,15 +70,15 @@ export const fieldset: ComponentDef<FieldsetNode> = {
     const fontSize = fontSizeOf(node.style, theme);
     const legendHeight = node.legend ? ctx.font.lineHeight(fontSize) : 0;
     const top = legendHeight / 2;
+    const outline = { x: 0, y: top, width: node.width ?? 0, height: (node.height ?? 0) - top };
+    const hand = handFrameParts('frame-', theme, node, { ...outline, overrides: { fill: undefined } });
     const parts: Part[] = [
       rectPart('box', theme, node, {
-        x: 0,
-        y: top,
-        width: node.width ?? 0,
-        height: (node.height ?? 0) - top,
+        ...outline,
         cornerRadius: theme.radius,
-        overrides: { fill: undefined },
+        overrides: hand.length ? { fill: undefined, stroke: 'none' } : { fill: undefined },
       }),
+      ...hand,
     ];
     if (node.legend) {
       parts.push(
@@ -94,6 +95,7 @@ export const fieldset: ComponentDef<FieldsetNode> = {
           text: node.legend,
           fontSize,
           color: textColor(node.style, theme.text),
+          weight: TITLE_WEIGHT,
         }),
       );
     }
@@ -107,19 +109,19 @@ export const form: ComponentDef<FormNode> = {
   resizable: true,
   interactive: true,
   localBounds: (node) => ({ x: 0, y: 0, width: node.width ?? 0, height: node.height ?? 0 }),
-  expand: (node, ctx) =>
-    hasOwnFill(node) || node.strokes
-      ? [
-          rectPart('box', ctx.theme, node, {
-            x: 0,
-            y: 0,
-            width: node.width ?? 0,
-            height: node.height ?? 0,
-            cornerRadius: ctx.theme.radius,
-            overrides: {},
-          }),
-        ]
-      : [],
+  expand: (node, ctx) => {
+    if (!hasOwnFill(node) && !node.strokes) return [];
+    const box = { x: 0, y: 0, width: node.width ?? 0, height: node.height ?? 0 };
+    const hand = handFrameParts('frame-', ctx.theme, node, box);
+    return [
+      rectPart('box', ctx.theme, node, {
+        ...box,
+        cornerRadius: ctx.theme.radius,
+        overrides: hand.length ? { stroke: 'none' } : {},
+      }),
+      ...hand,
+    ];
+  },
 };
 
 /** A strip that lays its children out in a row (or column), with a subtle box. */
@@ -128,17 +130,20 @@ export const toolbar: ComponentDef<ToolbarNode> = {
   resizable: true,
   interactive: true,
   localBounds: (node) => ({ x: 0, y: 0, width: node.width ?? 0, height: node.height ?? 0 }),
-  expand: (node, ctx) => [
-    rectPart('box', ctx.theme, node, {
-      x: 0,
-      y: 0,
-      width: node.width ?? 0,
-      height: node.height ?? 0,
-      cornerRadius: ctx.theme.radius,
-      overrides: {
-        ...(hasOwnFill(node) ? {} : { fill: ctx.theme.surface, fillStyle: 'solid' }),
-        ...(node.strokes === undefined ? { stroke: ctx.theme.muted } : {}),
-      },
-    }),
-  ],
+  expand: (node, ctx) => {
+    const box = { x: 0, y: 0, width: node.width ?? 0, height: node.height ?? 0 };
+    const overrides = {
+      ...(hasOwnFill(node) ? {} : { fill: ctx.theme.surface, fillStyle: 'solid' as const }),
+      ...(node.strokes === undefined ? { stroke: ctx.theme.muted } : {}),
+    };
+    const hand = handFrameParts('frame-', ctx.theme, node, { ...box, overrides });
+    return [
+      rectPart('box', ctx.theme, node, {
+        ...box,
+        cornerRadius: ctx.theme.radius,
+        overrides: hand.length ? { ...overrides, stroke: 'none' } : overrides,
+      }),
+      ...hand,
+    ];
+  },
 };

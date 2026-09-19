@@ -11,7 +11,7 @@ import {
   originOf,
   panelParts,
 } from './popups.js';
-import { textPart } from './common.js';
+import { textPart, TITLE_WEIGHT } from './common.js';
 import { fontSizeOf, resolvePartStyle, textColor } from './style.js';
 import { layoutText, wrapText } from '../text/layout.js';
 
@@ -58,6 +58,7 @@ function headerParts(
         text: node.title,
         fontSize: fontSize + 3,
         color: textColor(node.style, theme.text),
+        weight: TITLE_WEIGHT,
       }),
       layer: 'overlay',
     });
@@ -105,7 +106,7 @@ function modal<N extends DialogNode | AlertDialogNode>(dismissible: boolean): Co
       const head = headerParts(node, ctx, b, dismissible);
       return [
         backdropPart('backdrop', ctx.theme, node, ctx, origin),
-        ...panelParts('', ctx.theme, node, b),
+        ...panelParts('', ctx.theme, node, b, {}, true),
         ...head.parts,
       ];
     },
@@ -155,12 +156,13 @@ export const drawer: ComponentDef<DrawerNode> = {
     if (!isOpen(node, ctx)) return [];
     const b = drawerBox(node, ctx);
     const origin = originOf(ctx, node.id, b);
-    const [shadow, panel] = panelParts('', ctx.theme, node, b);
+    const [shadow, panel, ...frame] = panelParts('', ctx.theme, node, b, {}, true);
     const square = { ...panel, cornerRadius: 0 } as Part;
     return [
       backdropPart('backdrop', ctx.theme, node, ctx, origin),
       shadow,
       square,
+      ...frame,
       ...headerParts(node, ctx, b, true).parts,
     ];
   },
@@ -231,6 +233,7 @@ export const toast: ComponentDef<ToastNode> = {
           text: node.title,
           fontSize,
           color: textColor(node.style, theme.text),
+          weight: TITLE_WEIGHT,
         }),
         layer: 'overlay',
       },

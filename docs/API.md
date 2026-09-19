@@ -146,10 +146,44 @@ are supported.
 `fillStyle` is one of `hachure` (default), `solid`, `zigzag`, `cross-hatch`,
 `dots`, `dashed`, `zigzag-line`.
 
-Text-bearing nodes take `style: TypeStyle` with `fontSize`,
-`textAlignHorizontal` (`LEFT` | `CENTER` | `RIGHT`) and `fills` for the glyph
-colour. Interactive components take `state: ComponentState` with `focused`,
-`pressed`, `hovered`, `disabled` for the authored (static) look.
+Text-bearing nodes take `style: TypeStyle` with `fontSize`, `fontWeight`,
+`marker`, `textAlignHorizontal` (`LEFT` | `CENTER` | `RIGHT`) and `fills` for
+the glyph colour. Interactive components take `state: ComponentState` with
+`focused`, `pressed`, `hovered`, `disabled` for the authored (static) look.
+
+### Weight and the marker
+
+The font ships in one cut, so there is no second face to switch to: a weight
+above 400 is the same letterform gone round again with a broader, sketched pen,
+which is also where the edge picks up its wobble. Any value from 400 to 900
+works, and the pen is held back below 24px so small text keeps its counters
+open rather than filling in.
+
+```ts
+demo.text({ id: 'h', x: 40, y: 40, characters: 'Checkout', style: { fontSize: 30, fontWeight: 700 } });
+demo.text({ id: 'h2', x: 40, y: 100, characters: 'Billing', style: { fontSize: 26, marker: true } });
+demo.text({
+  id: 'h3',
+  x: 40,
+  y: 160,
+  characters: 'Overdue',
+  style: { fontSize: 26, fontWeight: 700, marker: { type: 'SOLID', color: '#ffd23f', opacity: 0.5 } },
+});
+```
+
+A component's own heading — a window, frame, dialog, drawer or toast title, and
+a fieldset's legend — is written at 600 without being asked; the node's own
+`style.fontWeight` overrides that.
+
+`marker` sweeps a band under the words before they are written, so the ink
+reads over it: `true` takes the theme's grey, a `Paint` names the colour and
+how strongly it shows. It is never automatic. A `HIGHLIGHT` mark is a different
+thing — a review mark, drawn over the interface, which would grey a heading out
+rather than back it.
+
+Bold costs output: the pen is real geometry, so a bold string is roughly three
+to four times the path data of the same string at 400. It is meant for
+headings, not for body text.
 
 ### Reactions
 
@@ -185,6 +219,32 @@ is rejected.
   `press`/`release` pair.
 - A reaction may name a node added after it. A target that never exists
   fails the step that would have fired it.
+
+### The hand-drawn frame
+
+A container's outline is not one rounded rectangle. It is a light marker band,
+then four straight edges that each run `frameOvershoot` past their corners,
+gone over a second time with a thinner pen, and two short strokes re-inking
+each corner — the way a hand draws a box, and the reason corners cross instead
+of closing.
+
+It applies to `WINDOW`, `FRAME`, `FIELDSET`, `FORM` and `TOOLBAR`, and to the
+raised panels of `DIALOG`, `ALERT_DIALOG` and `DRAWER`, which take the ink
+without the band because their shadow already carries the weight. A node with
+no stroke (`strokes: []`) has no outline to draw, so it gets none of this, and
+`SCROLL_AREA` keeps the plain rectangle because its clip would cut the
+overshoot off mid-stroke.
+
+On a small box the treatment would swamp the shape, so it scales itself down:
+the overshoot is capped at a quarter of the shorter side, the band at an
+eighth, a box shallower than 56px gets the ink without a band, and one
+shallower than 28px keeps the plain rectangle. A node's own `sketch.roughness`
+and `sketch.bowing` still scale the whole treatment, and
+`theme.frameOvershoot: 0` turns it off:
+
+```ts
+const demo = createDemo({ width: 400, height: 300, theme: { frameOvershoot: 0 } });
+```
 
 ### Auto-layout props (`AutoLayoutProps`)
 
@@ -477,20 +537,23 @@ shopping-cart, star, triangle-alert, upload, user, x.
 
 ### Theme
 
-| Key             | Default   | Used for                                         |
-| --------------- | --------- | ------------------------------------------------ |
-| `stroke`        | `#1f2430` | Outlines                                         |
-| `text`          | `#1f2430` | Text                                             |
-| `accent`        | `#2f6fed` | Primary buttons, checked state, focus, selection |
-| `muted`         | `#8a8f98` | Placeholders, descriptions, tracks               |
-| `surface`       | `#ffffff` | Component faces                                  |
-| `background`    | `#ffffff` | Document background                              |
-| `strokeWeight`  | `1.2`     |                                                  |
-| `roughness`     | `1`       | Sketch jitter                                    |
-| `bowing`        | `1`       | Sketch line bowing                               |
-| `radius`        | `6`       | Corner radius of components                      |
-| `fontSize`      | `14`      |                                                  |
-| `textRoughness` | `0.6`     | Text wants less wobble than boxes                |
+| Key                | Default   | Used for                                                                                   |
+| ------------------ | --------- | ------------------------------------------------------------------------------------------ |
+| `stroke`           | `#1f2430` | Outlines                                                                                   |
+| `text`             | `#1f2430` | Text                                                                                       |
+| `accent`           | `#2f6fed` | Primary buttons, checked state, focus, selection                                           |
+| `muted`            | `#8a8f98` | Placeholders, descriptions, tracks                                                         |
+| `surface`          | `#ffffff` | Component faces                                                                            |
+| `background`       | `#ffffff` | Document background                                                                        |
+| `strokeWeight`     | `1.2`     |                                                                                            |
+| `roughness`        | `1`       | Sketch jitter                                                                              |
+| `bowing`           | `1`       | Sketch line bowing                                                                         |
+| `radius`           | `6`       | Corner radius of components                                                                |
+| `fontSize`         | `14`      |                                                                                            |
+| `textRoughness`    | `0.6`     | Text wants less wobble than boxes                                                          |
+| `frameOvershoot`   | `8`       | How far a container's outline runs past its corners; `0` draws the plain rounded rectangle |
+| `frameBand`        | `8`       | Width of the marker band under that outline; `0` leaves the ink bare                       |
+| `frameBandOpacity` | `0.5`     | Opacity of the band                                                                        |
 
 ## Documents
 

@@ -311,7 +311,15 @@ describe('form containers', () => {
     demo.fieldset({ id: 'fs', x: 400, y: 0, width: 200, height: 100, legend: 'Contact' });
     demo.checkbox({ id: 'c', parent: 'fs', x: 10, y: 10, characters: 'Email' });
     expect(demo.scene.bounds('c').y).toBe(10 + demo.font.lineHeight(demo.theme.fontSize));
-    expect(keys(expand(demo, demo.scene.node('fs')))).toEqual(['box', 'legend-bg', 'legend']);
+    expect(keys(expand(demo, demo.scene.node('fs')))).toEqual([
+      'box',
+      'frame-band',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+      'legend-bg',
+      'legend',
+    ]);
   });
 
   test('a toolbar lays its children out in a row with padding', () => {

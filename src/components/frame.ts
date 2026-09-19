@@ -1,10 +1,23 @@
 import type { FrameNode } from '../core/types.js';
 import type { ComponentDef, Part } from './types.js';
-import { centredTextTop, rectPart, textPart } from './common.js';
+import { centredTextTop, rectPart, textPart, TITLE_WEIGHT } from './common.js';
+import { handFrameParts, handRuleParts } from './hand-frame.js';
 import { fontSizeOf, hasOwnFill, resolvePartStyle, textColor } from './style.js';
 
 export const FRAME_TITLE_HEIGHT = 34;
 const PADDING_X = 12;
+
+/** The rule under a frame's title, hand-drawn where the theme asks for it. */
+function ruleParts(
+  theme: Parameters<typeof handRuleParts>[1],
+  node: Parameters<typeof handRuleParts>[2],
+  width: number,
+): Part[] {
+  const rule = { x1: 0, y1: FRAME_TITLE_HEIGHT, x2: width, y2: FRAME_TITLE_HEIGHT };
+  const hand = handRuleParts('divider-', theme, node, rule);
+  if (hand.length) return hand;
+  return [{ key: 'divider', kind: 'line', ...rule, style: resolvePartStyle(theme, node, { fill: undefined }) }];
+}
 
 /** A container with an optional title bar. Children are positioned from below the bar. */
 export const frame: ComponentDef<FrameNode> = {
@@ -21,8 +34,17 @@ export const frame: ComponentDef<FrameNode> = {
     if (node.sketch?.fillStyle === undefined) overrides.fillStyle = 'solid';
     const width = node.width ?? 0;
     const height = node.height ?? 0;
+    const hand = handFrameParts('frame-', theme, node, { x: 0, y: 0, width, height, overrides });
     const parts: Part[] = [
-      rectPart('box', theme, node, { x: 0, y: 0, width, height, cornerRadius: theme.radius, overrides }),
+      rectPart('box', theme, node, {
+        x: 0,
+        y: 0,
+        width,
+        height,
+        cornerRadius: theme.radius,
+        overrides: hand.length ? { ...overrides, stroke: 'none' } : overrides,
+      }),
+      ...hand,
     ];
     if (node.title) {
       const fontSize = fontSizeOf(node.style, theme);
@@ -33,16 +55,9 @@ export const frame: ComponentDef<FrameNode> = {
           text: node.title,
           fontSize,
           color: textColor(node.style, theme.text),
+          weight: TITLE_WEIGHT,
         }),
-        {
-          key: 'divider',
-          kind: 'line',
-          x1: 0,
-          y1: FRAME_TITLE_HEIGHT,
-          x2: width,
-          y2: FRAME_TITLE_HEIGHT,
-          style: resolvePartStyle(theme, node, { fill: undefined }),
-        },
+        ...ruleParts(theme, node, width),
       );
     }
     return parts;

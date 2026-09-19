@@ -281,6 +281,41 @@ size. Marks ink themselves in the theme's accent, or in `strokes` when given.
 See [docs/API.md](docs/API.md) for every prop, including how an arrow chooses
 which edges to leave and meet.
 
+### Weight and the marker
+
+Grape Nuts ships in one cut, so a heavier weight is not a second face: it is the
+same letter gone round again with a broader, sketched pen, which is what gives
+a heading both its weight and its wobble.
+
+```ts
+demo.text({ id: 'h', x: 40, y: 40, characters: 'Checkout', style: { fontSize: 30, fontWeight: 700 } });
+demo.text({ id: 'h2', x: 40, y: 100, characters: 'Billing', style: { fontSize: 26, marker: true } });
+```
+
+`fontWeight` runs from 400 to 900 and is held back on small text so counters
+stay open. `marker` sweeps a grey band under the words before they are written.
+Component titles are written at 600 already; everything else stays at 400 until
+you ask. Bold is real geometry, so keep it for headings rather than body text.
+
+### The hand-drawn frame
+
+Containers are not outlined with a rounded rectangle. A window, frame,
+fieldset, form, toolbar or dialog gets a light marker band, four edges that run
+past their corners, a second thinner pass over them and two short strokes
+re-inking each corner, so the box reads as drawn rather than printed. The
+treatment scales itself down on small boxes, and the theme dials it:
+
+```ts
+const demo = createDemo({
+  width: 900,
+  height: 600,
+  theme: { frameOvershoot: 12, frameBand: 10, frameBandOpacity: 0.4 },
+});
+```
+
+`frameOvershoot: 0` goes back to the plain rectangle; `frameBand: 0` keeps the
+overshooting edges but drops the grey band.
+
 ### Relative placement
 
 Instead of `x` and `y`, a node can say where it sits relative to one that

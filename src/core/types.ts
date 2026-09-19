@@ -56,6 +56,18 @@ export type TextAlignHorizontal = 'LEFT' | 'CENTER' | 'RIGHT';
 /** Text styling, a subset of Figma's TypeStyle. `fills` colours the glyphs. */
 export interface TypeStyle {
   fontSize?: number;
+  /**
+   * 400 (default) draws the glyph as it is. Above that the letterform is gone
+   * round with a broader, sketched pen, the way a hand thickens a word: there
+   * is no second cut of the font, so any value between 400 and 900 works.
+   */
+  fontWeight?: number;
+  /**
+   * A marker swept under the words, the way a heading gets picked out on
+   * paper. `true` uses the theme's own grey; a `Paint` picks the colour and
+   * how strongly it shows.
+   */
+  marker?: boolean | Paint;
   textAlignHorizontal?: TextAlignHorizontal;
   fills?: Paint[];
 }
@@ -72,6 +84,16 @@ export interface Theme {
   bowing: number;
   radius: number;
   fontSize: number;
+  /**
+   * How far a container's outline runs past its corners, in px. 0 draws the
+   * plain rounded rectangle instead of the hand-drawn frame. Scaled down on
+   * small boxes so the overshoot never dominates them.
+   */
+  frameOvershoot: number;
+  /** Width of the light marker band under a container's outline. 0 leaves the ink bare. */
+  frameBand: number;
+  /** Opacity of that band, 0..1. */
+  frameBandOpacity: number;
   /** Roughness applied to text strokes; text wants less wobble than boxes. */
   textRoughness: number;
 }

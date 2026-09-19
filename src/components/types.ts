@@ -55,6 +55,10 @@ export type Part = { key: string; style: PartStyle; layer?: 'overlay' } & (
       fontSize: number;
       align: TextAlignHorizontal;
       color: string;
+      /** 400 draws the glyph as it is; heavier goes round it again with a broader pen. */
+      weight: number;
+      /** A marker swept under the words before they are written. */
+      marker?: { color: string; opacity: number };
     }
   | { kind: 'icon'; x: number; y: number; size: number; icon: IconDef; color: string }
   /** An element emitted as-is, for things that are deliberately not sketched (clip rects, carets). */

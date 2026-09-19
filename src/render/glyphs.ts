@@ -15,6 +15,27 @@ export function glyphStrokeWidth(fontSize: number): number {
   return Math.max(0.9, fontSize / 12);
 }
 
+/** The plain letterform. */
+const REGULAR = 400;
+/** At 700 the pen going round an outline is this fraction of the font size; 900 is heavier still. */
+const BOLD_PEN = 0.062;
+/**
+ * Small glyphs have small counters, and a broad pen closes them up. The pen is
+ * held back below 24px and barely there at label sizes.
+ */
+const PEN_FULL_SIZE = 24;
+const PEN_FLOOR_SIZE = 10;
+const PEN_MIN_GAIN = 0.15;
+/** A stroke font has no outline to go round, so its own stroke thickens instead. */
+const BOLD_STROKE_GAIN = 0.9;
+
+/** How wide the pen that goes round an outline glyph is, or 0 at a plain weight. */
+function boldPen(weight: number, fontSize: number): number {
+  if (weight <= REGULAR) return 0;
+  const gain = Math.max(PEN_MIN_GAIN, Math.min(1, (fontSize - PEN_FLOOR_SIZE) / (PEN_FULL_SIZE - PEN_FLOOR_SIZE)));
+  return ((weight - REGULAR) / 300) * fontSize * BOLD_PEN * gain;
+}
+
 /**
  * Draws a text part as sketched strokes. Every glyph stroke is a separate
  * engine call with its own seed keyed by character index and code, so while
@@ -23,9 +44,11 @@ export function glyphStrokeWidth(fontSize: number): number {
  */
 export function renderTextPart(gen: RoughGenerator, font: StrokeFont, part: TextPart, seed: number): VElement[] {
   const { fontSize, color } = part;
+  const pen = boldPen(part.weight, fontSize);
   const layout = layoutText(font, part.text, fontSize, part.align);
   const scale = font.scale(fontSize);
-  const strokeWidth = glyphStrokeWidth(fontSize);
+  const strokeWidth =
+    glyphStrokeWidth(fontSize) * (1 + ((Math.max(part.weight, REGULAR) - REGULAR) / 300) * BOLD_STROKE_GAIN);
   const capHeight = font.capHeight(fontSize);
   // Sketched strokes (and tofu boxes) go in one stroked path; outline glyphs in one filled path.
   let stroked = '';
@@ -44,7 +67,16 @@ export function renderTextPart(gen: RoughGenerator, font: StrokeFont, part: Text
     }
     const shape = glyph[1];
     if (typeof shape === 'string') {
-      filled += placeOutline(shape, scale, ox, oy);
+      const d = placeOutline(shape, scale, ox, oy);
+      filled += d;
+      // A heavier weight is the same letter gone round with a broader, sketched
+      // pen: the edge picks up the wobble the rest of the drawing has.
+      if (pen > 0) {
+        const o = strokeOptions(part, deriveSeed(seed, g.index, code, 1), pen);
+        o.disableMultiStroke = true;
+        o.preserveVertices = false;
+        stroked += pathData(gen.path(d, o), gen);
+      }
       continue;
     }
     shape.forEach((stroke, strokeIndex) => {
@@ -58,6 +90,35 @@ export function renderTextPart(gen: RoughGenerator, font: StrokeFont, part: Text
     });
   }
   const out: VElement[] = [];
+  // The marker goes down before the words do, so the ink reads over it.
+  if (part.marker) {
+    const b = layout.bounds;
+    const band = gen.line(
+      part.x + b.x + b.width * 0.02,
+      part.y + b.y + b.height * 0.58,
+      part.x + b.x + b.width * 0.98,
+      part.y + b.y + b.height * 0.46,
+      {
+        seed: deriveSeed(seed, 0, 0, 7),
+        fixedDecimalPlaceDigits: PRECISION,
+        stroke: part.marker.color,
+        strokeWidth: b.height * 0.8,
+        roughness: part.style.roughness * 2,
+        bowing: part.style.bowing,
+        disableMultiStroke: true,
+      },
+    );
+    out.push(
+      h('path', {
+        d: pathData(band, gen).trim(),
+        stroke: part.marker.color,
+        'stroke-width': fmt(b.height * 0.8),
+        'stroke-linecap': 'round',
+        fill: 'none',
+        opacity: part.marker.opacity,
+      }),
+    );
+  }
   if (filled) {
     const attrs: VElement['attrs'] = { d: filled, fill: color };
     if (part.style.opacity !== undefined) attrs.opacity = part.style.opacity;
@@ -67,7 +128,7 @@ export function renderTextPart(gen: RoughGenerator, font: StrokeFont, part: Text
     const attrs: VElement['attrs'] = {
       d: stroked.trim(),
       stroke: color,
-      'stroke-width': strokeWidth,
+      'stroke-width': pen > 0 && filled ? pen : strokeWidth,
       fill: 'none',
       'stroke-linecap': 'round',
       'stroke-linejoin': 'round',

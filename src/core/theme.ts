@@ -13,6 +13,9 @@ export const DEFAULT_THEME: Readonly<Theme> = Object.freeze({
   radius: 6,
   fontSize: 14,
   textRoughness: 0.6,
+  frameOvershoot: 8,
+  frameBand: 8,
+  frameBandOpacity: 0.5,
 });
 
 export function resolveTheme(theme?: Partial<Theme>): Theme {

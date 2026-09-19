@@ -10,6 +10,7 @@ import type { RenderContext } from '../../../src/components/types.js';
 import type { ButtonNode, ComponentState, InputNode, SceneNode } from '../../../src/core/types.js';
 
 const make = () => createDemo({ width: 800, height: 600, seed: 3 });
+const partKeys = (parts: { key: string }[]) => parts.map((p) => p.key);
 
 function expand(
   demo: ReturnType<typeof make>,
@@ -134,8 +135,24 @@ describe('containers', () => {
     expect(demo.scene.contentOrigin('p')).toEqual({ x: 100, y: 100 + FRAME_TITLE_HEIGHT });
     expect(demo.scene.contentOrigin('q')).toEqual({ x: 100, y: 400 });
     expect(demo.scene.bounds('child')).toEqual({ x: 110, y: 110 + FRAME_TITLE_HEIGHT, width: 20, height: 20 });
-    expect(expand(demo, demo.scene.node('p')).map((p) => p.key)).toEqual(['box', 'title', 'divider']);
-    expect(expand(demo, demo.scene.node('q')).map((p) => p.key)).toEqual(['box']);
+    expect(expand(demo, demo.scene.node('p')).map((p) => p.key)).toEqual([
+      'box',
+      'frame-band',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+      'title',
+      'divider-band',
+      'divider-ink',
+      'divider-ink2',
+    ]);
+    expect(expand(demo, demo.scene.node('q')).map((p) => p.key)).toEqual([
+      'box',
+      'frame-band',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+    ]);
     expect(demo.scene.isInteractive(demo.scene.node('p'))).toBe(true);
     expect(demo.scene.isFocusable(demo.scene.node('p'))).toBe(false);
   });
@@ -149,9 +166,72 @@ describe('containers', () => {
     expect(demo.scene.contentOrigin('w').y).toBe(WINDOW_BAR_HEIGHT);
     expect(demo.scene.contentOrigin('b').y).toBe(BROWSER_BAR_HEIGHT);
     const wk = expand(demo, w).map((p) => p.key);
-    expect(wk).toEqual(['box', 'divider', 'light-0', 'light-1', 'light-2', 'title']);
+    expect(wk).toEqual([
+      'box',
+      'frame-band',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+      'divider-band',
+      'divider-ink',
+      'divider-ink2',
+      'light-0',
+      'light-1',
+      'light-2',
+      'title',
+    ]);
     const bk = expand(demo, b).map((p) => p.key);
-    expect(bk).toEqual(['box', 'divider', 'light-0', 'light-1', 'light-2', 'nav-0', 'nav-1', 'address', 'url']);
+    expect(bk).toEqual([
+      'box',
+      'frame-band',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+      'divider-band',
+      'divider-ink',
+      'divider-ink2',
+      'light-0',
+      'light-1',
+      'light-2',
+      'nav-0',
+      'nav-1',
+      'address',
+      'url',
+    ]);
+  });
+
+  test('the hand-drawn frame: a theme turns it off, and a small box scales it down', () => {
+    const plain = createDemo({ width: 400, height: 300, seed: 3, theme: { frameOvershoot: 0 } });
+    plain.frame({ id: 'p', x: 0, y: 0, width: 300, height: 200 });
+    // With the treatment off the box is the whole outline, stroke and all.
+    const parts = expand(plain, plain.scene.node('p'));
+    expect(parts.map((p) => p.key)).toEqual(['box']);
+    expect(parts[0].style.stroke).not.toBe('none');
+
+    const bandless = createDemo({ width: 400, height: 300, seed: 3, theme: { frameBand: 0 } });
+    bandless.frame({ id: 'p', x: 0, y: 0, width: 300, height: 200 });
+    expect(expand(bandless, bandless.scene.node('p')).map((p) => p.key)).toEqual([
+      'box',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+    ]);
+
+    // Overshoot is capped at a quarter of the shorter side, so a shallow box keeps its shape.
+    const demo = make();
+    demo.frame({ id: 'shallow', x: 0, y: 0, width: 300, height: 30 });
+    const ink = expand(demo, demo.scene.node('shallow')).find((p) => p.key === 'frame-ink');
+    expect(ink?.kind).toBe('path');
+    expect(Number(/^M(-?[\d.]+) /.exec((ink as { d: string }).d)![1])).toBeCloseTo(-7.5, 6);
+    // No band on a strip that shallow, and below 28px the plain rectangle takes over entirely.
+    expect(partKeys(expand(demo, demo.scene.node('shallow')))).toEqual([
+      'box',
+      'frame-ink',
+      'frame-ink2',
+      'frame-corners',
+    ]);
+    demo.frame({ id: 'thin', x: 0, y: 100, width: 300, height: 24 });
+    expect(partKeys(expand(demo, demo.scene.node('thin')))).toEqual(['box']);
   });
 
   test('clicking inside a container but outside a control hits the container', () => {

@@ -1,6 +1,7 @@
 import type { WindowNode } from '../core/types.js';
 import type { ComponentDef, Part } from './types.js';
-import { centredTextTop, rectPart, textPart } from './common.js';
+import { centredTextTop, rectPart, textPart, TITLE_WEIGHT } from './common.js';
+import { handFrameParts, handRuleParts } from './hand-frame.js';
 import { fontSizeOf, hasOwnFill, resolvePartStyle, textColor } from './style.js';
 import { visibleValue } from './input.js';
 
@@ -30,17 +31,33 @@ export const window: ComponentDef<WindowNode> = {
     const boxOverrides: Parameters<typeof rectPart>[3]['overrides'] = {};
     if (!hasOwnFill(node)) boxOverrides.fill = theme.surface;
     if (node.sketch?.fillStyle === undefined) boxOverrides.fillStyle = 'solid';
+    const box = { x: 0, y: 0, width: node.width, height: node.height };
+    const hand = handFrameParts('frame-', theme, node, { ...box, overrides: boxOverrides });
     const parts: Part[] = [
+      // The hand-drawn frame carries the outline, so the box is left as the fill it sits on.
       rectPart('box', theme, node, {
-        x: 0,
-        y: 0,
-        width: node.width,
-        height: node.height,
+        ...box,
         cornerRadius: RADIUS,
-        overrides: boxOverrides,
+        overrides: hand.length ? { ...boxOverrides, stroke: 'none' } : boxOverrides,
       }),
-      { key: 'divider', kind: 'line', x1: 0, y1: bar, x2: node.width, y2: bar, style: { ...base, fill: undefined } },
+      ...hand,
     ];
+    const rule = handRuleParts('divider-', theme, node, { x1: 0, y1: bar, x2: node.width, y2: bar });
+    parts.push(
+      ...(rule.length
+        ? rule
+        : [
+            {
+              key: 'divider',
+              kind: 'line' as const,
+              x1: 0,
+              y1: bar,
+              x2: node.width,
+              y2: bar,
+              style: { ...base, fill: undefined },
+            },
+          ]),
+    );
     LIGHT_COLOURS.forEach((colour, i) => {
       parts.push({
         key: `light-${i}`,
@@ -101,6 +118,7 @@ export const window: ComponentDef<WindowNode> = {
             fontSize,
             color: titleColor,
             align: 'CENTER',
+            weight: TITLE_WEIGHT,
           }),
         );
       }
@@ -113,6 +131,7 @@ export const window: ComponentDef<WindowNode> = {
           fontSize,
           color: titleColor,
           align: 'CENTER',
+          weight: TITLE_WEIGHT,
         }),
       );
     }

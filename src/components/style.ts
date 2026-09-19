@@ -53,10 +53,29 @@ export function hasOwnFill(node: NodeBase): boolean {
 }
 
 /** The colour for a node's text: its TypeStyle fills, else the given default. */
+const REGULAR = 400;
+/** How strongly the marker under a heading shows when the style does not say. */
+const MARKER_OPACITY = 0.3;
+
 export function textColor(style: TypeStyle | undefined, fallback: string): string {
   const paint = resolvePaint(style?.fills);
   if (paint === undefined || paint === 'none') return fallback;
   return paint.color;
+}
+
+/** The marker swept under a heading: the theme's grey unless the style names a paint. */
+export function markerOf(style: TypeStyle | undefined, theme: Theme): { color: string; opacity: number } | undefined {
+  const marker = style?.marker;
+  if (!marker) return undefined;
+  if (marker === true) return { color: theme.muted, opacity: MARKER_OPACITY };
+  const paint = resolvePaint([marker]);
+  if (paint === undefined || paint === 'none') return undefined;
+  return { color: paint.color, opacity: paint.opacity ?? MARKER_OPACITY };
+}
+
+/** Font weight from a TypeStyle; 400 is the plain letterform. */
+export function fontWeightOf(style: TypeStyle | undefined): number {
+  return style?.fontWeight ?? REGULAR;
 }
 
 /** Font size from a TypeStyle, else the theme's. */

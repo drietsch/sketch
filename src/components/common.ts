@@ -1,9 +1,14 @@
-import type { NodeBase, Theme } from '../core/types.js';
+import type { NodeBase, Theme, TypeStyle } from '../core/types.js';
 import type { StrokeFont } from '../text/font.js';
 import type { Part, PartStyle } from './types.js';
-import { resolvePartStyle } from './style.js';
+import { markerOf, resolvePartStyle } from './style.js';
 
 export type TextPart = Extract<Part, { kind: 'text' }>;
+
+/** The plain letterform; heavier weights go round it again with a broader pen. */
+export const REGULAR_WEIGHT = 400;
+/** What a component's own heading is written with, unless the node's style says otherwise. */
+export const TITLE_WEIGHT = 600;
 export type RectPart = Extract<Part, { kind: 'rect' }>;
 
 /** Top y for a single-line text part so that its cap height is centred in a box of `height`. */
@@ -16,7 +21,16 @@ export function textPart(
   key: string,
   theme: Theme,
   node: NodeBase,
-  opts: { x: number; y: number; text: string; fontSize: number; color: string; align?: TextPart['align'] },
+  opts: {
+    x: number;
+    y: number;
+    text: string;
+    fontSize: number;
+    color: string;
+    align?: TextPart['align'];
+    /** A component's own default weight; the node's `style.fontWeight` wins over it. */
+    weight?: number;
+  },
 ): TextPart {
   return {
     key,
@@ -27,6 +41,8 @@ export function textPart(
     fontSize: opts.fontSize,
     align: opts.align ?? 'LEFT',
     color: opts.color,
+    weight: (node as { style?: TypeStyle }).style?.fontWeight ?? opts.weight ?? REGULAR_WEIGHT,
+    marker: markerOf((node as { style?: TypeStyle }).style, theme),
     style: resolvePartStyle(theme, node, { roughness: node.sketch?.roughness ?? theme.textRoughness }),
   };
 }

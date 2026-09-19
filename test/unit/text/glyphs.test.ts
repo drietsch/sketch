@@ -14,8 +14,44 @@ const part = (text: string, extra: Partial<Extract<Part, { kind: 'text' }>> = {}
   fontSize: 16,
   align: 'LEFT',
   color: '#123',
+  weight: 400,
   style: { stroke: '#123', strokeWeight: 1, fillStyle: 'hachure', roughness: 0.6, bowing: 1 },
   ...extra,
+});
+
+const pen = (els: ReturnType<typeof renderTextPart>) => Number(els.at(-1)!.attrs['stroke-width']);
+
+describe('weight and marker', () => {
+  test('a heavier weight goes round an outline glyph with a broader pen', () => {
+    const plain = renderTextPart(gen, DEFAULT_FONT, part('Hi'), 3);
+    const bold = renderTextPart(gen, DEFAULT_FONT, part('Hi', { weight: 700, fontSize: 32 }), 3);
+    // Regular: one filled path. Bold: the fill, plus the sketched pen over it.
+    expect(plain).toHaveLength(1);
+    expect(bold).toHaveLength(2);
+    expect(bold[1].attrs.fill).toBe('none');
+    expect(Number(bold[1].attrs['stroke-width'])).toBeGreaterThan(1);
+  });
+
+  test('the pen is held back on small text, so counters stay open', () => {
+    const big = renderTextPart(gen, DEFAULT_FONT, part('Hi', { weight: 700, fontSize: 32 }), 3);
+    const small = renderTextPart(gen, DEFAULT_FONT, part('Hi', { weight: 700, fontSize: 12 }), 3);
+    // Not merely smaller in proportion to the size: held back further than that.
+    expect(pen(small)).toBeLessThan(pen(big) * (12 / 32));
+  });
+
+  test('a marker is swept before the words, under the ink', () => {
+    const els = renderTextPart(gen, DEFAULT_FONT, part('Hi', { marker: { color: '#ccc', opacity: 0.3 } }), 3);
+    expect(els).toHaveLength(2);
+    expect(els[0].attrs.stroke).toBe('#ccc');
+    expect(els[0].attrs.opacity).toBe(0.3);
+    expect(els[1].attrs.fill).toBe('#123');
+  });
+
+  test('a stroke font thickens its own stroke instead', () => {
+    const plain = renderTextPart(gen, HERSHEY_FONT, part('Hi'), 3);
+    const bold = renderTextPart(gen, HERSHEY_FONT, part('Hi', { weight: 700 }), 3);
+    expect(Number(bold[0].attrs['stroke-width'])).toBeGreaterThan(Number(plain[0].attrs['stroke-width']));
+  });
 });
 
 describe('renderTextPart with a stroke font', () => {

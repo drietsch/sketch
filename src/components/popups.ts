@@ -2,6 +2,7 @@ import type { Bounds, MenuItem, NodeBase, Theme, TypeStyle } from '../core/types
 import type { Part, PartStyle, Region, RenderContext } from './types.js';
 import { ROW } from './controls.js';
 import { centredTextTop, rectPart, textPart } from './common.js';
+import { handFrameParts } from './hand-frame.js';
 import { fontSizeOf, resolvePartStyle, textColor } from './style.js';
 
 /** Metrics shared by the popup family. */
@@ -23,6 +24,8 @@ export function panelParts(
   node: NodeBase,
   box: Bounds,
   overrides: Partial<PartStyle> = {},
+  /** Big panels (a dialog, a drawer) take the hand-drawn outline; small popups keep the plain one. */
+  hand = false,
 ): Part[] {
   const shadow = rectPart(`${keyPrefix}shadow`, theme, undefined, {
     x: box.x + 3,
@@ -40,9 +43,18 @@ export function panelParts(
     cornerRadius: theme.radius,
     overrides: { fill: theme.surface, fillStyle: 'solid', ...overrides },
   });
+  const frame = hand
+    ? handFrameParts(`${keyPrefix}frame-`, theme, node, {
+        ...box,
+        overrides: { fill: theme.surface, fillStyle: 'solid', ...overrides },
+        layer: 'overlay',
+        band: false,
+      })
+    : [];
   return [
     { ...shadow, layer: 'overlay' },
-    { ...panel, layer: 'overlay' },
+    { ...panel, layer: 'overlay', style: frame.length ? { ...panel.style, stroke: 'none' } : panel.style },
+    ...frame,
   ];
 }
 
