@@ -96,6 +96,11 @@ export interface Theme {
   frameBandOpacity: number;
   /** Roughness applied to text strokes; text wants less wobble than boxes. */
   textRoughness: number;
+  /**
+   * How many times a glyph is gone round with a pen, each pass from its own
+   * stream so the lines differ. 0 leaves the bare letterform.
+   */
+  textPasses: number;
 }
 
 /**

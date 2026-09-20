@@ -83,7 +83,6 @@ try {
     'DEFAULT_THEME',
     'Demo',
     'DemoJSONError',
-    'HERSHEY_FONT',
     'Player',
     'Scene',
     'StrokeFont',

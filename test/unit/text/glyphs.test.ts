@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import { RoughGenerator } from '../../../src/sketch/index.js';
-import { DEFAULT_FONT, HERSHEY_FONT } from '../../../src/text/index.js';
+import { DEFAULT_FONT, StrokeFont } from '../../../src/text/index.js';
+import { HERSHEY_SANS } from '../../support/hershey-sans.js';
+
+const HERSHEY_FONT = new StrokeFont(HERSHEY_SANS);
 import { renderTextPart, glyphStrokeWidth } from '../../../src/render/glyphs.js';
 import type { Part } from '../../../src/components/types.js';
 
@@ -22,17 +25,31 @@ const part = (text: string, extra: Partial<Extract<Part, { kind: 'text' }>> = {}
 const pen = (els: ReturnType<typeof renderTextPart>) => Number(els.at(-1)!.attrs['stroke-width']);
 
 describe('weight and marker', () => {
-  test('a heavier weight goes round an outline glyph with a broader pen', () => {
-    const plain = renderTextPart(gen, DEFAULT_FONT, part('Hi'), 3);
+  test('weight is contour strokes, not a broader pen', () => {
+    const plain = renderTextPart(gen, DEFAULT_FONT, part('Hi', { fontSize: 32 }), 3);
     const bold = renderTextPart(gen, DEFAULT_FONT, part('Hi', { weight: 700, fontSize: 32 }), 3);
-    // Regular: one filled path. Bold: the fill, plus the sketched pen over it.
-    expect(plain).toHaveLength(1);
+    // Both are the letterform plus its contours; the heavier one went round more times.
+    expect(plain).toHaveLength(2);
     expect(bold).toHaveLength(2);
     expect(bold[1].attrs.fill).toBe('none');
-    expect(Number(bold[1].attrs['stroke-width'])).toBeGreaterThan(1);
+    expect(String(bold[1].attrs.d).length).toBeGreaterThan(String(plain[1].attrs.d).length * 1.8);
+    // The pen itself barely moves: a wider nib is what stops it looking written.
+    expect(pen(bold)).toBeLessThan(pen(plain) * 2);
   });
 
-  test('the pen is held back on small text, so counters stay open', () => {
+  test('the letterform is graphite, not flat ink', () => {
+    const [fill, contour] = renderTextPart(gen, DEFAULT_FONT, part('Hi', { fontSize: 32 }), 3);
+    expect(Number(fill.attrs['fill-opacity'])).toBeLessThan(1);
+    expect(Number(contour.attrs['stroke-opacity'])).toBeLessThan(Number(fill.attrs['fill-opacity']));
+  });
+
+  test('textPasses 0 leaves the bare letterform', () => {
+    const els = renderTextPart(gen, DEFAULT_FONT, part('Hi', { style: { ...part('Hi').style, textPasses: 0 } }), 3);
+    expect(els).toHaveLength(1);
+    expect(els[0].attrs.fill).toBe('#123');
+  });
+
+  test('the hand is held back on small text, so counters stay open', () => {
     const big = renderTextPart(gen, DEFAULT_FONT, part('Hi', { weight: 700, fontSize: 32 }), 3);
     const small = renderTextPart(gen, DEFAULT_FONT, part('Hi', { weight: 700, fontSize: 12 }), 3);
     // Not merely smaller in proportion to the size: held back further than that.
@@ -41,7 +58,7 @@ describe('weight and marker', () => {
 
   test('a marker is swept before the words, under the ink', () => {
     const els = renderTextPart(gen, DEFAULT_FONT, part('Hi', { marker: { color: '#ccc', opacity: 0.3 } }), 3);
-    expect(els).toHaveLength(2);
+    expect(els).toHaveLength(3);
     expect(els[0].attrs.stroke).toBe('#ccc');
     expect(els[0].attrs.opacity).toBe(0.3);
     expect(els[1].attrs.fill).toBe('#123');
@@ -96,15 +113,18 @@ const first = (d: string) =>
     .map(Number);
 
 describe('renderTextPart with the default outline font', () => {
-  test('emits one filled path, in capitals, that owes nothing to the seed', () => {
-    const [el, ...rest] = renderTextPart(gen, DEFAULT_FONT, part('Hi'), 99);
+  test('the letterform is a filled path in capitals; the contours over it follow the seed', () => {
+    const [el, contour, ...rest] = renderTextPart(gen, DEFAULT_FONT, part('Hi'), 99);
     expect(rest).toEqual([]);
     expect(el.tag).toBe('path');
     expect(el.attrs.fill).toBe('#123');
     expect(el.attrs.stroke).toBeUndefined();
     expect(String(el.attrs.d)).toMatch(/^M[\d.]+ [\d.]+[lqc]/);
+    // The letterform itself is the same however the document is seeded, and whatever case it was written in.
     expect(renderTextPart(gen, DEFAULT_FONT, part('hi'), 5)[0].attrs.d).toBe(el.attrs.d);
     expect(renderTextPart(gen, DEFAULT_FONT, part('HI'), 6)[0].attrs.d).toBe(el.attrs.d);
+    // The hand over it does not: a different seed writes it differently.
+    expect(renderTextPart(gen, DEFAULT_FONT, part('Hi'), 5)[1].attrs.d).not.toBe(contour.attrs.d);
   });
 
   test('typing more characters leaves the earlier glyphs byte-identical; the outline is scaled and placed', () => {

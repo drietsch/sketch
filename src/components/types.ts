@@ -34,6 +34,8 @@ export interface PartStyle {
   strokeDashes?: number[];
   opacity?: number;
   disableMultiStroke?: boolean;
+  /** How many times a glyph's outline is gone round with a pen. */
+  textPasses?: number;
   preserveVertices?: boolean;
 }
 

@@ -6,7 +6,7 @@ into `dist/`, and their notices are reproduced here as their licenses require.
 
 - [roughjs](#roughjs) and four small libraries it uses: the sketch engine (MIT)
 - [Grape Nuts](#grape-nuts): the default font, as glyph outlines (SIL Open Font License 1.1)
-- [Hershey Fonts](#hershey-fonts): the alternative stroke font (permissive use restriction)
+- [Hershey Fonts](#hershey-fonts): not in the bundle any more, still in the repository (permissive use restriction)
 - [sketchyicons](#sketchyicons), derived from Lucide and Feather: the built-in icons (MIT / ISC / MIT)
 
 The published bundle is not minified and comments are preserved, so the code
@@ -167,9 +167,14 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 ## Hershey Fonts
 
-The built-in text font (`src/text/fonts/hershey-sans.ts`) is a converted copy
-of `futural.jhf`, the "Hershey Sans 1-stroke" font from the 1986 Usenet
-distribution of the Hershey Fonts, taken from
+This font was the package's default until 0.8.0 and is no longer compiled
+into `dist/`. The converted copy lives in `test/support/hershey-sans.ts`,
+where the migration tests hand it to `loadDemo` to prove that documents saved
+with it still render; the notice stands because the repository still
+redistributes the data.
+
+It is a converted copy of `futural.jhf`, the "Hershey Sans 1-stroke" font from
+the 1986 Usenet distribution of the Hershey Fonts, taken from
 https://github.com/kamalmostafa/hershey-fonts. The original file and the
 distribution's use restriction are in `vendor/hershey/`.
 

@@ -34,7 +34,6 @@ export const PUBLIC_EXPORTS = [
   'DEFAULT_THEME',
   'Demo',
   'DemoJSONError',
-  'HERSHEY_FONT',
   'Player',
   'Scene',
   'StrokeFont',

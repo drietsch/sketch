@@ -283,19 +283,23 @@ which edges to leave and meet.
 
 ### Weight and the marker
 
-Grape Nuts ships in one cut, so a heavier weight is not a second face: it is the
-same letter gone round again with a broader, sketched pen, which is what gives
-a heading both its weight and its wobble.
+Text is drawn in pencil: every glyph is gone round with a fine graphite line
+that strays a hair from the letterform, so the words look written rather than
+set. Grape Nuts ships in one cut, so a heavier weight is not a second face —
+it is the same letter gone round more times, which is what gives a heading its
+weight without thickening the nib until the counters close.
 
 ```ts
 demo.text({ id: 'h', x: 40, y: 40, characters: 'Checkout', style: { fontSize: 30, fontWeight: 700 } });
 demo.text({ id: 'h2', x: 40, y: 100, characters: 'Billing', style: { fontSize: 26, marker: true } });
 ```
 
-`fontWeight` runs from 400 to 900 and is held back on small text so counters
-stay open. `marker` sweeps a grey band under the words before they are written.
-Component titles are written at 600 already; everything else stays at 400 until
-you ask. Bold is real geometry, so keep it for headings rather than body text.
+`fontWeight` runs from 400 to 900 — one contour to four — and is held back on
+small text so counters stay open. `marker` sweeps a grey band under the words
+before they are written. Component titles are written at 600 already;
+everything else stays at 400 until you ask. Contours are real geometry, so keep
+the heavy weights for headings rather than body text. `theme.textPasses: 0`
+gives the bare letterform back.
 
 ### The hand-drawn frame
 
@@ -487,14 +491,9 @@ and measured, so `characters: 'Sign in'` reads SIGN IN while the model keeps
 symbols, and the typographic characters UI copy uses (`…`, curly quotes,
 dashes); anything else draws as a small box.
 
-The previous default, the Hershey sans drawn as sketched single strokes, is
-still there as `HERSHEY_FONT` (mixed case, ASCII only):
-
-```ts
-import { createDemo, HERSHEY_FONT } from '@drietsch/sketch';
-
-const demo = createDemo({ width: 400, height: 200, font: HERSHEY_FONT });
-```
+The package ships this one font. A document may bring its own through
+`createDemo({ font })`, and one saved with a font the package does not carry
+must be handed it again: `loadDemo(json, { font })`.
 
 A custom `StrokeFont` built from `StrokeFontData` (stroke polylines or
 outline paths) can be passed the same way; a document saved with one must be
@@ -513,7 +512,7 @@ The pages in [`examples/`](examples/) load the built bundle. Run
 `pnpm run verify:pages` to render them all in headless Chromium).
 
 - `sketch-styles.html`: every fill style and primitive
-- `text-and-icons.html`: both fonts at several sizes, every built-in icon
+- `text-and-icons.html`: the font at several sizes and weights, every built-in icon
 - `login-form.html`: the briefing's mockup with every component state
 - `login-demo.html`: the same, animated, with a scrub bar over `toSVG(t)`
 - `player.html`: mounted into a live SVG and driven by the `Player`
@@ -542,7 +541,7 @@ of those is missing.
 
 The sketch-geometry engine in `src/sketch/` is derived from
 [roughjs](https://github.com/rough-stuff/rough) by Preet Shihn (MIT). Text
-uses Grape Nuts by Robert Leuschke (SIL OFL) and the Hershey Fonts; icons
+uses Grape Nuts by Robert Leuschke (SIL OFL); icons
 come from sketchyicons, derived from Lucide and Feather. See
 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 

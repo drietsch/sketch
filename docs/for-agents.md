@@ -96,7 +96,8 @@ it live and returns a player with `play`, `pause`, `seek`.
   you wrote, so `type('email', 'ada@example.com')` shows ADA@EXAMPLE.COM and
   `nodeAt` reports `'ada@example.com'`. It covers ASCII, Latin-1 letters and
   symbols, `…`, curly quotes and dashes; other characters draw as a small
-  box. For mixed case, pass `font: HERSHEY_FONT` to `createDemo`.
+  box. There is no mixed-case font in the package; a document may supply its
+  own through `createDemo({ font })`.
 - **Keep the whole scene inside the document.** Nothing is clipped except
   inside a `SCROLL_AREA`; anchored popups are pulled back onto the page.
 

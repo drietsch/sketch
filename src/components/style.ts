@@ -20,6 +20,7 @@ export function resolvePartStyle(
     fillStyle: sketch?.fillStyle ?? 'hachure',
     roughness: sketch?.roughness ?? theme.roughness,
     bowing: sketch?.bowing ?? theme.bowing,
+    textPasses: theme.textPasses,
   };
   const stroke = resolvePaint(node?.strokes);
   if (stroke === 'none') out.stroke = 'none';

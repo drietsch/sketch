@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest';
-import { DEFAULT_FONT, HERSHEY_FONT, StrokeFont, layoutText } from '../../../src/text/index.js';
-import { HERSHEY_SANS } from '../../../src/text/fonts/hershey-sans.js';
+import { DEFAULT_FONT, StrokeFont, layoutText } from '../../../src/text/index.js';
+import { HERSHEY_SANS } from '../../support/hershey-sans.js';
+
+/** Not shipped any more; kept as a fixture because pre-0.8.0 documents name it. */
+const HERSHEY_FONT = new StrokeFont(HERSHEY_SANS);
 import { GRAPE_NUTS } from '../../../src/text/fonts/grape-nuts.js';
 
 describe('StrokeFont', () => {

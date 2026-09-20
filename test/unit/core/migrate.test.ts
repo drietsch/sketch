@@ -1,8 +1,16 @@
 import { describe, expect, test } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { HERSHEY_FONT, loadDemo, parseDemoJSON } from '../../../src/index.js';
+import { StrokeFont, loadDemo, parseDemoJSON } from '../../../src/index.js';
+import { HERSHEY_SANS } from '../../support/hershey-sans.js';
 import { migrateV1 } from '../../../src/core/json.js';
 import { SCENES } from '../../support/scenes.js';
+
+/**
+ * The package ships one font now, so a document saved with the old default has
+ * to be handed it. That is the documented path for any font the package does
+ * not carry, and these fixtures are the reason it exists.
+ */
+const HERSHEY_FONT = new StrokeFont(HERSHEY_SANS);
 
 /**
  * Documents written by 0.1.0 / 0.2.0 (version 1: flat `nodes` with `parent`,
@@ -18,8 +26,8 @@ describe('version 1 migration', () => {
     ['login-form', 'loginForm'],
     ['primitives', 'primitives'],
   ])('%s renders byte-identically to the 0.3.0 fixture', (file, fixture) => {
-    const migrated = loadDemo(v1(file));
-    // The fixtures were saved with the Hershey font, which loadDemo finds by name.
+    const migrated = loadDemo(v1(file), { font: HERSHEY_FONT });
+    // The fixtures were saved with the Hershey font, which no longer ships: it is supplied here.
     expect(migrated.font.name).toBe('hershey-sans');
     const fresh = SCENES[fixture](undefined, HERSHEY_FONT);
     const duration = fresh.duration;

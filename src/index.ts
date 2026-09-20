@@ -22,7 +22,7 @@ export { Player } from './player/player.js';
 export type { Clock, PlayerEvent, PlayerOptions } from './player/player.js';
 
 export { registerIcon, iconNames } from './icons/index.js';
-export { StrokeFont, DEFAULT_FONT, HERSHEY_FONT } from './text/index.js';
+export { StrokeFont, DEFAULT_FONT } from './text/index.js';
 export { DEFAULT_THEME } from './core/theme.js';
 
 export { CompileError } from './timeline/compile.js';

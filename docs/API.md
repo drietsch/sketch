@@ -35,14 +35,14 @@ runtime dependencies and never touches the DOM unless `mount` or
 
 ### `createDemo(options: DemoOptions): Demo`
 
-| Option       | Type             | Default                          | Notes                                                                                                     |
-| ------------ | ---------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `width`      | `number`         | required                         | Document width in px. Must be positive.                                                                   |
-| `height`     | `number`         | required                         | Document height in px. Must be positive.                                                                  |
-| `seed`       | `number`         | random                           | Integer in `[0, 2^31)`. Read `demo.seed` to reproduce a run that used a random seed.                      |
-| `theme`      | `Partial<Theme>` | `DEFAULT_THEME`                  | Colours, stroke weight, roughness, corner radius, font size. See [Theme](#theme).                         |
-| `background` | `string \| null` | the theme background (`#ffffff`) | A CSS colour, or `null` for a transparent document.                                                       |
-| `font`       | `StrokeFont`     | `DEFAULT_FONT`                   | The font for all text: Grape Nuts in capitals by default, `HERSHEY_FONT` for mixed-case sketched strokes. |
+| Option       | Type             | Default                          | Notes                                                                                                       |
+| ------------ | ---------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `width`      | `number`         | required                         | Document width in px. Must be positive.                                                                     |
+| `height`     | `number`         | required                         | Document height in px. Must be positive.                                                                    |
+| `seed`       | `number`         | random                           | Integer in `[0, 2^31)`. Read `demo.seed` to reproduce a run that used a random seed.                        |
+| `theme`      | `Partial<Theme>` | `DEFAULT_THEME`                  | Colours, stroke weight, roughness, corner radius, font size. See [Theme](#theme).                           |
+| `background` | `string \| null` | the theme background (`#ffffff`) | A CSS colour, or `null` for a transparent document.                                                         |
+| `font`       | `StrokeFont`     | `DEFAULT_FONT`                   | The font for all text. Grape Nuts, in capitals, is the one the package ships; a document may bring its own. |
 
 ### `loadDemo(json: DemoJSON | string, options?: { font?: StrokeFont }): Demo`
 
@@ -151,13 +151,23 @@ Text-bearing nodes take `style: TypeStyle` with `fontSize`, `fontWeight`,
 the glyph colour. Interactive components take `state: ComponentState` with
 `focused`, `pressed`, `hovered`, `disabled` for the authored (static) look.
 
-### Weight and the marker
+### Pencil, weight and the marker
 
-The font ships in one cut, so there is no second face to switch to: a weight
-above 400 is the same letterform gone round again with a broader, sketched pen,
-which is also where the edge picks up its wobble. Any value from 400 to 900
-works, and the pen is held back below 24px so small text keeps its counters
-open rather than filling in.
+Text is drawn rather than printed: every glyph is gone round with a fine
+graphite line, each contour straying a hair from the letterform so no two
+lines are the same. The letterform is laid down a little short of solid and
+the contours lighter still, so tone builds where they overlap.
+`theme.textPasses` (1) sets how many contours a plain weight gets; `0` leaves
+the bare letterform.
+
+The font ships in one cut, so weight is more contours rather than a broader
+pen: 400 is one, 700 three, 900 four, and the pen itself barely grows. Any
+value from 400 to 900 works, and the whole treatment is held back below 24px
+so small text keeps its counters open rather than filling in.
+
+Because the contours are sketched, text follows the document seed — the same
+document and seed still render the same bytes, but a different seed writes the
+words differently.
 
 ```ts
 demo.text({ id: 'h', x: 40, y: 40, characters: 'Checkout', style: { fontSize: 30, fontWeight: 700 } });
@@ -524,7 +534,6 @@ Returned by `demo.mount(container, options)`.
 | `registerIcon(name, def)` | Registers an icon for the whole process. `demo.registerIcon` scopes it to one demo and saves it with the document.                                                                                                                                                                |
 | `IconDef`                 | `{ viewBox?: string, nodes: [tag, attrs][], rough?: boolean }`, the shape of `@sketchyicons/data`; any of its 1,756 icons can be passed directly. `rough: true` sketches clean paths.                                                                                             |
 | `DEFAULT_FONT`            | Grape Nuts (SIL OFL) as vendored glyph outlines, drawn in capitals: text is folded to upper case when measured and drawn, the model keeps its case. Covers printable ASCII, Latin-1 letters and common symbols, `…`, curly quotes and dashes; anything else draws as a small box. |
-| `HERSHEY_FONT`            | The Hershey sans, single strokes drawn through the sketch engine, mixed case, printable ASCII plus `…`, curly quotes and dashes. The default before 0.8.0.                                                                                                                        |
 | `StrokeFont`              | Built from `StrokeFontData`: `kind` (`stroke` polylines or `outline` paths), `uppercase`, `lineHeight`, metrics and `glyphs`. Methods: `measure`, `advance`, `caretX`, `glyph`, `fold`, `ascent`, `descent`, `capHeight`, `lineHeight`, `scale`, `outline`.                       |
 | `DEFAULT_THEME`           | See below.                                                                                                                                                                                                                                                                        |
 
@@ -616,7 +625,7 @@ are `DemoJSONError`s.
 ## Exports
 
 Runtime: `createDemo`, `loadDemo`, `Demo`, `Scene`, `Timeline`, `Player`,
-`registerIcon`, `iconNames`, `StrokeFont`, `DEFAULT_FONT`, `HERSHEY_FONT`,
+`registerIcon`, `iconNames`, `StrokeFont`, `DEFAULT_FONT`,
 `DEFAULT_THEME`, `CompileError`, `DemoJSONError`, `parseDemoJSON`.
 
 Types: `DemoOptions`, `LoadOptions`, `DemoJSON`, `Props`, `RelativeProps`,
