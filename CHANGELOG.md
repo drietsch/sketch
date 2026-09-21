@@ -2,6 +2,78 @@
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 0.10.0
+
+### Minor Changes
+
+- d7c58f7: Handodle is the font.
+  
+  **A scribbled marker hand, in capitals.** The package now ships Handodle
+  (Putracetol Studio) in place of Grape Nuts. Its letters are drawn with a
+  marker — a doubled line and all — and that drawing is the look, so each
+  letter is laid down as its own outline, filled a little short of solid, with
+  no line put round it. As before, every string is folded to capitals when it
+  is drawn; the model keeps the case you wrote.
+  
+  **Weight is going over it again.** A heavier weight lays the same letter
+  down again a hair off the first: 700 three times, 900 four, the shift kept
+  under a pixel or two so the word thickens without ghosting. From 700 up the
+  words also get a light marker under them on their own
+  (`theme.boldMarkerOpacity`, 0.18; `style.marker: false` declines it).
+  `theme.textPasses` (1) is how many times a plain weight is laid down.
+  
+  **What the file lacks is written by hand.** The font file carries no glyphs
+  for the digits, `ß`, `· ± ™`, the marks `? ( ) ! % & @ # $ * < > ^ { } ‹ › ‚`,
+  the arrows or the check marks. Those are written in this repository as pen strokes in the same hand,
+  drawn by the engine with the face's pen and gone over twice like its drawn
+  lines, so a price or a date sits with the words. Drop the full font in and
+  its own glyphs take over.
+  
+  `StrokeFontData` gains `penWidth` and `penPasses`; a face may mix outline
+  and stroke glyphs. The stroke path (Hershey-style faces, or a monoline face
+  reduced with `scripts/gen-stroke-font.mjs`) writes each stroke as one smooth
+  engine line, with a hand that wobbles in proportion to the size.
+  
+  **Licence.** Handodle is a commercial face; see THIRD-PARTY-NOTICES.md for
+  its terms and for what this build of it is. Redistributing the package is
+  the redistributor's responsibility.
+  
+  Documents saved with `grape-nuts` need that font handed back:
+  `loadDemo(json, { font })`. Golden digests move: every scene with text draws
+  differently.
+- d7c58f7: Labels over a hatch get a halo.
+  
+  Text and icons on a hatched face — a pressed toggle, a selected toggle-group
+  option, an avatar on its muted hachure, a button under the hover hatch — were
+  crossed by the hatch lines and hard to read. The face colour is now laid under
+  them first, a little wider than the pen and its straying contours, so the
+  lines stop short of the ink the way a gel pen clears its ground. Each
+  component uses its own face colour, so a hovered primary button's white label
+  gets an accent halo under the white hatch.
+  
+  `TypeStyle` gains `halo`: `true` lays the theme's surface under a `TEXT` node
+  you put over a hatched box of your own, a `Paint` names the colour, and
+  `false` takes a component's default away. It travels with the document.
+  
+  Golden digests move for the six scenes that show one of those faces.
+
+### Patch Changes
+
+- 1b1e16c: `gap` reaches an arrow and a callout.
+  
+  `demo.arrow({ gap })` and `demo.callout({ gap })` threw "gap and alignTo need
+  one of below, above, rightOf, leftOf": the relative-placement splitter claimed
+  the key before the node saw it, so the documented clearance of a shaft or a
+  tail could not be set. On those two types `gap` is now the node's own unless a
+  direction stands beside it, in which case it is the placement's, as before.
+  
+  **Getting the look.** The README and the agent guide gain a section on why a
+  screen drawn with the library reads as printed or as sketched — controls with
+  state rather than text lists, an icon on every control, one primary button,
+  headings at 700 with a marker, marks kept for review, sibling frames 16px
+  apart, a still rendered mid-use — with one worked screen that `verify:docs`
+  runs.
+
 ## 0.9.0
 
 ### Minor Changes
