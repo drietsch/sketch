@@ -125,6 +125,31 @@ describe('relative placement', () => {
     );
   });
 
+  test('a mark keeps its own gap when no direction claims it', () => {
+    // ARROW and CALLOUT have a `gap` of their own (shaft and tail clearance);
+    // without below/above/rightOf/leftOf beside it, the key is the node's.
+    const demo = make();
+    demo.button({ id: 'pay', below: 'email', characters: 'Pay' });
+    const arrow = demo.arrow({ id: 'ar', from: 'email', to: 'pay', gap: 12 });
+    expect(arrow.gap).toBe(12);
+    const note = demo.callout({ id: 'note', target: 'pay', characters: 'here', gap: 40 });
+    expect(note.gap).toBe(40);
+    // The clearance is real: a wider gap moves the bubble.
+    demo.callout({ id: 'near', target: 'pay', characters: 'here', gap: 10 });
+    expect(demo.scene.bounds('note').y).toBeLessThan(demo.scene.bounds('near').y);
+    // Beside a direction the key is still the placement's, and never stored.
+    const placed = demo.callout({ id: 'placed', below: 'pay', gap: 5, characters: 'free' } as never);
+    expect(placed.gap).toBeUndefined();
+    expect(placed.y).toBe(demo.scene.bounds('pay').y + demo.scene.bounds('pay').height + 5);
+    // Everything else still needs a direction for it.
+    expect(() => demo.rectangle({ id: 'r', gap: 4, x: 0, y: 0, width: 1, height: 1 } as never)).toThrow(
+      /gap and alignTo need one of below/,
+    );
+    expect(() => demo.arrow({ id: 'ar2', from: 'email', to: 'pay', alignTo: 'start' } as never)).toThrow(
+      /gap and alignTo need one of below/,
+    );
+  });
+
   test('centred text and lines are placed by their boxes, not their origins', () => {
     const demo = make();
     const t = demo.text({ id: 't', below: 'email', characters: 'hello', style: { textAlignHorizontal: 'CENTER' } });
@@ -154,13 +179,10 @@ describe('relative placement', () => {
   test('a placed scene renders byte-identically to the same scene written with literals', () => {
     const literal = createDemo({ width: 400, height: 300, seed: 9 });
     literal.text({ id: 'l1', x: 24, y: 24, characters: 'Email' });
-    literal.input({ id: 'i1', x: 24, y: 24 + DEFAULT_FONT.ascent(14) + DEFAULT_FONT.descent(14) + 4, width: 200 });
-    literal.button({
-      id: 'b1',
-      x: 24,
-      y: 24 + DEFAULT_FONT.ascent(14) + DEFAULT_FONT.descent(14) + 4 + INPUT_HEIGHT + 12,
-      characters: 'Go',
-    });
+    // The label's box is its ascent plus descent, summed as the layout sums them.
+    const labelHeight = DEFAULT_FONT.ascent(14) + DEFAULT_FONT.descent(14);
+    literal.input({ id: 'i1', x: 24, y: 24 + labelHeight + 4, width: 200 });
+    literal.button({ id: 'b1', x: 24, y: 24 + labelHeight + 4 + INPUT_HEIGHT + 12, characters: 'Go' });
 
     const placed = createDemo({ width: 400, height: 300, seed: 9 });
     placed.text({ id: 'l1', x: 24, y: 24, characters: 'Email' });

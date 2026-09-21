@@ -26,6 +26,8 @@ export type Placement =
 const DIRECTIONS: readonly PlaceDirection[] = ['below', 'above', 'rightOf', 'leftOf'];
 const ALIGNS: readonly Align[] = ['start', 'center', 'end'];
 export const PLACEMENT_KEYS: readonly string[] = [...DIRECTIONS, 'gap', 'alignTo'];
+/** Node types with a `gap` of their own: without a direction beside it, the key is the node's. */
+const OWNS_GAP: ReadonlySet<string> = new Set(['ARROW', 'CALLOUT']);
 
 /**
  * Separates placement props from node props. Placement keys must never reach
@@ -33,6 +35,7 @@ export const PLACEMENT_KEYS: readonly string[] = [...DIRECTIONS, 'gap', 'alignTo
  */
 export function splitPlacement(
   id: string,
+  type: string,
   props: Record<string, unknown>,
 ): { placement?: Placement; rest: Record<string, unknown> } {
   const rest: Record<string, unknown> = {};
@@ -43,6 +46,10 @@ export function splitPlacement(
   }
   const directions = DIRECTIONS.filter((d) => taken[d] !== undefined);
   if (directions.length === 0) {
+    if ('gap' in taken && OWNS_GAP.has(type)) {
+      rest.gap = taken.gap;
+      delete taken.gap;
+    }
     if ('gap' in taken || 'alignTo' in taken) {
       throw new Error(`Cannot place "${id}": gap and alignTo need one of below, above, rightOf, leftOf.`);
     }

@@ -714,7 +714,7 @@ export class Demo {
   private add<T extends NodeType>(type: T, props: NodeProps<NodeOf<T>>): NodeOf<T> {
     const id = props.id ?? this.ids.next(type, (candidate) => this.scene.has(candidate));
     // Placement and padding shorthands must never reach the stored node: they would leak into toJSON().
-    const { placement, rest } = splitPlacement(id, props as Record<string, unknown>);
+    const { placement, rest } = splitPlacement(id, type, props as Record<string, unknown>);
     expandPadding(id, rest);
     if (!placement) {
       if (typeof rest.x !== 'number' || typeof rest.y !== 'number') {
