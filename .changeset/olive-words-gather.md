@@ -7,8 +7,8 @@ Text can carry weight, and a heading can sit on a marker.
 The default font ships in one cut, and its glyphs were the one thing in a scene
 the engine never touched: filled outlines, straight into a path, while
 everything around them wobbled. A weight above 400 now goes round the same
-letterform again with a broader, sketched pen, so a heading gains thickness and
-a hand-drawn edge in the same stroke.
+letterform again, so a heading gains thickness and a hand-drawn edge in the
+same stroke; how the pen does that is under *One font, written in pencil*.
 
 ```ts
 demo.text({ id: 'h', x: 40, y: 40, characters: 'Checkout', style: { fontSize: 30, fontWeight: 700 } });

@@ -8,3 +8,5 @@ z
 bug.html
 test-results
 playwright-report
+/samples
+/sample_components
