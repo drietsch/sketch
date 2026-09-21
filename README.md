@@ -4,12 +4,13 @@
 and animating hand-drawn GUI mockups.
 
 Build complete interfaces (windows, panels, forms, buttons, inputs, checkboxes,
-sliders, tabs, icons, text) in a sketch-style visual language, then script how
-someone uses them: the cursor moves, clicks, checks, chooses, drags and types
-on a seekable timeline. Output is SVG, as a
-string in Node or a live document in the browser, and everything is
-deterministic: the same document, seed and timestamp always produce
-byte-identical output.
+sliders, tabs, icons, text) in a sketch-style visual language, mark them up
+the way a reviewer would (highlights, rings, underlines, arrows, callouts),
+then script how someone uses them: the cursor moves, clicks, checks, chooses,
+drags and types on a seekable timeline, and the mockup's own buttons can react.
+Output is SVG, as a string in Node or a live document in the browser, and
+everything is deterministic: the same document, seed and timestamp always
+produce byte-identical output.
 
 > Everything that can be drawn, edited, animated or interacted with has a
 > public API representation. A future visual editor uses the same API.
@@ -63,14 +64,18 @@ Nodes are created through the demo's factories and edited through the scene:
 `INPUT`, `FRAME` and `WINDOW` (plain or browser chrome), next to the
 primitives `RECTANGLE`, `ELLIPSE`, `LINE`, `VECTOR`, `TEXT` and `ICON`. Inputs and buttons are simulated
 graphical controls, not native HTML, so focus rings, carets, hover and
-pressed looks are all drawn and all exportable.
+pressed looks are all drawn and all exportable. Annotation marks
+(`HIGHLIGHT`, `ENCIRCLE`, `UNDERLINE`, `ARROW`, `CALLOUT`) are nodes as well:
+they target another node and follow it, and take no clicks.
 
 **Timeline.** What happens and when. A fluent builder over a plain list of
 steps: `moveCursor`, `click`, `press`, `release`, `type`, `clear`, `wait`,
 `focus`, `blur`, `setValue` and `set` (patch a node from that moment on).
 Durations are computed when the timeline is compiled against the scene:
 cursor moves follow Fitts's law along seeded curved paths, clicks hold for a
-human moment, typing has a human cadence. Pass `duration` to override.
+human moment, typing has a human cadence. Pass `duration` to override. A
+node's own `reactions` fire on top: a click on a Cancel button can close its
+dialog without the timeline saying so.
 
 **Rendering.** `demo.frameAt(t)` is a pure function of the document and the
 time. `toSVG(t)` serialises it; `mount(el)` renders it into a live `<svg>`
@@ -501,7 +506,8 @@ loaded with it.
 
 Icons use the [`@sketchyicons/data`](https://github.com/Fantomiald/sketchyicons)
 shape: 47 common icons are built in (`iconNames()` lists them), any of that
-package's 1,756 icons can be passed to `demo.icon({ icon })` directly, and
+package's icons — 1,759 drawings under 2,006 names — can be passed to
+`demo.icon({ icon })` directly, and
 `registerIcon(name, def)` adds more by name. Set `rough: true` on a
 definition of clean paths to sketch them.
 
@@ -519,6 +525,7 @@ The pages in [`examples/`](examples/) load the built bundle. Run
 - `auto-layout.html`: a signup form laid out entirely by auto-layout, playing on a loop
 - `controls.html`: every control in its states, then a form driven by the semantic steps
 - `overlays.html`: menus, selects, a popover, a dialog, a drawer, toasts and a scroll area over one timeline
+- `annotations.html`: highlights, rings, underlines, arrows and callouts over a finished screen, each following its target
 
 ## Development
 
@@ -531,7 +538,7 @@ pnpm run verify:pages       # render every examples/ page in headless Chromium
 pnpm run verify:package     # pack, install into a temp project, smoke-test
 ```
 
-The engine's 946-case golden digest and the library's per-fixture SVG digests
+The engine's 945-case golden digest and the library's per-fixture SVG digests
 pin the visual output; a change to either must be deliberate. A new component
 is one file in `src/components/`, a registry entry, a node interface, a
 factory on `Demo`, a README row and a fixture; `verify:components` says which
