@@ -2,6 +2,178 @@
 
 This project follows [Semantic Versioning](https://semver.org/).
 
+## 0.9.0
+
+### Minor Changes
+
+- 7bb72d0: Nodes can carry authored click actions, so a mockup's own buttons do something.
+  
+  `NodeBase` gains `reactions: Reaction[]`, Figma's name for what an interaction
+  does. A reaction is `{ trigger: 'ON_CLICK', action }`, where the action is the
+  same `WidgetAction` a component's own click returns: `target` (defaulting to the
+  node carrying the reaction) plus any of `checked`, `open`, `value` and `focus`.
+  A dialog's Cancel button now closes the dialog by itself:
+  
+  ```ts
+  demo.button({
+    id: 'cancel',
+    parent: 'actions',
+    characters: 'Cancel',
+    reactions: [{ trigger: 'ON_CLICK', action: { target: 'confirm', open: false } }],
+  });
+  demo.timeline.click('cancel');
+  ```
+  
+  Every reaction on the node a click hits fires, in the order written, after the
+  component's own effect, so a reaction wins where the two disagree. They fire for
+  any click that lands on the node, including the clicks a semantic step makes on
+  the way, but not for `set`, `setValue` or a hand-written `press`/`release` pair.
+  A reaction may name a node added after it; a target that never exists is a
+  `CompileError` on the step that would have fired it, and a malformed reaction is
+  rejected when the node is added or loaded.
+  
+  New exported types: `Reaction` and `ReactionTrigger`. `WidgetAction` moved to
+  `core/types` and is still exported under the same name. Nothing else changes:
+  documents without reactions compile and render exactly as before.
+- 7bb72d0: Annotation marks: the layer someone reviewing a screen draws on top of it.
+  
+  Five node types, all drawn by the engine like everything else, so they wobble
+  the way a pen does rather than arriving as clean vectors — at roughly twice the
+  theme's roughness, which a node's own `sketch.roughness` still overrides.
+  
+  - `HIGHLIGHT` — a translucent marker band, one thick sweep or the whole box.
+  - `ENCIRCLE` — a ring around the box, `oval` or `rect`, drawn in `passes` turns
+    of the pen, each from its own random stream so the turns differ.
+  - `UNDERLINE` — `straight`, `double`, `wavy`, `zigzag`, `scribble` or `loop`,
+    under the box or struck `through` it.
+  - `ARROW` — a shaft between two nodes or points: `straight`, `curved`, `s` or
+    `elbow`, with heads at either or both ends.
+  - `CALLOUT` — a `bubble`, `burst` or `cloud` carrying a note.
+  
+  ```ts
+  demo.button({ id: 'pay', x: 40, y: 60, characters: 'Pay now', variant: 'primary' });
+  demo.encircle({ id: 'ring', target: 'pay', spread: 10 });
+  demo.callout({ id: 'tip', target: 'pay', side: 'top', characters: 'One tap and you are done' });
+  demo.arrow({ id: 'link', from: 'terms', to: 'pay', curve: 'curved' });
+  ```
+  
+  A mark names a `target` and takes that node's box, so it follows what it
+  annotates when the interface moves or resizes; `spread` grows the box first, so
+  a ring clears what it circles. Without a target a mark sits at its own `x`/`y`
+  and size. Marks are never hit-tested, so one drawn over a button does not eat
+  the click, and they stay outside an auto-layout parent's flow.
+  
+  An arrow's endpoints are node ids or `{ x, y }` points. Aimed at a node it
+  stops `gap` short of that node's edge rather than its centre, `fromSide`/`toSide`
+  pin which edges it leaves and meets (`auto` takes the shortest way), and the
+  head follows the shaft's direction where it arrives, so a curved or elbowed
+  arrow points the way it is travelling. A callout is placed like a popup —
+  `side` and `align` — and its tail is drawn from the bubble's edge to the
+  target's, so it re-aims itself whenever either one moves.
+  
+  New in `ComponentDef` for components that take their geometry from other nodes:
+  `fit` (which nodes to wait for, the box to occupy, and whether it can place
+  itself) and `references` (ids the scene checks exist). New exported types:
+  `AnnotationBase`, `HighlightNode`, `EncircleNode`, `UnderlineNode`,
+  `UnderlineVariant`, `ArrowNode`, `ArrowEnd`, `ArrowSide`, `CalloutNode`,
+  `CalloutShape`.
+- dd277d3: Text can carry weight, and a heading can sit on a marker.
+  
+  The default font ships in one cut, and its glyphs were the one thing in a scene
+  the engine never touched: filled outlines, straight into a path, while
+  everything around them wobbled. A weight above 400 now goes round the same
+  letterform again, so a heading gains thickness and a hand-drawn edge in the
+  same stroke; how the pen does that is under *One font, written in pencil*.
+  
+  ```ts
+  demo.text({ id: 'h', x: 40, y: 40, characters: 'Checkout', style: { fontSize: 30, fontWeight: 700 } });
+  demo.text({ id: 'h2', x: 40, y: 100, characters: 'Billing', style: { fontSize: 26, marker: true } });
+  ```
+  
+  `TypeStyle` gains `fontWeight` (400–900) and `marker`. Any value in between
+  works, since there is no second face to snap to. The pen is held back below
+  24px and is barely there at label sizes, so small text keeps its counters open
+  instead of filling in.
+  
+  `marker` sweeps a band under the words before they are written, so the ink
+  reads over it: `true` takes the theme's grey, a `Paint` names the colour and
+  opacity. It is never applied on its own — a banded heading is a decision, and
+  an automatic one would blunt what a `HIGHLIGHT` mark means. (A `HIGHLIGHT`
+  cannot do this job: it is a review mark and draws on top, which greys the
+  heading out.)
+  
+  A component's own heading — window, frame, dialog, drawer and toast titles, and
+  a fieldset's legend — is written at 600 by default, which moves those scenes'
+  golden digests. The node's own `style.fontWeight` overrides it, and every other
+  piece of text stays at 400.
+  
+  Bold is real geometry: a bold string is roughly three to four times the path
+  data of the same string at 400, so it belongs on headings rather than body
+  text.
+- fed3db9: One font, written in pencil.
+  
+  **Text is drawn now, not printed.** Every glyph is gone round with a fine
+  graphite line, once by default, each contour straying a hair from the
+  letterform so the lines differ the way a hand's do. The letterform itself is
+  laid down a little short of solid, and the contours lighter still, so tone
+  builds where strokes overlap instead of arriving flat and black.
+  
+  **Weight is contour strokes, not a broader pen.** A heavier weight goes round
+  the letter more times rather than widening the nib: 400 is one contour, 700 is
+  three, 900 is four, and the pen itself barely grows. The previous approach —
+  one fat pen — thickened a word by eroding its counters, which stopped looking
+  written at all. `theme.textPasses` sets the base number of contours, and `0`
+  leaves the bare letterform.
+  
+  **Consequence: text follows the document seed.** A plain weight used to render
+  identically whatever the seed; now the hand over it does not. The same document
+  and seed still give the same bytes.
+  
+  **Only Grape Nuts ships.** `HERSHEY_FONT` is no longer exported and its data is
+  out of the bundle. Documents saved before 0.8.0 name it, so loading one now
+  throws unless the font is supplied — the error already says how:
+  
+  ```ts
+  loadDemo(json, { font: myHersheyFont });
+  ```
+  
+  The converted face has moved to `test/support/hershey-sans.ts`, where the
+  migration tests hand it to `loadDemo` to prove those documents still render
+  byte-identically. `createDemo({ font })` still takes any `StrokeFont`, and the
+  stroke-font path is unchanged for one.
+  
+  Golden digests move: every scene with text draws differently.
+- dd277d3: Containers are drawn the way a hand draws a box.
+  
+  A rounded rectangle from the engine closes its corners neatly however rough the
+  line is, which is what made a window frame read as printed rather than drawn.
+  A container's outline is now a light marker band, four straight edges that each
+  run past their corners, a second thinner pass over them, and two short strokes
+  re-inking each corner.
+  
+  It applies to `WINDOW`, `FRAME`, `FIELDSET`, `FORM` and `TOOLBAR`, and to the
+  raised panels of `DIALOG`, `ALERT_DIALOG` and `DRAWER` — those take the ink
+  without the band, since their shadow already carries the weight. A node with no
+  stroke gets none of it, and `SCROLL_AREA` keeps the plain rectangle because its
+  clip would cut the overshoot off mid-stroke.
+  
+  Three new theme keys, all of which a document can dial or turn off:
+  
+  ```ts
+  createDemo({ width: 900, height: 600, theme: { frameOvershoot: 12, frameBand: 10, frameBandOpacity: 0.4 } });
+  createDemo({ width: 900, height: 600, theme: { frameOvershoot: 0 } }); // the old plain rectangle
+  ```
+  
+  `frameOvershoot` (8) is how far each edge runs past its corner, capped at a
+  quarter of the box's shorter side; `frameBand` (8) is the band's width, capped
+  at an eighth; `frameBandOpacity` (0.5) is how strongly it shows. A container
+  shallower than 56px takes the ink without a band, and one shallower than 28px
+  keeps the plain rectangle, so a toolbar strip does not turn to scribble. A node's own `sketch.roughness` and
+  `sketch.bowing` scale the whole treatment as before.
+  
+  Every scene with a container renders differently, so the golden digests move.
+  Nothing about the model, the timeline or the API changes.
+
 ## 0.8.0
 
 ### Minor Changes
