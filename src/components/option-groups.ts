@@ -96,6 +96,7 @@ export const toggleGroup: ComponentDef<ToggleGroupNode> = {
           text: option,
           fontSize,
           color: textColor(node.style, theme.text),
+          halo: down ? theme.surface : undefined,
         }),
       );
     });

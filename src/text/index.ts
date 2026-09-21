@@ -1,13 +1,13 @@
 import { StrokeFont } from './font.js';
-import { GRAPE_NUTS } from './fonts/grape-nuts.js';
+import { HANDODLE } from './fonts/handodle.js';
 
 export { StrokeFont } from './font.js';
 export type { StrokeFontData, StrokeGlyph, OutlineGlyph } from './font.js';
 export { layoutText, wrapText } from './layout.js';
 export type { PlacedGlyph, TextAlign, TextLayout } from './layout.js';
 
-/** Grape Nuts (SIL OFL), a handwriting font drawn in capitals: the one font the package ships. */
-export const DEFAULT_FONT = new StrokeFont(GRAPE_NUTS);
+/** Handodle, a scribbled marker handwriting face drawn in capitals: the one font the package ships. */
+export const DEFAULT_FONT = new StrokeFont(HANDODLE);
 /**
  * The font that ships with the package, by name, so a document saved with it
  * loads without help. A document naming any other font must be handed it:

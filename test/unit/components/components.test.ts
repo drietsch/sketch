@@ -244,6 +244,99 @@ describe('containers', () => {
   });
 });
 
+const haloOf = (parts: ReturnType<typeof expand>, key: string) =>
+  (parts.find((p) => p.key === key) as { halo?: string } | undefined)?.halo;
+
+describe('halo', () => {
+  test('a hatched face lays the surface back under its label and icon', () => {
+    const demo = make();
+    const up = demo.toggle({ id: 'up', x: 0, y: 0, characters: 'Filters', icon: 'list' });
+    const down = demo.toggle({ id: 'down', x: 0, y: 0, characters: 'Filters', icon: 'list', pressed: true });
+    expect(haloOf(expand(demo, up), 'label')).toBeUndefined();
+    expect(haloOf(expand(demo, down), 'label')).toBe(demo.theme.surface);
+    expect(haloOf(expand(demo, down), 'icon')).toBe(demo.theme.surface);
+    // The live state, not the authored one, decides.
+    expect(haloOf(expand(demo, up, {}, { checked: true }), 'label')).toBe(demo.theme.surface);
+
+    const group = demo.toggleGroup({ id: 'g', x: 0, y: 0, options: ['Day', 'Week'], value: 'Week' });
+    expect(haloOf(expand(demo, group), '0.label')).toBeUndefined();
+    expect(haloOf(expand(demo, group), '1.label')).toBe(demo.theme.surface);
+
+    const initials = demo.avatar({ id: 'a1', x: 0, y: 0, characters: 'Dr' });
+    const icon = demo.avatar({ id: 'a2', x: 0, y: 0, icon: 'user' });
+    const own = demo.avatar({ id: 'a3', x: 0, y: 0, characters: 'Dr', fills: [{ type: 'SOLID', color: '#eee' }] });
+    expect(haloOf(expand(demo, initials), 'initials')).toBe(demo.theme.surface);
+    expect(haloOf(expand(demo, icon), 'icon')).toBe(demo.theme.surface);
+    // A solid face of the node's own has no hatch to clear.
+    expect(haloOf(expand(demo, own), 'initials')).toBeUndefined();
+  });
+
+  test('a button gets one only under the hover hatch, in its own face colour', () => {
+    const demo = make();
+    const plain = demo.button({ id: 'b', x: 0, y: 0, characters: 'Save', icon: 'check' });
+    const primary = demo.button({ id: 'p', x: 0, y: 0, characters: 'Send', variant: 'primary' });
+    expect(haloOf(expand(demo, plain), 'label')).toBeUndefined();
+    expect(haloOf(expand(demo, plain, { hovered: true }), 'label')).toBe(demo.theme.surface);
+    expect(haloOf(expand(demo, plain, { hovered: true }), 'icon')).toBe(demo.theme.surface);
+    expect(haloOf(expand(demo, primary, { hovered: true }), 'label')).toBe(demo.theme.accent);
+    expect(haloOf(expand(demo, plain, { hovered: true, pressed: true }), 'label')).toBeUndefined();
+  });
+
+  test("style.halo is the author's: it adds one to plain text and takes a default away", () => {
+    const demo = make();
+    const over = demo.text({ id: 't', x: 0, y: 0, characters: 'Over a hatch', style: { halo: true } });
+    const tinted = demo.text({
+      id: 't2',
+      x: 0,
+      y: 0,
+      characters: 'Tinted',
+      style: { halo: { type: 'SOLID', color: '#ffe' } },
+    });
+    const bare = demo.text({ id: 't3', x: 0, y: 0, characters: 'Bare' });
+    expect(haloOf(expand(demo, over), 'self')).toBe(demo.theme.surface);
+    expect(haloOf(expand(demo, tinted), 'self')).toBe('#ffe');
+    expect(haloOf(expand(demo, bare), 'self')).toBeUndefined();
+    const none = demo.toggle({ id: 'n', x: 0, y: 0, characters: 'Filters', pressed: true, style: { halo: false } });
+    expect(haloOf(expand(demo, none), 'label')).toBeUndefined();
+    // It travels with the document.
+    expect(demo.toJSON().children.find((n) => n.id === 't')).toMatchObject({ style: { halo: true } });
+  });
+});
+
+const markerOf = (parts: ReturnType<typeof expand>, key: string) =>
+  (parts.find((p) => p.key === key) as { marker?: { color: string; opacity: number } } | undefined)?.marker;
+
+describe('bold marker', () => {
+  test('700 and up gets a light band of its own; a node can decline or replace it', () => {
+    const demo = make();
+    const bold = demo.text({ id: 'b', x: 0, y: 0, characters: 'Plan', style: { fontWeight: 700 } });
+    const heavier = demo.text({ id: 'h', x: 0, y: 0, characters: 'Plan', style: { fontWeight: 900 } });
+    const title = demo.text({ id: 't', x: 0, y: 0, characters: 'Plan', style: { fontWeight: 600 } });
+    const plain = demo.text({ id: 'p', x: 0, y: 0, characters: 'Plan' });
+    const declined = demo.text({ id: 'd', x: 0, y: 0, characters: 'Plan', style: { fontWeight: 700, marker: false } });
+    const stronger = demo.text({ id: 's', x: 0, y: 0, characters: 'Plan', style: { fontWeight: 700, marker: true } });
+    const light = { color: demo.theme.muted, opacity: demo.theme.boldMarkerOpacity };
+    expect(markerOf(expand(demo, bold), 'self')).toEqual(light);
+    expect(markerOf(expand(demo, heavier), 'self')).toEqual(light);
+    expect(markerOf(expand(demo, title), 'self')).toBeUndefined();
+    expect(markerOf(expand(demo, plain), 'self')).toBeUndefined();
+    expect(markerOf(expand(demo, declined), 'self')).toBeUndefined();
+    expect(markerOf(expand(demo, stronger), 'self')?.opacity).toBeGreaterThan(light.opacity);
+    // A component label at 700 gets it too, through the same path.
+    const label = demo.button({ id: 'btn', x: 0, y: 0, characters: 'Pay', style: { fontWeight: 700 } });
+    expect(markerOf(expand(demo, label), 'label')).toEqual(light);
+    // A frame title is written at 600 by the component, so it stays bare.
+    const frame = demo.frame({ id: 'f', x: 0, y: 0, width: 200, height: 100, title: 'Delivery' });
+    expect(expand(demo, frame).find((p) => p.kind === 'text')).not.toHaveProperty('marker.color');
+  });
+
+  test('theme.boldMarkerOpacity: 0 turns it off', () => {
+    const demo = createDemo({ width: 100, height: 100, seed: 1, theme: { boldMarkerOpacity: 0 } });
+    const bold = demo.text({ id: 'b', x: 0, y: 0, characters: 'Plan', style: { fontWeight: 700 } });
+    expect(markerOf(expand(demo, bold), 'self')).toBeUndefined();
+  });
+});
+
 describe('focus ring', () => {
   test('is drawn once, after the nodes, around the focused focusable node', () => {
     const demo = make();

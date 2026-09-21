@@ -27,6 +27,7 @@ export const avatar: ComponentDef<AvatarNode> = {
       },
     ];
     const color = textColor(node.style, theme.text);
+    const halo = node.fills === undefined ? theme.surface : undefined;
     if (node.icon) {
       const icon = Math.round(size * 0.55);
       parts.push({
@@ -37,6 +38,7 @@ export const avatar: ComponentDef<AvatarNode> = {
         size: icon,
         icon: ctx.icons(node.icon),
         color,
+        halo,
         style: resolvePartStyle(theme, node),
       });
     } else if (node.characters) {
@@ -49,6 +51,7 @@ export const avatar: ComponentDef<AvatarNode> = {
           text,
           fontSize,
           color,
+          halo,
         }),
       );
     }

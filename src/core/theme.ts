@@ -14,6 +14,7 @@ export const DEFAULT_THEME: Readonly<Theme> = Object.freeze({
   fontSize: 14,
   textRoughness: 0.6,
   textPasses: 1,
+  boldMarkerOpacity: 0.18,
   frameOvershoot: 8,
   frameBand: 8,
   frameBandOpacity: 0.5,

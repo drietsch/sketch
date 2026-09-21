@@ -20,6 +20,18 @@ export interface StrokeFontData {
   uppercase?: boolean;
   /** Line height as a multiple of the font size. Defaults to 1.4. */
   lineHeight?: number;
+  /**
+   * Width of the pen the strokes were written with, in font units. A stroke
+   * font reduced from outlines carries the width those outlines had; without
+   * one the renderer picks a pen from the font size.
+   */
+  penWidth?: number;
+  /**
+   * How many times a written stroke of this face is gone over at a plain
+   * weight. A face whose drawn letters carry a doubled line writes its stroke
+   * glyphs twice, so they sit in the same hand. Default 1.
+   */
+  penPasses?: number;
   glyphs: Record<string, StrokeGlyph | OutlineGlyph>;
 }
 
@@ -46,6 +58,11 @@ export class StrokeFont {
   /** Whether glyphs are filled outlines rather than sketched strokes. */
   get outline(): boolean {
     return this.data.kind === 'outline';
+  }
+
+  /** The pen the strokes are written with at this size, or undefined for a font that names none. */
+  penWidth(fontSize: number): number | undefined {
+    return this.data.penWidth === undefined ? undefined : this.data.penWidth * this.scale(fontSize);
   }
 
   /** The character a glyph is looked up under: the capital, for an upper-case font. */

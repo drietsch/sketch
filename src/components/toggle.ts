@@ -38,6 +38,8 @@ export const toggle: ComponentDef<ToggleNode> = {
     ];
     let x = PADDING_X;
     const color = textColor(node.style, theme.text);
+    // The pressed face is hatched; the surface goes back under the label so the hatch stops short of it.
+    const halo = down ? theme.surface : undefined;
     if (node.icon) {
       parts.push({
         key: 'icon',
@@ -47,6 +49,7 @@ export const toggle: ComponentDef<ToggleNode> = {
         size: ICON_SIZE,
         icon: ctx.icons(node.icon),
         color,
+        halo,
         style: resolvePartStyle(theme, node),
       });
       x += ICON_SIZE + (node.characters ? ICON_GAP : 0);
@@ -59,6 +62,7 @@ export const toggle: ComponentDef<ToggleNode> = {
           text: node.characters,
           fontSize,
           color,
+          halo,
         }),
       );
     }

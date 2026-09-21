@@ -65,9 +65,17 @@ export interface TypeStyle {
   /**
    * A marker swept under the words, the way a heading gets picked out on
    * paper. `true` uses the theme's own grey; a `Paint` picks the colour and
-   * how strongly it shows.
+   * how strongly it shows. A weight of 700 or more gets a light one on its
+   * own (`theme.boldMarkerOpacity`); `false` takes that away.
    */
   marker?: boolean | Paint;
+  /**
+   * The face colour laid under the letters, so they read over a hatched fill:
+   * `true` uses the theme's surface, a `Paint` names the colour. Components
+   * whose face is hatched (a pressed toggle, an avatar) set one by default;
+   * `false` takes it away.
+   */
+  halo?: boolean | Paint;
   textAlignHorizontal?: TextAlignHorizontal;
   fills?: Paint[];
 }
@@ -101,6 +109,11 @@ export interface Theme {
    * stream so the lines differ. 0 leaves the bare letterform.
    */
   textPasses: number;
+  /**
+   * How strongly the light marker under bold text (700 and up) shows; 0 draws
+   * none. A node's own `style.marker` overrides it either way.
+   */
+  boldMarkerOpacity: number;
 }
 
 /**

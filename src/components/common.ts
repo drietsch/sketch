@@ -1,7 +1,7 @@
 import type { NodeBase, Theme, TypeStyle } from '../core/types.js';
 import type { StrokeFont } from '../text/font.js';
 import type { Part, PartStyle } from './types.js';
-import { markerOf, resolvePartStyle } from './style.js';
+import { haloOf, markerOf, resolvePartStyle } from './style.js';
 
 export type TextPart = Extract<Part, { kind: 'text' }>;
 
@@ -30,8 +30,12 @@ export function textPart(
     align?: TextPart['align'];
     /** A component's own default weight; the node's `style.fontWeight` wins over it. */
     weight?: number;
+    /** The face colour laid under the glyphs when they sit on a hatched fill. */
+    halo?: string;
   },
 ): TextPart {
+  const style = (node as { style?: TypeStyle }).style;
+  const weight = style?.fontWeight ?? opts.weight ?? REGULAR_WEIGHT;
   return {
     key,
     kind: 'text',
@@ -41,10 +45,17 @@ export function textPart(
     fontSize: opts.fontSize,
     align: opts.align ?? 'LEFT',
     color: opts.color,
-    weight: (node as { style?: TypeStyle }).style?.fontWeight ?? opts.weight ?? REGULAR_WEIGHT,
-    marker: markerOf((node as { style?: TypeStyle }).style, theme),
+    weight,
+    marker: markerOf(style, theme, weight),
+    ...haloEntry((node as { style?: TypeStyle }).style, theme, opts.halo),
     style: resolvePartStyle(theme, node, { roughness: node.sketch?.roughness ?? theme.textRoughness }),
   };
+}
+
+/** The node's own `style.halo` decides; without one, the component's default stands. */
+function haloEntry(style: TypeStyle | undefined, theme: Theme, fallback: string | undefined): { halo?: string } {
+  const halo = style?.halo !== undefined ? haloOf(style, theme) : fallback;
+  return halo === undefined ? {} : { halo };
 }
 
 /** A sketched box part styled from the node's fills/strokes, with component overrides applied last. */

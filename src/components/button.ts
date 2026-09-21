@@ -71,6 +71,8 @@ export const button: ComponentDef<ButtonNode> = {
 
     const contentWidth = m.iconWidth + m.textWidth;
     let x = (m.width - contentWidth) / 2;
+    // The hover hatch crosses the label; the face colour goes back under it.
+    const halo = state.hovered && !state.pressed ? box.style.fill : undefined;
     if (node.icon) {
       parts.push({
         key: 'icon',
@@ -80,6 +82,7 @@ export const button: ComponentDef<ButtonNode> = {
         size: ICON_SIZE,
         icon: ctx.icons(node.icon),
         color: labelColor,
+        halo,
         style: resolvePartStyle(theme, node),
       });
       x += ICON_SIZE + ICON_GAP;
@@ -92,6 +95,7 @@ export const button: ComponentDef<ButtonNode> = {
           text: node.characters,
           fontSize,
           color: labelColor,
+          halo,
         }),
       );
     }

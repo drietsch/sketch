@@ -288,23 +288,30 @@ which edges to leave and meet.
 
 ### Weight and the marker
 
-Text is drawn in pencil: every glyph is gone round with a fine graphite line
-that strays a hair from the letterform, so the words look written rather than
-set. Grape Nuts ships in one cut, so a heavier weight is not a second face —
-it is the same letter gone round more times, which is what gives a heading its
-weight without thickening the nib until the counters close.
+Text is drawn, not printed: Handodle's letters are scribbled with a marker,
+a doubled line and all, and that drawing is laid down as it is. The face
+ships in one cut, so a heavier weight is not a second face — it is what a
+hand does for emphasis, the same letters gone over again a hair off, with a
+light marker under them.
 
 ```ts
 demo.text({ id: 'h', x: 40, y: 40, characters: 'Checkout', style: { fontSize: 30, fontWeight: 700 } });
 demo.text({ id: 'h2', x: 40, y: 100, characters: 'Billing', style: { fontSize: 26, marker: true } });
 ```
 
-`fontWeight` runs from 400 to 900 — one contour to four — and is held back on
-small text so counters stay open. `marker` sweeps a grey band under the words
-before they are written. Component titles are written at 600 already;
-everything else stays at 400 until you ask. Contours are real geometry, so keep
-the heavy weights for headings rather than body text. `theme.textPasses: 0`
-gives the bare letterform back.
+`fontWeight` runs from 400 to 900 — laid down once, to four times over. From
+700 up the words get a light marker on their own (`theme.boldMarkerOpacity`);
+`marker: true` sweeps a stronger one, a `Paint` picks its colour, `false`
+declines it. Component titles are written at 600 already; everything else
+stays at 400 until you ask. Every pass is real geometry, so keep the heavy
+weights for headings rather than body text. `theme.textPasses` sets how often
+a plain weight is laid down.
+
+Text over a hatched face — a pressed toggle, an avatar, a hovered button —
+gets a `halo`: the face colour laid under the letters, so the hatch stops
+short of the ink and the label stays legible. Components do this on their own;
+`style: { halo: true }` asks for it on a `text` you lay over your own hatched
+box, and `halo: false` turns a default off.
 
 ### The hand-drawn frame
 
@@ -488,13 +495,15 @@ the way.
 
 Text is drawn from glyph data that ships with the package, so measurement,
 carets and bounds are exact and identical in every environment and the SVG
-needs no fonts. The default font is
-[Grape Nuts](https://fonts.google.com/specimen/Grape+Nuts), a handwriting
-face, set in capitals: every string is folded to upper case when it is drawn
-and measured, so `characters: 'Sign in'` reads SIGN IN while the model keeps
-`'Sign in'`. It covers printable ASCII, the Latin-1 letters and common
-symbols, and the typographic characters UI copy uses (`…`, curly quotes,
-dashes); anything else draws as a small box.
+needs no fonts. The default font is Handodle, a scribbled marker
+handwriting face, drawn as its own outlines and set in capitals: every string
+is folded to upper case when it is drawn and measured, so
+`characters: 'Sign in'` reads SIGN IN while the model keeps `'Sign in'`. It
+covers printable ASCII, the Latin-1 letters and common symbols and the typographic
+characters UI copy uses (`…`, curly quotes, dashes); the digits, `ß`, `· ± ™`, the marks `? ( ) ! % & @ # $ * < > ^ { } ‹ › ‚`, the arrows `← → ↑ ↓` and `✓ ✗` are written by hand as pen
+strokes in the same hand, since the font file carries no glyphs for them (see
+[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md)); anything else draws as
+a small box.
 
 The package ships this one font. A document may bring its own through
 `createDemo({ font })`, and one saved with a font the package does not carry
@@ -510,6 +519,137 @@ reference names them by group), any of that package's 1,756 icons can be
 passed as `demo.icon({ icon: { nodes: Rocket } })`, and
 `registerIcon(name, def)` adds one by name. Set `rough: true` on a
 definition of clean paths to sketch them.
+
+## Getting the look
+
+The sketch does not come from the roughness knob. It comes from what is on
+the page: controls with state, icons on them, one accent doing one job, and
+frames drawn the way a hand draws a box. Three panels of grey text at rest
+look printed at any roughness; the same information drawn as an interface
+someone is using looks sketched at the default.
+
+- **Draw controls, not labels.** A sidebar is toggles with icons, one of them
+  `pressed`; a chat has an `avatar`, an `input` and a primary button; a
+  status is a `progress` with a `value` and `characters`. Plain `text` is for
+  what the user reads, not for what they would click.
+- **Put an icon on every control that takes one.** `icon` on buttons,
+  toggles, avatars and menu items: `folder` and `file` for a tree, `send`,
+  `download`, `trash-2` for actions, `circle-check` and `triangle-alert` for
+  status. The 47 built-in names are listed in the API reference.
+- **Show the screen mid-use.** A checked box, an indeterminate one, a pressed
+  toggle, a focused input with text in it, a toast up, the cursor over a
+  button. Script a short timeline and render `toSVG(demo.duration - 80)`
+  rather than `toSVG(0)` of a scene at rest.
+- **One accent, one job.** The theme's accent means the primary action, the
+  checked state, focus and selection. `variant: 'primary'` on one button per
+  screen; do not paint the colour on with `fills`.
+- **Headings carry weight.** Section headings at `fontWeight: 700`, 16–18px;
+  bold brings its own light marker, and `marker: true` makes it stronger. A
+  frame's `title` is already written at 600, so do not add a text node for a
+  title the frame draws itself.
+- **Marks are the reviewer's layer.** `highlight`, `encircle`, `underline`,
+  `arrow` and `callout` are what someone draws over a finished screen. To show
+  a selected row use `pressed`, `checked` or `fills`; a `HIGHLIGHT` block
+  behind a list item reads as a review mark, not as selection.
+- **Size to content.** A wide canvas with three lines per panel looks
+  abandoned. Fill the panels or shrink them (`layoutSizingVertical: 'HUG'`
+  wraps a container to its children). The wobble is measured in pixels, so
+  around 900×600 to 1200×720 reads best; a huge canvas spreads it thin.
+- **Give sibling frames room.** A frame's edges run `frameOvershoot` (8px)
+  past its corners, so frames closer than 16px pile their corners into a
+  thicket. Keep 16px between them, and do not nest a frame in a frame in a
+  frame. A `toolbar` around two chips draws the whole treatment around
+  nothing; place small controls with `rightOf` instead.
+- **Leave roughness alone.** Text has its own `textRoughness`, so raising
+  `roughness` only wobbles the boxes. The sketch is in the hachure fills, the
+  contour text and the hand-drawn frame. `sketch.fillStyle: 'cross-hatch'` on
+  one node is emphasis; on every node it is noise.
+- **Text over a hatch needs a halo.** Components give their own labels one
+  (a pressed toggle, an avatar, a hovered button). A `text` node you lay over
+  a hatched rectangle of your own gets it with `style: { halo: true }`.
+- **Muted is for secondary text.** Placeholders, descriptions, the percentage
+  under a bar. Navigation and body copy stay in the theme's text colour.
+
+All of that in one screen:
+
+```ts
+const demo = createDemo({ width: 960, height: 420, seed: 7 });
+demo.browser({ id: 'win', x: 10, y: 10, width: 940, height: 400, url: 'studio.example.com/imports' });
+
+// A panel is a frame with a title; auto-layout stacks the controls in it.
+demo.frame({
+  id: 'nav',
+  parent: 'win',
+  x: 16,
+  y: 12,
+  width: 220,
+  height: 320,
+  title: 'Objects',
+  layoutMode: 'VERTICAL',
+  padding: [10, 10],
+  itemSpacing: 4,
+});
+demo.toggle({ id: 'products', parent: 'nav', characters: 'Products', icon: 'folder' });
+demo.toggle({ id: 'import', parent: 'nav', characters: 'Import 09/26', icon: 'upload', pressed: true });
+demo.toggle({ id: 'categories', parent: 'nav', characters: 'Categories', icon: 'folder' });
+demo.toggle({ id: 'pricing', parent: 'nav', characters: 'Pricing', icon: 'shopping-cart' });
+
+// The main panel: who said what, and the input the user is about to use.
+demo.frame({ id: 'chat', parent: 'win', x: 252, y: 12, width: 420, height: 320, title: 'Copilot' });
+demo.avatar({ id: 'me', parent: 'chat', x: 16, y: 14, characters: 'Dr', size: 32 });
+demo.text({
+  id: 'msg',
+  parent: 'chat',
+  x: 60,
+  y: 14,
+  characters: 'Onboard the 1,240 new SKUs\nfor the DACH launch.',
+  style: { fontSize: 15 },
+});
+demo.input({ id: 'ask', parent: 'chat', x: 16, y: 236, width: 290, placeholder: 'Ask Copilot…' });
+demo.button({
+  id: 'send',
+  parent: 'chat',
+  rightOf: 'ask',
+  gap: 10,
+  characters: 'Send',
+  icon: 'send',
+  variant: 'primary',
+});
+
+// State tells the story: one step done, one running, a number on the bar.
+demo.frame({
+  id: 'run',
+  parent: 'win',
+  x: 688,
+  y: 12,
+  width: 236,
+  height: 320,
+  title: 'Agent run',
+  layoutMode: 'VERTICAL',
+  padding: [12, 14],
+  itemSpacing: 8,
+});
+demo.text({ id: 'plan', parent: 'run', characters: 'Plan', style: { fontSize: 16, fontWeight: 700, marker: true } });
+demo.checkbox({ id: 'ingest', parent: 'run', characters: 'Ingest', checked: true });
+demo.checkbox({ id: 'enrich', parent: 'run', characters: 'Enrich', indeterminate: true });
+demo.checkbox({ id: 'publish', parent: 'run', characters: 'Publish' });
+demo.progress({ id: 'prog', parent: 'run', width: 200, value: 38, characters: 'Enriching · 38%' });
+
+// Marks are the reviewer's layer, drawn over the interface, not part of it.
+demo.encircle({ id: 'ring', target: 'enrich', spread: 6 });
+demo.callout({
+  id: 'note',
+  target: 'ask',
+  characters: 'Ask it to skip review for parts',
+  side: 'top',
+  gap: 36,
+  width: 200,
+});
+
+// Render a moment mid-use: the question typed, the cursor over Send.
+demo.timeline.moveCursor('ask').click().type('ask', 'Skip review for parts?').moveCursor('send');
+const svg = demo.toSVG(demo.duration - 80);
+```
 
 ## Examples
 
@@ -548,7 +688,7 @@ of those is missing.
 
 The sketch-geometry engine in `src/sketch/` is derived from
 [roughjs](https://github.com/rough-stuff/rough) by Preet Shihn (MIT). Text
-uses Grape Nuts by Robert Leuschke (SIL OFL); icons
+uses Handodle by Putracetol Studio (see the notices for its licence); icons
 come from sketchyicons, derived from Lucide and Feather. See
 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
 

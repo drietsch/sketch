@@ -24,7 +24,7 @@ describe('toJSON / loadDemo', () => {
       height: 200,
       seed: 9,
       background: null,
-      font: 'grape-nuts',
+      font: 'handodle',
     });
     expect(json.theme.accent).toBe('#f00');
     expect(json.children.map((n) => n.id)).toEqual(['a']);

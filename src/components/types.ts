@@ -61,8 +61,10 @@ export type Part = { key: string; style: PartStyle; layer?: 'overlay' } & (
       weight: number;
       /** A marker swept under the words before they are written. */
       marker?: { color: string; opacity: number };
+      /** The face colour laid under the glyphs, so they read over a hatched fill. */
+      halo?: string;
     }
-  | { kind: 'icon'; x: number; y: number; size: number; icon: IconDef; color: string }
+  | { kind: 'icon'; x: number; y: number; size: number; icon: IconDef; color: string; halo?: string }
   /** An element emitted as-is, for things that are deliberately not sketched (clip rects, carets). */
   | { kind: 'raw'; el: VElement }
 );

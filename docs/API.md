@@ -35,14 +35,14 @@ runtime dependencies and never touches the DOM unless `mount` or
 
 ### `createDemo(options: DemoOptions): Demo`
 
-| Option       | Type             | Default                          | Notes                                                                                                       |
-| ------------ | ---------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `width`      | `number`         | required                         | Document width in px. Must be positive.                                                                     |
-| `height`     | `number`         | required                         | Document height in px. Must be positive.                                                                    |
-| `seed`       | `number`         | random                           | Integer in `[0, 2^31)`. Read `demo.seed` to reproduce a run that used a random seed.                        |
-| `theme`      | `Partial<Theme>` | `DEFAULT_THEME`                  | Colours, stroke weight, roughness, corner radius, font size. See [Theme](#theme).                           |
-| `background` | `string \| null` | the theme background (`#ffffff`) | A CSS colour, or `null` for a transparent document.                                                         |
-| `font`       | `StrokeFont`     | `DEFAULT_FONT`                   | The font for all text. Grape Nuts, in capitals, is the one the package ships; a document may bring its own. |
+| Option       | Type             | Default                          | Notes                                                                                                     |
+| ------------ | ---------------- | -------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `width`      | `number`         | required                         | Document width in px. Must be positive.                                                                   |
+| `height`     | `number`         | required                         | Document height in px. Must be positive.                                                                  |
+| `seed`       | `number`         | random                           | Integer in `[0, 2^31)`. Read `demo.seed` to reproduce a run that used a random seed.                      |
+| `theme`      | `Partial<Theme>` | `DEFAULT_THEME`                  | Colours, stroke weight, roughness, corner radius, font size. See [Theme](#theme).                         |
+| `background` | `string \| null` | the theme background (`#ffffff`) | A CSS colour, or `null` for a transparent document.                                                       |
+| `font`       | `StrokeFont`     | `DEFAULT_FONT`                   | The font for all text. Handodle, in capitals, is the one the package ships; a document may bring its own. |
 
 ### `loadDemo(json: DemoJSON | string, options?: { font?: StrokeFont }): Demo`
 
@@ -117,6 +117,10 @@ document for top-level nodes.
 Containers also accept `padding`, a shorthand for the four `padding*` props:
 a number, `[vertical, horizontal]` or `[top, right, bottom, left]`.
 
+`ARROW` and `CALLOUT` have a `gap` of their own (the clearance the shaft or
+tail leaves). On those, `gap` is the placement's only next to a direction;
+alone, it is the node's.
+
 ### Common props (`NodeBase`)
 
 | Prop                                  | Type                         | Notes                                                                                                                |
@@ -147,27 +151,40 @@ are supported.
 `dots`, `dashed`, `zigzag-line`.
 
 Text-bearing nodes take `style: TypeStyle` with `fontSize`, `fontWeight`,
-`marker`, `textAlignHorizontal` (`LEFT` | `CENTER` | `RIGHT`) and `fills` for
-the glyph colour. Interactive components take `state: ComponentState` with
+`marker`, `halo`, `textAlignHorizontal` (`LEFT` | `CENTER` | `RIGHT`) and
+`fills` for the glyph colour. Interactive components take `state: ComponentState` with
 `focused`, `pressed`, `hovered`, `disabled` for the authored (static) look.
 
-### Pencil, weight and the marker
+### Drawn text, weight and the marker
 
-Text is drawn rather than printed: every glyph is gone round with a fine
-graphite line, each contour straying a hair from the letterform so no two
-lines are the same. The letterform is laid down a little short of solid and
-the contours lighter still, so tone builds where they overlap.
-`theme.textPasses` (1) sets how many contours a plain weight gets; `0` leaves
-the bare letterform.
+Text is drawn, not printed. Handodle's letters are scribbled with a marker —
+a doubled line, a stray hair — and that drawing is the look, so each letter
+is laid down as its own outline, filled a little short of solid, with no line
+put round it. `theme.textPasses` (1) is how many times a plain weight is laid
+down; `0` draws nothing.
 
-The font ships in one cut, so weight is more contours rather than a broader
-pen: 400 is one, 700 three, 900 four, and the pen itself barely grows. Any
-value from 400 to 900 works, and the whole treatment is held back below 24px
-so small text keeps its counters open rather than filling in.
+The face ships in one cut, so weight is not a broader nib. It is what a hand
+does for emphasis: the same letter gone over again, a hair off the first.
+700 is three times, 900 four, and the shift stays under a pixel or two so the
+word thickens without ghosting. From 700 up the words also get a light marker
+under them on their own (`theme.boldMarkerOpacity`, 0.18; `marker: false` on
+the node declines it). Any value from 400 to 900 works.
 
-Because the contours are sketched, text follows the document seed — the same
-document and seed still render the same bytes, but a different seed writes the
-words differently.
+The font file carries no glyphs for the digits, `ß`, `· ± ™`, the marks `? ( ) ! % & @ # $ * < > ^ { } ‹ › ‚`,
+the arrows or the check marks; those are written by hand as pen strokes, one
+smooth engine line per movement, with the face's pen (`penWidth`, scaled to
+the size) and gone over twice like its drawn lines (`penPasses`), so they sit
+in the same hand. A written stroke wobbles in proportion to the letter — a
+label steadier than a heading — and weight is the pen going over it again.
+
+Text follows the document seed: the same document and seed render the same
+bytes, and a different seed lands the second passes differently.
+
+A document may bring a face of its own: an outline font (`kind: 'outline'`)
+is drawn the same way, and a stroke font (`kind: 'stroke'`, polylines) is
+written throughout, with a pen picked from the size when it names none.
+`scripts/gen-outline-font.mjs` and `scripts/gen-stroke-font.mjs` make either
+from a TTF.
 
 ```ts
 demo.text({ id: 'h', x: 40, y: 40, characters: 'Checkout', style: { fontSize: 30, fontWeight: 700 } });
@@ -186,14 +203,24 @@ a fieldset's legend — is written at 600 without being asked; the node's own
 `style.fontWeight` overrides that.
 
 `marker` sweeps a band under the words before they are written, so the ink
-reads over it: `true` takes the theme's grey, a `Paint` names the colour and
-how strongly it shows. It is never automatic. A `HIGHLIGHT` mark is a different
-thing — a review mark, drawn over the interface, which would grey a heading out
-rather than back it.
+reads over it: `true` takes the theme's grey at full marker strength, a
+`Paint` names the colour and how strongly it shows, `false` takes away the
+light band bold gets by itself. A `HIGHLIGHT` mark is a different thing — a
+review mark, drawn over the interface, which would grey a heading out rather
+than back it.
 
 Bold costs output: the pen is real geometry, so a bold string is roughly three
 to four times the path data of the same string at 400. It is meant for
 headings, not for body text.
+
+`halo` lays the face colour under the letters so they read over a hatched
+fill — the hatch lines stop a little short of the ink, the way a gel pen
+clears its ground. Components whose face is hatched set one by default: a
+pressed toggle, a selected toggle-group option, an avatar on its muted
+hachure, and a button under the hover hatch, each in its own face colour, on
+the icon as well as the label. A `TEXT` node laid over a hatched rectangle of
+your own asks for it with `style: { halo: true }` (the theme's surface) or a
+`Paint`; `false` takes a component's default away.
 
 ### Reactions
 
@@ -528,14 +555,14 @@ Returned by `demo.mount(container, options)`.
 
 ## Icons, fonts, theme
 
-| Export                    | Notes                                                                                                                                                                                                                                                                             |
-| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `iconNames()`             | The 47 built-in icon names plus globally registered ones.                                                                                                                                                                                                                         |
-| `registerIcon(name, def)` | Registers an icon for the whole process. `demo.registerIcon` scopes it to one demo and saves it with the document.                                                                                                                                                                |
-| `IconDef`                 | `{ viewBox?: string, nodes: [tag, attrs][], rough?: boolean }`, the shape of `@sketchyicons/data`; any of its 1,756 icons can be passed as `{ nodes }` (see below). `rough: true` sketches clean paths.                                                                           |
-| `DEFAULT_FONT`            | Grape Nuts (SIL OFL) as vendored glyph outlines, drawn in capitals: text is folded to upper case when measured and drawn, the model keeps its case. Covers printable ASCII, Latin-1 letters and common symbols, `…`, curly quotes and dashes; anything else draws as a small box. |
-| `StrokeFont`              | Built from `StrokeFontData`: `kind` (`stroke` polylines or `outline` paths), `uppercase`, `lineHeight`, metrics and `glyphs`. Methods: `measure`, `advance`, `caretX`, `glyph`, `fold`, `ascent`, `descent`, `capHeight`, `lineHeight`, `scale`, `outline`.                       |
-| `DEFAULT_THEME`           | See below.                                                                                                                                                                                                                                                                        |
+| Export                    | Notes                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `iconNames()`             | The 47 built-in icon names plus globally registered ones.                                                                                                                                                                                                                                                                                                                                                                     |
+| `registerIcon(name, def)` | Registers an icon for the whole process. `demo.registerIcon` scopes it to one demo and saves it with the document.                                                                                                                                                                                                                                                                                                            |
+| `IconDef`                 | `{ viewBox?: string, nodes: [tag, attrs][], rough?: boolean }`, the shape of `@sketchyicons/data`; any of its 1,756 icons can be passed as `{ nodes }` (see below). `rough: true` sketches clean paths.                                                                                                                                                                                                                       |
+| `DEFAULT_FONT`            | Handodle, a scribbled marker hand drawn as its own outlines, in capitals: text is folded to upper case when measured and drawn, the model keeps its case. Covers printable ASCII, Latin-1 letters and common symbols, `…`, curly quotes and dashes; digits, `ß`, `· ± ™`, the marks `? ( ) ! % & @ # $ * < > ^ { } ‹ › ‚`, the arrows `← → ↑ ↓` and `✓ ✗` are written by hand as strokes; anything else draws as a small box. |
+| `StrokeFont`              | Built from `StrokeFontData`: `kind` (`stroke` polylines or `outline` paths, mixed per glyph), `uppercase`, `lineHeight`, `penWidth`, `penPasses`, metrics and `glyphs`. Methods: `measure`, `advance`, `caretX`, `glyph`, `fold`, `ascent`, `descent`, `capHeight`, `lineHeight`, `scale`, `outline`, `penWidth`.                                                                                                             |
+| `DEFAULT_THEME`           | See below.                                                                                                                                                                                                                                                                                                                                                                                                                    |
 
 ### Built-in icons
 
@@ -570,23 +597,25 @@ its export (`shopping-cart` ↔ `ShoppingCart`).
 
 ### Theme
 
-| Key                | Default   | Used for                                                                                   |
-| ------------------ | --------- | ------------------------------------------------------------------------------------------ |
-| `stroke`           | `#1f2430` | Outlines                                                                                   |
-| `text`             | `#1f2430` | Text                                                                                       |
-| `accent`           | `#2f6fed` | Primary buttons, checked state, focus, selection                                           |
-| `muted`            | `#8a8f98` | Placeholders, descriptions, tracks                                                         |
-| `surface`          | `#ffffff` | Component faces                                                                            |
-| `background`       | `#ffffff` | Document background                                                                        |
-| `strokeWeight`     | `1.2`     |                                                                                            |
-| `roughness`        | `1`       | Sketch jitter                                                                              |
-| `bowing`           | `1`       | Sketch line bowing                                                                         |
-| `radius`           | `6`       | Corner radius of components                                                                |
-| `fontSize`         | `14`      |                                                                                            |
-| `textRoughness`    | `0.6`     | Text wants less wobble than boxes                                                          |
-| `frameOvershoot`   | `8`       | How far a container's outline runs past its corners; `0` draws the plain rounded rectangle |
-| `frameBand`        | `8`       | Width of the marker band under that outline; `0` leaves the ink bare                       |
-| `frameBandOpacity` | `0.5`     | Opacity of the band                                                                        |
+| Key                 | Default   | Used for                                                                                   |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------ |
+| `stroke`            | `#1f2430` | Outlines                                                                                   |
+| `text`              | `#1f2430` | Text                                                                                       |
+| `accent`            | `#2f6fed` | Primary buttons, checked state, focus, selection                                           |
+| `muted`             | `#8a8f98` | Placeholders, descriptions, tracks                                                         |
+| `surface`           | `#ffffff` | Component faces                                                                            |
+| `background`        | `#ffffff` | Document background                                                                        |
+| `strokeWeight`      | `1.2`     |                                                                                            |
+| `roughness`         | `1`       | Sketch jitter                                                                              |
+| `bowing`            | `1`       | Sketch line bowing                                                                         |
+| `radius`            | `6`       | Corner radius of components                                                                |
+| `fontSize`          | `14`      |                                                                                            |
+| `textRoughness`     | `0.6`     | Text wants less wobble than boxes                                                          |
+| `textPasses`        | `1`       | How many times a plain weight is laid down; `0` draws nothing                              |
+| `boldMarkerOpacity` | `0.18`    | The light marker under text at 700 and up; `0` draws none                                  |
+| `frameOvershoot`    | `8`       | How far a container's outline runs past its corners; `0` draws the plain rounded rectangle |
+| `frameBand`         | `8`       | Width of the marker band under that outline; `0` leaves the ink bare                       |
+| `frameBandOpacity`  | `0.5`     | Opacity of the band                                                                        |
 
 ## Documents
 

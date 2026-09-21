@@ -1,7 +1,7 @@
 import { pointsOnPath } from 'points-on-path';
 import type { Bounds, EllipseNode, IconNode, LineNode, RectangleNode, TextNode, VectorNode } from '../core/types.js';
 import type { ComponentDef } from './types.js';
-import { fontSizeOf, fontWeightOf, markerOf, resolvePartStyle, textColor } from './style.js';
+import { fontSizeOf, fontWeightOf, haloOf, markerOf, resolvePartStyle, textColor } from './style.js';
 import { layoutText } from '../text/layout.js';
 
 export const DEFAULT_ICON_SIZE = 20;
@@ -105,6 +105,7 @@ export const text: ComponentDef<TextNode> = {
       color: textColor(node.style, ctx.theme.text),
       weight: fontWeightOf(node.style),
       marker: markerOf(node.style, ctx.theme),
+      ...(haloOf(node.style, ctx.theme) === undefined ? {} : { halo: haloOf(node.style, ctx.theme) }),
       style: resolvePartStyle(ctx.theme, node, { roughness: node.sketch?.roughness ?? ctx.theme.textRoughness }),
     },
   ],

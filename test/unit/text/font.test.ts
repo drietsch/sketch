@@ -4,7 +4,7 @@ import { HERSHEY_SANS } from '../../support/hershey-sans.js';
 
 /** Not shipped any more; kept as a fixture because pre-0.8.0 documents name it. */
 const HERSHEY_FONT = new StrokeFont(HERSHEY_SANS);
-import { GRAPE_NUTS } from '../../../src/text/fonts/grape-nuts.js';
+import { HANDODLE } from '../../../src/text/fonts/handodle.js';
 
 describe('StrokeFont', () => {
   test('both built-in fonts ship every printable ASCII glyph', () => {
@@ -19,17 +19,25 @@ describe('StrokeFont', () => {
     expect(DEFAULT_FONT.glyph('Ω')).toBeUndefined();
   });
 
-  test('the default font is Grape Nuts in capitals: outlines, folded to upper case', () => {
-    expect(DEFAULT_FONT.name).toBe('grape-nuts');
+  test('the default font is Handodle in capitals: drawn letters, hand-written digits, folded to upper case', () => {
+    expect(DEFAULT_FONT.name).toBe('handodle');
     expect(DEFAULT_FONT.outline).toBe(true);
     expect(HERSHEY_FONT.outline).toBe(false);
+    // Every string is folded to capitals when drawn and measured; the model keeps its case.
     expect(DEFAULT_FONT.fold('a')).toBe('A');
     expect(DEFAULT_FONT.fold('é')).toBe('É');
     expect(DEFAULT_FONT.fold('ß')).toBe('ß');
     expect(DEFAULT_FONT.glyph('a')).toBe(DEFAULT_FONT.glyph('A'));
-    expect(typeof DEFAULT_FONT.glyph('A')![1]).toBe('string');
     expect(DEFAULT_FONT.measure('hello', 16)).toBe(DEFAULT_FONT.measure('HELLO', 16));
-    expect(GRAPE_NUTS.glyphs.a).toBeUndefined();
+    expect(HANDODLE.glyphs.a).toBeUndefined();
+    // The letters are the face's own outlines; the digits, which the file lacks, are written by hand as strokes.
+    expect(typeof DEFAULT_FONT.glyph('A')![1]).toBe('string');
+    expect(Array.isArray(DEFAULT_FONT.glyph('4')![1])).toBe(true);
+    expect(Array.isArray(DEFAULT_FONT.glyph('→')![1])).toBe(true);
+    // Those strokes carry the face's pen and are written twice, like its drawn lines; Hershey names no pen.
+    expect(DEFAULT_FONT.penWidth(1000)).toBe(HANDODLE.penWidth);
+    expect(HANDODLE.penPasses).toBe(2);
+    expect(HERSHEY_FONT.penWidth(16)).toBeUndefined();
     expect(HERSHEY_FONT.fold('a')).toBe('a');
   });
 
@@ -39,8 +47,8 @@ describe('StrokeFont', () => {
     const sum = [...'Hello'].reduce((w, ch) => w + HERSHEY_SANS.glyphs[ch][0], 0);
     expect(at16).toBeCloseTo((sum * 16) / HERSHEY_SANS.unitsPerEm, 10);
     expect(HERSHEY_FONT.measure('', 16)).toBe(0);
-    const caps = [...'HELLO'].reduce((w, ch) => w + GRAPE_NUTS.glyphs[ch][0], 0);
-    expect(DEFAULT_FONT.measure('hello', 16)).toBeCloseTo((caps * 16) / GRAPE_NUTS.unitsPerEm, 10);
+    const letters = [...'HELLO'].reduce((w, ch) => w + HANDODLE.glyphs[ch][0], 0);
+    expect(DEFAULT_FONT.measure('hello', 16)).toBeCloseTo((letters * 16) / HANDODLE.unitsPerEm, 10);
   });
 
   test('unknown characters advance by the tofu width', () => {
@@ -61,8 +69,8 @@ describe('StrokeFont', () => {
     expect(HERSHEY_FONT.ascent(32)).toBe(HERSHEY_SANS.ascent);
     expect(HERSHEY_FONT.descent(32)).toBe(HERSHEY_SANS.descent);
     expect(HERSHEY_FONT.lineHeight(10)).toBe(14);
-    expect(DEFAULT_FONT.capHeight(1000)).toBe(GRAPE_NUTS.capHeight);
-    expect(DEFAULT_FONT.ascent(1000)).toBe(GRAPE_NUTS.ascent);
+    expect(DEFAULT_FONT.capHeight(1000)).toBe(HANDODLE.capHeight);
+    expect(DEFAULT_FONT.ascent(1000)).toBe(HANDODLE.ascent);
     expect(DEFAULT_FONT.lineHeight(10)).toBe(14);
   });
 
