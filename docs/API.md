@@ -532,17 +532,41 @@ Returned by `demo.mount(container, options)`.
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `iconNames()`             | The 47 built-in icon names plus globally registered ones.                                                                                                                                                                                                                         |
 | `registerIcon(name, def)` | Registers an icon for the whole process. `demo.registerIcon` scopes it to one demo and saves it with the document.                                                                                                                                                                |
-| `IconDef`                 | `{ viewBox?: string, nodes: [tag, attrs][], rough?: boolean }`, the shape of `@sketchyicons/data`; any of its icons (1,759 drawings under 2,006 names) can be passed directly. `rough: true` sketches clean paths.                                                                |
+| `IconDef`                 | `{ viewBox?: string, nodes: [tag, attrs][], rough?: boolean }`, the shape of `@sketchyicons/data`; any of its 1,756 icons can be passed as `{ nodes }` (see below). `rough: true` sketches clean paths.                                                                           |
 | `DEFAULT_FONT`            | Grape Nuts (SIL OFL) as vendored glyph outlines, drawn in capitals: text is folded to upper case when measured and drawn, the model keeps its case. Covers printable ASCII, Latin-1 letters and common symbols, `…`, curly quotes and dashes; anything else draws as a small box. |
 | `StrokeFont`              | Built from `StrokeFontData`: `kind` (`stroke` polylines or `outline` paths), `uppercase`, `lineHeight`, metrics and `glyphs`. Methods: `measure`, `advance`, `caretX`, `glyph`, `fold`, `ascent`, `descent`, `capHeight`, `lineHeight`, `scale`, `outline`.                       |
 | `DEFAULT_THEME`           | See below.                                                                                                                                                                                                                                                                        |
 
-Built-in icons: arrow-left, arrow-right, bell, bookmark, calendar, check,
-chevron-down, chevron-left, chevron-right, chevron-up, circle-alert,
-circle-check, circle-x, copy, download, eye, eye-off, file, folder, globe,
-heart, house, image, info, link, list, lock, log-in, log-out, mail, menu,
-minus, pause, pencil, play, plus, refresh-cw, search, send, settings,
-shopping-cart, star, triangle-alert, upload, user, x.
+### Built-in icons
+
+These 47 names work as `icon` on `demo.icon`, and on buttons, toggles,
+avatars and menu items, with nothing to register. They are Lucide names;
+`iconNames()` returns the same list at runtime, and an unknown name throws
+when the node is added.
+
+| Group      | Names                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Navigation | `arrow-left`, `arrow-right`, `chevron-down`, `chevron-left`, `chevron-right`, `chevron-up`, `menu`, `house`, `search`                                              |
+| Status     | `check`, `circle-check`, `circle-alert`, `circle-x`, `triangle-alert`, `info`, `x`                                                                                 |
+| Actions    | `plus`, `minus`, `copy`, `pencil`, `trash-2`, `download`, `upload`, `send`, `refresh-cw`, `play`, `pause`, `log-in`, `log-out`, `link`                             |
+| Objects    | `file`, `folder`, `image`, `calendar`, `mail`, `bell`, `bookmark`, `heart`, `star`, `shopping-cart`, `user`, `lock`, `eye`, `eye-off`, `globe`, `settings`, `list` |
+
+Any other icon comes from [`@sketchyicons/data`](https://github.com/Fantomiald/sketchyicons)
+(1,756 Lucide icons, sketched), which this package does not depend on. Its
+exports are bare node arrays under PascalCase names, so wrap one in
+`{ nodes }` to pass it, or register it once to use it by name:
+
+<!-- no-run -->
+
+```ts
+import { Rocket } from '@sketchyicons/data';
+
+demo.icon({ id: 'launch', x: 20, y: 20, icon: { nodes: Rocket } });
+registerIcon('rocket', { nodes: Rocket }); // then icon: 'rocket' anywhere
+```
+
+That package's `iconNames` and `componentNames` arrays map a Lucide name to
+its export (`shopping-cart` ↔ `ShoppingCart`).
 
 ### Theme
 

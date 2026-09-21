@@ -98,6 +98,13 @@ it live and returns a player with `play`, `pause`, `seek`.
   symbols, `…`, curly quotes and dashes; other characters draw as a small
   box. There is no mixed-case font in the package; a document may supply its
   own through `createDemo({ font })`.
+- **Icons are Lucide names.** `icon: 'search'`, `'trash-2'`, `'chevron-down'`:
+  47 ship with the package, listed under
+  [Built-in icons](API.md#built-in-icons) in the API reference and returned
+  by `iconNames()`. An unknown name throws when the node is added. Any other
+  Lucide icon comes from `@sketchyicons/data`, wrapped as
+  `{ nodes: Rocket }` or registered once with
+  `registerIcon('rocket', { nodes: Rocket })`.
 - **Keep the whole scene inside the document.** Nothing is clipped except
   inside a `SCROLL_AREA`; anchored popups are pulled back onto the page.
 

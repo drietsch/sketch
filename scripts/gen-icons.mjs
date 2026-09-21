@@ -1,7 +1,7 @@
 /**
  * Copies a curated set of icons from @sketchyicons/data into
  * src/icons/builtin.ts so the library works out of the box with no runtime
- * dependency. Any other of its icons can be passed to demo.icon() directly.
+ * dependency. Any other of its icons can be passed as demo.icon({ icon: { nodes } }).
  * Run with: node scripts/gen-icons.mjs
  */
 import { writeFileSync } from 'node:fs';

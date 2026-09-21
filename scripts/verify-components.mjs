@@ -8,6 +8,9 @@
  *   - at least one fixture in test/support/scenes.ts uses its factory, so a
  *     golden pins its look.
  *
+ * It also checks that the API reference names every built-in icon, and only
+ * those, and that every doc quotes the right count of them.
+ *
  * Run with: pnpm run verify:components
  */
 import { readFileSync } from 'node:fs';
@@ -68,8 +71,38 @@ for (const name of new Set([...demoMethods, ...timelineMethods])) {
   );
 }
 
+// The built-in icons are only usable by name, so the name has to be written
+// down somewhere an agent will read it. The API reference's table is that
+// place; it must list exactly the icons gen-icons.mjs copied in.
+const builtin = [...read('src/icons/builtin.ts').matchAll(/^  "([^"]+)": \{ nodes:/gm)].map((m) => m[1]);
+const iconSection = api.slice(api.indexOf('### Built-in icons'), api.indexOf('Any other icon'));
+const documented = iconSection
+  .split('\n')
+  .filter((line) => line.startsWith('| ') && line.includes('`'))
+  .flatMap((line) => [...line.matchAll(/`([^`]+)`/g)].map((m) => m[1]));
+const missing = builtin.filter((n) => !documented.includes(n));
+const extra = documented.filter((n) => !builtin.includes(n));
+const twice = documented.filter((n, i) => documented.indexOf(n) !== i);
+check(
+  'API reference names every built-in icon',
+  missing.length === 0,
+  missing.length ? `missing ${missing.join(', ')}` : '',
+);
+check('API reference names no other icon', extra.length === 0, extra.length ? `extra ${extra.join(', ')}` : '');
+check('API reference names each icon once', twice.length === 0, twice.length ? `twice ${twice.join(', ')}` : '');
+const n = builtin.length;
+for (const [file, text, phrase] of [
+  ['API.md', api, `These ${n} names work`],
+  ['API.md', api, `The ${n} built-in icon names`],
+  ['README.md', readme, `${n} common icons are built in`],
+  ['for-agents.md', read('docs/for-agents.md'), `${n} ship with the package`],
+  ['llms.txt', read('llms.txt'), `${n} ship built in`],
+]) {
+  check(`${file} counts ${n} built-in icons`, text.includes(phrase), `expected "${phrase}"`);
+}
+
 if (failed) {
   console.error('\ncomponent catalogue is out of sync');
   process.exit(1);
 }
-console.log(`\n${types.length} component types verified`);
+console.log(`\n${types.length} component types and ${n} built-in icons verified`);

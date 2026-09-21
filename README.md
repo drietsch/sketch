@@ -505,10 +505,10 @@ outline paths) can be passed the same way; a document saved with one must be
 loaded with it.
 
 Icons use the [`@sketchyicons/data`](https://github.com/Fantomiald/sketchyicons)
-shape: 47 common icons are built in (`iconNames()` lists them), any of that
-package's icons — 1,759 drawings under 2,006 names — can be passed to
-`demo.icon({ icon })` directly, and
-`registerIcon(name, def)` adds more by name. Set `rough: true` on a
+shape: 47 common icons are built in (`iconNames()` lists them; the API
+reference names them by group), any of that package's 1,756 icons can be
+passed as `demo.icon({ icon: { nodes: Rocket } })`, and
+`registerIcon(name, def)` adds one by name. Set `rough: true` on a
 definition of clean paths to sketch them.
 
 ## Examples
