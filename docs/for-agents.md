@@ -19,6 +19,8 @@ animated demo of someone using it, from code. This is the walkthrough; the
 
 ## The shortest useful program
 
+<!-- render: login animate -->
+
 ```ts
 import { createDemo } from '@drietsch/sketch';
 
@@ -42,6 +44,8 @@ for (const { t, svg } of demo.frames(30)) {
   /* write each frame */
 }
 ```
+
+![A login form being filled in and submitted](images/login.svg)
 
 In a browser, `demo.mount(element, { autoplay: true, loop: true })` renders
 it live and returns a player with `play`, `pause`, `seek`.
@@ -238,9 +242,13 @@ demo.timeline.moveCursor('ask').click().type('ask', 'Skip review for parts?').mo
 const svg = demo.toSVG(demo.duration - 80);
 ```
 
+![The screen above, rendered: navigation toggles with one pressed, a chat with a typed question and the cursor over Send, an agent run with checkboxes and progress, and a ring and callout over it](images/look.svg)
+
 ## Recipes
 
 ### A form with auto-layout
+
+<!-- render: recipe-form animate size=380x340 -->
 
 ```ts
 demo.form({ id: 'signup', x: 30, y: 30, width: 320, layoutSizingVertical: 'HUG' });
@@ -265,7 +273,11 @@ demo.button({ id: 'save', parent: 'actions', characters: 'Save', variant: 'prima
 demo.timeline.click('name').type('name', 'Ada').choose('plan', 'Team').drag('volume', 75).click('save');
 ```
 
+![A signup form filled in by semantic steps](images/recipe-form.svg)
+
 ### Menus, selects and popups
+
+<!-- render: recipe-popups animate size=560x360 -->
 
 ```ts
 demo.button({ id: 'share', x: 20, y: 20, characters: 'Share', icon: 'send' });
@@ -281,8 +293,8 @@ demo.menu({
   characters: 'File',
   items: ['New', { label: 'Export', items: ['PDF', 'PNG'] }, '-', 'Quit'],
 });
-demo.select({ id: 'country', x: 20, y: 80, width: 200, options: ['Austria', 'Germany'], value: 'Austria' });
-demo.combobox({ id: 'city', x: 240, y: 80, width: 200, options: ['Berlin', 'Bern', 'Vienna'], placeholder: 'City' });
+demo.select({ id: 'country', x: 20, y: 200, width: 200, options: ['Austria', 'Germany'], value: 'Austria' });
+demo.combobox({ id: 'city', x: 240, y: 200, width: 200, options: ['Berlin', 'Bern', 'Vienna'], placeholder: 'City' });
 
 demo.timeline
   .hover('share') // tooltip appears after 400 ms and the cursor rests
@@ -296,7 +308,11 @@ demo.timeline
   .choose('city', 'Bern');
 ```
 
+![A tooltip, a popover, a submenu, a select and a combobox in use](images/recipe-popups.svg)
+
 ### A dialog and a toast
+
+<!-- render: recipe-dialog animate size=520x320 -->
 
 ```ts
 demo.button({ id: 'trash', x: 20, y: 20, characters: 'Delete', icon: 'x' });
@@ -337,7 +353,11 @@ demo.toast({ id: 'done', title: 'Deleted', variant: 'success', open: false });
 demo.timeline.click('trash').open('confirm').click('delete').wait(800);
 ```
 
+![A delete confirmation dialog closing and a toast appearing](images/recipe-dialog.svg)
+
 ### Marking up a screen
+
+<!-- render: recipe-marks size=360x200 -->
 
 ```ts
 demo.text({ id: 'price', x: 40, y: 40, characters: 'EUR 49', style: { fontSize: 22 } });
@@ -351,6 +371,8 @@ demo.callout({ id: 'tip', target: 'pay', side: 'right', characters: 'One tap and
 demo.arrow({ id: 'link', from: 'deal', to: 'pay', curve: 'curved' });
 ```
 
+![A price struck through, the new price highlighted, and a ringed button with a callout](images/recipe-marks.svg)
+
 A mark follows its `target`, so it stays right when the interface moves; give
 it `spread` to clear what it marks. Marks are not hit-tested, so one over a
 button never eats the click. An arrow's endpoints are node ids or points, and
@@ -358,24 +380,31 @@ it stops at a node's edge rather than its centre.
 
 ### Tabs, accordion, collapsible
 
+<!-- render: recipe-tabs animate size=680x300 -->
+
 ```ts
 demo.tabs({ id: 'tabs', x: 20, y: 20, width: 300, height: 160, tabs: ['General', 'Billing'], value: 'General' });
 demo.text({ id: 'general', parent: 'tabs', characters: 'General settings' }); // shown with tab 1
 demo.button({ id: 'billing', parent: 'tabs', characters: 'Add card', icon: 'plus' }); // shown with tab 2
+// Placement is resolved once, so put what grows when it opens last in its column.
+demo.collapsible({ id: 'advanced', below: 'tabs', gap: 16, width: 300, characters: 'Advanced', padding: 12 });
 demo.accordion({
   id: 'faq',
-  below: 'tabs',
-  gap: 16,
+  rightOf: 'tabs',
+  gap: 24,
   width: 300,
   items: [{ label: 'Shipping', characters: 'Two days.' }, 'Returns'],
 });
-demo.collapsible({ id: 'advanced', below: 'faq', gap: 16, width: 300, characters: 'Advanced', padding: 12 });
 demo.checkbox({ id: 'beta', parent: 'advanced', characters: 'Beta features' });
 
 demo.timeline.choose('tabs', 'Billing').choose('faq', 'Shipping').open('advanced').check('beta');
 ```
 
+![Tabs, an accordion and a collapsible in use](images/recipe-tabs.svg)
+
 ### Scrolling content
+
+<!-- render: recipe-scroll animate size=340x160 fps=8 -->
 
 ```ts
 // 12 text rows of 14 px with 8 px between them, inside 10 px of padding: 276 px of content.
@@ -395,7 +424,11 @@ for (let i = 1; i <= 12; i++) demo.text({ id: `row-${i}`, parent: 'list', charac
 demo.timeline.drag('list', 160).click('row-11'); // rows out of view cannot be clicked until scrolled to
 ```
 
+![A scroll area scrolled to a row that is clicked](images/recipe-scroll.svg)
+
 ### Styling a node
+
+<!-- render: recipe-style size=210x160 -->
 
 ```ts
 demo.rectangle({
@@ -416,6 +449,8 @@ demo.text({
   style: { fontSize: 18, fills: [{ type: 'SOLID', color: '#2f6fed' }] },
 });
 ```
+
+![A yellow cross-hatched rectangle and blue text](images/recipe-style.svg)
 
 ### Changing the scene mid-timeline
 
